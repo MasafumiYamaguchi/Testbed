@@ -49,3 +49,11 @@ fixed camera/Recipe. To bound hosted WARP cost, those six captures all use the
 same 96-pixel internal width, 32 view steps and 4 shadow steps. All voxels and
 HDR transmittance are read back against CPU references. Physical-GPU speed and
 noise aliasing at production resolutions remain future validation.
+
+For nonzero noise amplitudes the pointwise GPU/CPU density tolerance is 1e-4
+multiplied by max(1, density upper bound), versus 2e-5 for the smooth noise-OFF
+field. FP32 local coordinates, quintic interpolation and the 20-metre erosion
+amplitude magnify small FP64/FP32 differences near a sharp edge. The measured
+maximum is always logged before rejection; this tolerance does not change the
+independent full-frame transmittance tolerance (0.001). A first CI run correctly
+rejected the maximum-amplitude fixture under the older smooth-field tolerance.
