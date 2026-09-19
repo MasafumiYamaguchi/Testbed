@@ -1,0 +1,1 @@
+CI run 35421805523, commit df809c4 (see PR65). Nine actual images reviewed. 60 edits per mode at 160x90, 64 view / 8 shadow steps. Exposure: zero HDR updates, zero bakes. Camera: 60 HDR updates, zero bakes. Density: direct fallback while cache is rebuilding. Timings in stdout and per-frame CSV are WARP wall times, not physical-GPU timing or scanout.

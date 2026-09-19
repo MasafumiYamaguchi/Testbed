@@ -4,6 +4,7 @@ param(
     [ValidateSet(160,640)][int]$InternalWidth=160,
     [int]$ViewSteps=64,
     [int]$ShadowSteps=8,
+    [switch]$ExportHdr,
     [string]$RecipeDirectory="$PSScriptRoot/../tests/fixtures/gate"
 )
 $ErrorActionPreference="Stop"
@@ -20,6 +21,7 @@ foreach($source in Get-ChildItem "$recipes/*.white.json") {
     foreach($grid in $modes){
         $stem="$name-cache-$grid"
         $arguments=@("--recipe",$source.Name,"--cache","$grid","--render-width","$InternalWidth","--view-steps","$ViewSteps","--shadow-steps","$ShadowSteps","--frames","90","--capture","$stem.bmp")
+        if($ExportHdr){$arguments+=@("--export-hdr","$stem-hdr")}
         $process=Start-Process -FilePath $exe -ArgumentList $arguments -WorkingDirectory $out -PassThru -RedirectStandardOutput "$out/$stem.stdout.log" -RedirectStandardError "$out/$stem.stderr.log"
         try {
             if(!$process.WaitForExit(180000)){throw "Fixed gate case timed out: $stem"}

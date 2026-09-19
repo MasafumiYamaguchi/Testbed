@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(ProjectWhite VERSION 0.1.0 LANGUAGES CXX)
+project(ProjectWhite VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,8 +23,19 @@ FetchContent_Declare(nlohmann_json
   GIT_REPOSITORY https://github.com/nlohmann/json.git
   GIT_TAG 55f93686c01528224f448c19128836e7df245f72)
 FetchContent_MakeAvailable(nlohmann_json)
-add_library(white_core src/core/build_info.cpp src/core/document.cpp src/core/persistence.cpp src/core/density.cpp src/core/optics.cpp src/core/editor_geometry.cpp src/core/noise.cpp src/core/dense_cache.cpp src/core/revision_queue.cpp src/core/benchmark.cpp src/core/phase.cpp)
-target_link_libraries(white_core PRIVATE nlohmann_json::nlohmann_json)
+FetchContent_Declare(tinyexr GIT_REPOSITORY https://github.com/syoyo/tinyexr.git
+  GIT_TAG 735ff73ce5959cf005eb99ce517c9bcecab89dfb SOURCE_SUBDIR white-unused)
+FetchContent_MakeAvailable(tinyexr)
+add_library(white_exr STATIC src/core/exr_codec.cpp ${tinyexr_SOURCE_DIR}/deps/miniz/miniz.c)
+target_include_directories(white_exr PRIVATE ${tinyexr_SOURCE_DIR} ${tinyexr_SOURCE_DIR}/deps/miniz PUBLIC include)
+execute_process(COMMAND git rev-parse HEAD WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE WHITE_COMMIT OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT WHITE_COMMIT)
+  set(WHITE_COMMIT "unknown")
+endif()
+add_library(white_core src/core/build_info.cpp src/core/document.cpp src/core/persistence.cpp src/core/density.cpp src/core/optics.cpp src/core/editor_geometry.cpp src/core/noise.cpp src/core/dense_cache.cpp src/core/revision_queue.cpp src/core/benchmark.cpp src/core/phase.cpp src/core/hdr_export.cpp)
+target_link_libraries(white_core PRIVATE nlohmann_json::nlohmann_json white_exr)
+target_compile_definitions(white_core PRIVATE WHITE_COMMIT="${WHITE_COMMIT}")
 target_include_directories(white_core PUBLIC include)
 target_compile_features(white_core PUBLIC cxx_std_20)
 if(MSVC)
@@ -74,6 +85,9 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(white_hdr_tests tests/hdr_tests.cpp)
+  target_link_libraries(white_hdr_tests PRIVATE white_core white_exr)
+  add_test(NAME hdr_export_contract COMMAND white_hdr_tests)
   add_executable(white_core_tests tests/core_tests.cpp)
   target_link_libraries(white_core_tests PRIVATE white_core)
   add_test(NAME core_contract COMMAND white_core_tests)

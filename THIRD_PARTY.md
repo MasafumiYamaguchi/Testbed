@@ -21,3 +21,5 @@ source language, not an additional runtime dependency.
 Technical source: SDL public API headers/documentation (https://wiki.libsdl.org/SDL3),
 CMake/CTest documentation (https://cmake.org/documentation/). No proprietary
 product code, internal formats, UI layout or algorithms were inspected.
+
+TinyEXR 1.0.12 (`735ff73ce5959cf005eb99ce517c9bcecab89dfb`), https://github.com/syoyo/tinyexr: BSD-3-Clause (notice in tinyexr.h). Bundled miniz at the same revision: MIT notice in deps/miniz/miniz.c. Compiled as static libraries for FLOAT EXR output; source remains unmodified. Both notices accompany CI artifacts.

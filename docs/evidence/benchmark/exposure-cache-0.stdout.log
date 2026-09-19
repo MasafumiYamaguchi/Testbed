@@ -1,0 +1,17 @@
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+GPU ray/box six cases max_abs_error=4.76837e-07
+GPU homogeneous optics max_abs_error=5.25884e-06 tolerance=0.001
+bake=1 extent=65x67x69 texture_bytes=1201980 peak_requested_gpu_bytes=3568956 cpu_reference_bytes=1201980 record_cpu_ms=0.3039 submit_to_fence_wall_ms=31.711 gpu_timestamp_ms=unavailable
+density_reference max_abs_error=4.52995e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+density_publish producer_revision=2 consumer_revision=2 matching_density_hash=17993680759361396548 peak_requested_gpu_bytes=70677820
+density_job_revision=2 input_hash=2169756699829809763 publish=1 coalesced=0 discarded=0 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=1.4774 generation_submit_and_fence_wall_ms=14.4097
+fixed_recipe=recipe.white.json density_hash=17993680759361396548 internal_width=160 view_steps=64 shadow_steps=8 cache=0 camera_sun=from_saved_recipe
+benchmark_track=exposure warmup_frames=30 requested_updates=60 cells=8 frames_in_flight=1 adaptive_quality=false artificial_frame_delay=false validation=1
+capture=exposure-cache-0.bmp frame=120
+HDR verified 160x90 view_steps=64 shadow_steps=8 max_channel=1 min_T=0.188269 CPU_T_max_error=2.24301e-06
+fixed_capture width=160 height=90 revision=62 pending=0
+benchmark_samples=60 edit_to_submission_p50_ms=0.4686 edit_to_submission_p95_ms=0.5788 edit_to_gpu_complete_p50_ms=15.975 edit_to_gpu_complete_p95_ms=16.2692 serial_work_updates_per_second=61.6650235 cached_samples=0 direct_samples=60 hdr_updates=0 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=973.427 completed_update_hz=61.6379
+benchmark_bakes=0 final_revision=62 requested_cache=0 csv=exposure-cache-0.csv
+shutdown=clean lifecycle_test=0

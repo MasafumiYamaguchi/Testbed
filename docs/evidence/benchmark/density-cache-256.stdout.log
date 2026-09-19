@@ -1,0 +1,81 @@
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+GPU ray/box six cases max_abs_error=4.76837e-07
+GPU homogeneous optics max_abs_error=5.25884e-06 tolerance=0.001
+bake=1 extent=65x67x69 texture_bytes=1201980 peak_requested_gpu_bytes=3568956 cpu_reference_bytes=1201980 record_cpu_ms=0.2957 submit_to_fence_wall_ms=30.4671 gpu_timestamp_ms=unavailable
+density_reference max_abs_error=4.52995e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+density_publish producer_revision=2 consumer_revision=2 matching_density_hash=17993680759361396548 peak_requested_gpu_bytes=201326592
+density_job_revision=2 input_hash=7790186690887494623 publish=1 coalesced=0 discarded=1 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=0.8231 generation_submit_and_fence_wall_ms=710.382
+fixed_recipe=recipe.white.json density_hash=17993680759361396548 internal_width=160 view_steps=64 shadow_steps=8 cache=256 camera_sun=from_saved_recipe
+benchmark_track=density warmup_frames=30 requested_updates=60 cells=8 frames_in_flight=1 adaptive_quality=false artificial_frame_delay=false validation=1
+density_job_revision=3 input_hash=2376028835190590579 publish=0 coalesced=0 discarded=2 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=0.4586 generation_submit_and_fence_wall_ms=203.171
+density_job_revision=4 input_hash=15902788952960415386 publish=0 coalesced=0 discarded=3 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=11.6286 generation_submit_and_fence_wall_ms=240.944
+density_job_revision=5 input_hash=8134536789086867890 publish=0 coalesced=0 discarded=4 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=2.1316 generation_submit_and_fence_wall_ms=155.045
+density_job_revision=6 input_hash=2809572132675106523 publish=0 coalesced=0 discarded=5 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=3.0644 generation_submit_and_fence_wall_ms=151.853
+density_job_revision=7 input_hash=11529497868984947356 publish=0 coalesced=0 discarded=6 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5909 generation_submit_and_fence_wall_ms=154.48
+density_job_revision=8 input_hash=3407465684827227747 publish=0 coalesced=0 discarded=7 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6132 generation_submit_and_fence_wall_ms=153.561
+density_job_revision=9 input_hash=2276555920375904476 publish=0 coalesced=0 discarded=8 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5998 generation_submit_and_fence_wall_ms=153.102
+density_job_revision=10 input_hash=14089351069624721182 publish=0 coalesced=0 discarded=9 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5915 generation_submit_and_fence_wall_ms=149.837
+density_job_revision=11 input_hash=10994831864863476217 publish=0 coalesced=0 discarded=10 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6107 generation_submit_and_fence_wall_ms=154.132
+density_job_revision=12 input_hash=10046799122649080834 publish=0 coalesced=0 discarded=11 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5957 generation_submit_and_fence_wall_ms=151.122
+density_job_revision=13 input_hash=12152774225694984937 publish=0 coalesced=0 discarded=12 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6015 generation_submit_and_fence_wall_ms=154.839
+density_job_revision=14 input_hash=7935690104832677192 publish=0 coalesced=0 discarded=13 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6037 generation_submit_and_fence_wall_ms=149.527
+density_job_revision=15 input_hash=1790944131928330158 publish=0 coalesced=0 discarded=14 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5967 generation_submit_and_fence_wall_ms=153.366
+density_job_revision=16 input_hash=3539476427263989429 publish=0 coalesced=0 discarded=15 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6021 generation_submit_and_fence_wall_ms=155.104
+density_job_revision=17 input_hash=14925471213422466434 publish=0 coalesced=0 discarded=16 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6788 generation_submit_and_fence_wall_ms=151.549
+density_job_revision=18 input_hash=16983190434556999945 publish=0 coalesced=0 discarded=17 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6137 generation_submit_and_fence_wall_ms=154.342
+density_job_revision=19 input_hash=12394989787848369086 publish=0 coalesced=0 discarded=18 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6789 generation_submit_and_fence_wall_ms=153.603
+density_job_revision=20 input_hash=1147191348937827585 publish=0 coalesced=0 discarded=19 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.8299 generation_submit_and_fence_wall_ms=151.892
+density_job_revision=21 input_hash=6731831725825554016 publish=0 coalesced=0 discarded=20 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.7322 generation_submit_and_fence_wall_ms=150.891
+density_job_revision=22 input_hash=10356337557181012201 publish=0 coalesced=0 discarded=21 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6805 generation_submit_and_fence_wall_ms=153.733
+density_job_revision=23 input_hash=10420280912433865079 publish=0 coalesced=0 discarded=22 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5878 generation_submit_and_fence_wall_ms=151.383
+density_job_revision=24 input_hash=17500916576981897824 publish=0 coalesced=0 discarded=23 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5947 generation_submit_and_fence_wall_ms=153.4
+density_job_revision=25 input_hash=6527796004619523876 publish=0 coalesced=0 discarded=24 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6072 generation_submit_and_fence_wall_ms=150.853
+density_job_revision=26 input_hash=16501127142517820831 publish=0 coalesced=0 discarded=25 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6026 generation_submit_and_fence_wall_ms=154.198
+density_job_revision=27 input_hash=13915731228111711806 publish=0 coalesced=0 discarded=26 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5959 generation_submit_and_fence_wall_ms=154.889
+density_job_revision=28 input_hash=2965346404116288686 publish=0 coalesced=0 discarded=27 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6214 generation_submit_and_fence_wall_ms=154.374
+density_job_revision=29 input_hash=10146676006595387400 publish=0 coalesced=0 discarded=28 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=2.174 generation_submit_and_fence_wall_ms=154.577
+density_job_revision=30 input_hash=12856604502080709240 publish=0 coalesced=0 discarded=29 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.7466 generation_submit_and_fence_wall_ms=155.344
+density_job_revision=31 input_hash=8435015454942557295 publish=0 coalesced=0 discarded=30 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.592 generation_submit_and_fence_wall_ms=151.35
+density_job_revision=32 input_hash=15738968928003833478 publish=0 coalesced=0 discarded=31 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.582 generation_submit_and_fence_wall_ms=151.095
+density_job_revision=33 input_hash=2519993127726166720 publish=0 coalesced=0 discarded=32 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5854 generation_submit_and_fence_wall_ms=158.083
+density_job_revision=34 input_hash=8583183295025931533 publish=0 coalesced=0 discarded=33 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6098 generation_submit_and_fence_wall_ms=153.793
+density_job_revision=35 input_hash=6812960743281239831 publish=0 coalesced=0 discarded=34 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6277 generation_submit_and_fence_wall_ms=154.323
+density_job_revision=36 input_hash=13054591833105256134 publish=0 coalesced=0 discarded=35 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5954 generation_submit_and_fence_wall_ms=150.722
+density_job_revision=37 input_hash=7374770270568534922 publish=0 coalesced=0 discarded=36 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6034 generation_submit_and_fence_wall_ms=152.358
+density_job_revision=38 input_hash=4629182077375226975 publish=0 coalesced=0 discarded=37 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6325 generation_submit_and_fence_wall_ms=152.524
+density_job_revision=39 input_hash=12901854119618433813 publish=0 coalesced=0 discarded=38 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6194 generation_submit_and_fence_wall_ms=150.727
+density_job_revision=40 input_hash=7621190203962159455 publish=0 coalesced=0 discarded=39 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6213 generation_submit_and_fence_wall_ms=157.966
+density_job_revision=41 input_hash=11530499237109964490 publish=0 coalesced=0 discarded=40 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6987 generation_submit_and_fence_wall_ms=154.938
+density_job_revision=42 input_hash=9450804571362151274 publish=0 coalesced=0 discarded=41 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=2.5246 generation_submit_and_fence_wall_ms=154.808
+density_job_revision=43 input_hash=5343685953903406720 publish=0 coalesced=0 discarded=42 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6072 generation_submit_and_fence_wall_ms=154.24
+density_job_revision=44 input_hash=1202592545778588564 publish=0 coalesced=0 discarded=43 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6399 generation_submit_and_fence_wall_ms=151.836
+density_job_revision=45 input_hash=6240877877461821391 publish=0 coalesced=0 discarded=44 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6898 generation_submit_and_fence_wall_ms=156.322
+density_job_revision=46 input_hash=12002664034989020287 publish=0 coalesced=0 discarded=45 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.596 generation_submit_and_fence_wall_ms=154.655
+density_job_revision=47 input_hash=7599777844332371268 publish=0 coalesced=0 discarded=46 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.617 generation_submit_and_fence_wall_ms=155.713
+density_job_revision=48 input_hash=18186387086576167922 publish=0 coalesced=0 discarded=47 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6114 generation_submit_and_fence_wall_ms=150.179
+density_job_revision=49 input_hash=3848372611493460192 publish=0 coalesced=0 discarded=48 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5998 generation_submit_and_fence_wall_ms=156.18
+density_job_revision=50 input_hash=17039179109394961962 publish=0 coalesced=0 discarded=49 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6196 generation_submit_and_fence_wall_ms=151.571
+density_job_revision=51 input_hash=18138887015745821897 publish=0 coalesced=0 discarded=50 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6058 generation_submit_and_fence_wall_ms=155.411
+density_job_revision=52 input_hash=18418684265695820970 publish=0 coalesced=0 discarded=51 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6104 generation_submit_and_fence_wall_ms=151.296
+density_job_revision=53 input_hash=8625240413983414696 publish=0 coalesced=0 discarded=52 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.5944 generation_submit_and_fence_wall_ms=151.039
+density_job_revision=54 input_hash=2820203703034946198 publish=0 coalesced=0 discarded=53 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6376 generation_submit_and_fence_wall_ms=150.282
+density_job_revision=55 input_hash=9420551936847452226 publish=0 coalesced=0 discarded=54 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.627 generation_submit_and_fence_wall_ms=156.205
+density_job_revision=56 input_hash=12291282673997670009 publish=0 coalesced=0 discarded=55 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6211 generation_submit_and_fence_wall_ms=154.523
+density_job_revision=57 input_hash=10770106606000025529 publish=0 coalesced=0 discarded=56 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=2.3252 generation_submit_and_fence_wall_ms=153.532
+density_job_revision=58 input_hash=15152498727102812495 publish=0 coalesced=0 discarded=57 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.7005 generation_submit_and_fence_wall_ms=156.135
+density_job_revision=59 input_hash=3125864152648450407 publish=0 coalesced=0 discarded=58 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6114 generation_submit_and_fence_wall_ms=151.754
+density_job_revision=60 input_hash=12389450868703485389 publish=0 coalesced=0 discarded=59 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6007 generation_submit_and_fence_wall_ms=152.863
+density_job_revision=61 input_hash=9772956210019481640 publish=0 coalesced=0 discarded=60 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.6462 generation_submit_and_fence_wall_ms=151.508
+density_publish producer_revision=62 consumer_revision=62 matching_density_hash=9152289645623985802 peak_requested_gpu_bytes=203954592
+density_job_revision=62 input_hash=17438052904893178693 publish=1 coalesced=0 discarded=60 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=2.1246 generation_submit_and_fence_wall_ms=811.182
+capture=density-cache-256.bmp frame=120
+density_reference max_abs_error=1.54972e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=256x256x256 row_bytes=1024 max_abs_error=1.54972e-06 interpolation_error=0 PASS
+HDR verified 160x90 view_steps=64 shadow_steps=8 max_channel=1 min_T=0.187269 CPU_T_max_error=7.78428e-05
+dense_vs_direct_T max=0.0058449 mean=5.6641e-05 sampler_reference_error=7.78428e-05 resolution=256
+fixed_capture width=160 height=90 revision=62 pending=0
+benchmark_samples=60 edit_to_submission_p50_ms=88.1022 edit_to_submission_p95_ms=90.3799 edit_to_gpu_complete_p50_ms=155.3656 edit_to_gpu_complete_p95_ms=159.3323 serial_work_updates_per_second=6.37900698 cached_samples=0 direct_samples=60 hdr_updates=60 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=9406.65 completed_update_hz=6.37846
+benchmark_bakes=1 final_revision=62 requested_cache=256 csv=density-cache-256.csv
+shutdown=clean lifecycle_test=0

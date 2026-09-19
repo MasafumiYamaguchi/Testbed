@@ -1,0 +1,10 @@
+updates=60
+width=160
+view_steps=64
+shadow_steps=8
+warmup=30
+frames_in_flight=1
+validation=True
+physical_acceptance=unverified
+gpu_timestamps=unavailable
+scanout=unavailable
