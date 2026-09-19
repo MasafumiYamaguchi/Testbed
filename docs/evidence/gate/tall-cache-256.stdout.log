@@ -1,0 +1,18 @@
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+GPU ray/box six cases max_abs_error=4.76837e-07
+GPU homogeneous optics max_abs_error=5.25884e-06 tolerance=0.001
+bake=1 extent=65x67x69 texture_bytes=1201980 peak_requested_gpu_bytes=3568956 cpu_reference_bytes=1201980 record_cpu_ms=0.3927 submit_to_fence_wall_ms=37.1714 gpu_timestamp_ms=unavailable
+density_reference max_abs_error=4.52995e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+density_publish producer_revision=2 consumer_revision=2 matching_density_hash=9886262410655544469 peak_requested_gpu_bytes=201326592
+density_job_revision=2 input_hash=17360312824376591658 publish=1 coalesced=0 discarded=1 pending=0 running=0
+fixed_recipe=tall.white.json density_hash=9886262410655544469 internal_width=160 view_steps=64 shadow_steps=8 cache=256 camera_sun=from_saved_recipe
+edit_to_present_submission revision=2 ms=344.397 samples=1 p50_ms=344.397 p95_ms=344.397
+frame_revision=2 mode=cache record_cpu_ms=3.0894 submit_to_fence_wall_ms=150.441 gpu_timestamp_ms=unavailable
+capture=tall-cache-256.bmp frame=60
+density_reference max_abs_error=1.3113e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=256x256x256 row_bytes=1024 max_abs_error=1.3113e-06 interpolation_error=0 PASS
+HDR verified 160x90 view_steps=64 shadow_steps=8 max_channel=1 min_T=0.496598 CPU_T_max_error=4.40543e-05
+dense_vs_direct_T max=0.0023497 mean=2.33509e-05 sampler_reference_error=4.40543e-05 resolution=256
+fixed_capture width=160 height=90 revision=2 pending=0
+shutdown=clean lifecycle_test=0

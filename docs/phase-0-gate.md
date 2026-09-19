@@ -5,7 +5,7 @@ shape/editing and cache checks have evidence, but no RTX 5070 Ti 16 GB result,
 pure GPU timestamps, actual GPU residency, or sustained edit performance exists.
 Hosted Windows uses Microsoft Basic Render Driver (WARP), driver
 10.0.20348.5386 with validation enabled. Its measurements cannot establish the
-physical target. OpenVDB spike #63 is being verified separately.
+physical target. The [OpenVDB spike succeeded](evidence/vdb/README.md); [all 31 fixed captures](evidence/gate/README.md) also passed and were visually reviewed.
 
 ## Fixed inputs and repeatable comparison
 
