@@ -6,6 +6,8 @@
 #include <charconv>
 #include <iostream>
 #include <string_view>
+#include <cmath>
+#include <algorithm>
 
 namespace {
 struct Ui {
@@ -40,7 +42,7 @@ int main(int argc,char** argv) {
     for(int i=1;i<argc;++i) {
         std::string_view arg(argv[i]);
         if(arg=="--help") {
-            std::cout<<"ProjectWhite --frames N --capture output.bmp --self-test --lifecycle-test\n"
+            std::cout<<"ProjectWhite --frames N --capture output.bmp --self-test --lifecycle-test --scene 0..4\n"
                 "Windows D3D12 GPU field validation; startup fails if required GPU features are absent.\n"; return 0;
         }
         if(arg=="--self-test") {self_test=true;continue;}
@@ -62,7 +64,7 @@ int main(int argc,char** argv) {
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
     int exit_code=0;
     try {
-        white::GpuSpike gpu; gpu.initialize();
+        white::GpuSpike gpu; gpu.initialize();gpu.validate_optics();
         if(self_test) {
             for(auto dims:{std::array<Uint32,3>{1,1,1},{17,19,23},{32,32,32}}) {
                 for(Uint32 fixture=0;fixture<2;++fixture) {gpu.create_field(dims,fixture);gpu.validate();}
@@ -78,6 +80,8 @@ int main(int argc,char** argv) {
         Ui ui;ui.init(gpu);
         float slice=0.5f;int axis=2,kind=preset+2;
         bool running=true,captured=false;
+        std::vector<float> baseline_hdr;
+        int convergence_frame=-1;
         for(int frame=0;running && (frames==0 || frame<frames);++frame) {
             if(lifecycle) {
                 if(frame==10) white::gpu_check(SDL_SetWindowSize(gpu.window,800,520),"Resize smaller");
@@ -108,6 +112,16 @@ int main(int argc,char** argv) {
             ImGui::Combo("Slice axis",&axis,"X (YZ)\0Y (XZ)\0Z (XY)\0");
             ImGui::SliderFloat("Position",&slice,0,1,"%.3f");
             ImGui::PopItemWidth();
+            ImGui::Checkbox("Lit volume",&gpu.show_volume);
+            if(gpu.show_volume) {
+                ImGui::PushItemWidth(135);
+                if(ImGui::SliderInt("View steps",&gpu.view_steps,8,256))gpu.volume_dirty=true;
+                if(ImGui::SliderInt("Shadow steps",&gpu.shadow_steps,1,32))gpu.volume_dirty=true;
+                if(ImGui::SliderInt("Internal width",&gpu.internal_width,64,320))gpu.volume_dirty=true;
+                if(ImGui::SliderFloat("Sun azimuth",&gpu.sun_angle,-180,180,"%.0f"))gpu.volume_dirty=true;
+                ImGui::SliderFloat("Exposure EV",&gpu.exposure_ev,-4,4,"%.1f");
+                ImGui::PopItemWidth();
+            }
             if(ImGui::Button("Regenerate and verify")) {gpu.create_field(gpu.extent,gpu.fixture);gpu.validate();}
             ImGui::Spacing();ImGui::Separator();
             ImGui::TextColored({0.4f,0.95f,0.7f,1},"Readback verified");
@@ -117,14 +131,15 @@ int main(int argc,char** argv) {
             ImGui::Text("Row pitch: %u bytes",((gpu.extent[0]+63)/64)*256);
             ImGui::TextWrapped("Coordinate: voxel centers\nSampling: linear / clamp");
             ImGui::Spacing();ImGui::Separator();
-            ImGui::TextWrapped("Shape constraints: ellipsoids, smooth union, flat base, subtractive cuts. This is a density slice; lighting comes next.");
+            ImGui::TextWrapped("Isotropic single scattering. Linear HDR, separate display exposure. No multiple scattering or atmosphere.");
             ImGui::TextWrapped("Hosted CI results do not establish RTX performance.");
             ImGui::End();
             ImGui::SetNextWindowPos({290,15},ImGuiCond_Always);
             ImGui::SetNextWindowSize({580,40},ImGuiCond_Always);
             ImGui::Begin("Slice label",nullptr,ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoBackground|ImGuiWindowFlags_NoInputs);
             const char* names[]={"XYZ RAMP","IMPULSE","TALL CELL","WIDE CELL","FUSED CELLS","FLAT BASE","ELLIPSOID CUT"};
-            ImGui::Text("%s / %s plane / %.3f",names[kind],axis==0?"YZ":axis==1?"XZ":"XY",slice);
+            if(gpu.show_volume&&kind>=2)ImGui::Text("%s / SINGLE SCATTERING / %d steps",names[kind],gpu.view_steps);
+            else ImGui::Text("%s / %s plane / %.3f",names[kind],axis==0?"YZ":axis==1?"XZ":"XY",slice);
             ImGui::End(); ImGui::Render();
             auto* cmd=SDL_AcquireGPUCommandBuffer(gpu.device);white::gpu_check(cmd != nullptr,"Acquire frame commands");
             SDL_GPUTexture* swap=nullptr;Uint32 w=0,h=0;
@@ -143,7 +158,20 @@ int main(int argc,char** argv) {
                 SDL_BlitGPUTexture(cmd,&blit);
             }
             white::gpu_check(SDL_SubmitGPUCommandBuffer(cmd),"Submit frame");
-            if(swap && !capture.empty() && !captured && frame>=60) {gpu.save_capture(capture);captured=true;std::cout<<"capture="<<capture<<" frame="<<frame<<'\n';}
+            if(swap && !capture.empty() && !captured && frame>=60) {
+                gpu.save_capture(capture);captured=true;std::cout<<"capture="<<capture<<" frame="<<frame<<'\n';
+                if(gpu.show_volume&&gpu.fixture==2) {
+                    baseline_hdr=gpu.read_hdr();
+                    if(self_test){gpu.view_steps*=2;gpu.volume_dirty=true;convergence_frame=frame;}
+                }
+            }
+            if(swap && convergence_frame>=0 && frame>convergence_frame) {
+                const auto finer=gpu.read_hdr();double sum=0,maximum=0;
+                for(size_t i=0;i<finer.size();++i){double error=std::abs(double(finer[i])-baseline_hdr[i]);sum+=error;maximum=std::max(maximum,error);}
+                std::cout<<"Step convergence 64->128 HDR+T max_abs_difference="<<maximum<<" mean_abs_difference="<<sum/finer.size()<<" (measured, not a proof of convergence)\n";
+                gpu.save_capture(std::filesystem::path(capture).parent_path()/"step-half.bmp");
+                gpu.view_steps/=2;gpu.volume_dirty=true;convergence_frame=-1;baseline_hdr.clear();
+            }
             SDL_Delay(16);
         }
         if(!capture.empty() && !captured) throw std::runtime_error("No valid frame was available for screenshot");
