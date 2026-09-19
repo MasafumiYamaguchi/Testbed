@@ -60,9 +60,12 @@ publishes it through the existing `EditorSession`, which owns its only Undo
 history. The separate headless `CumulonimbusDocument` is not instantiated by the
 application and is not synchronized with the Scene.
 
-Every public parameter has a target-only Reset. Width/height use the whole-cloud
-X/Y scale handles, and cloud base uses its Y translation handle. Gizmo matrix
-rounding below 0.0001 metres does not alter an untouched parameter. The Inspector
+Every public parameter has a target-only Reset. Width/height use explicit X/Y size handles at the nominal upper-right corner;
+cloud base uses its own Y translation handle. These use ImGuizmo translation
+so an exactly front-facing camera does not hit the scale picking-plane
+degeneracy. Local translation deltas update the original double parameters;
+absolute float matrices never overwrite an unrelated fractional height/base.
+Motion below 0.0001 metres does not alter an untouched size parameter. The Inspector
 accepts numeric width/height/base/density, full unsigned 64-bit seeds, and a growth
 orientation that is normalized once before the shared unit-direction command.
 Drag activation/deactivation groups the existing EditorSession transaction;

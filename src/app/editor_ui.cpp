@@ -289,21 +289,24 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(gizmo_active) {
         auto view=camera_view(current.camera),projection=camera_projection(current.camera,vw/vh),model=primitive_matrix(current.cloud.transform,selected_center,selected_radii);
         ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());ImGuizmo::SetRect(vx,vy,vw,vh);ImGuizmo::SetOrthographic(false);
-        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),whole?(scale_?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Y):ImGuizmo::TRANSLATE_Y):(scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE),ImGuizmo::LOCAL,model.data());
+        Matrix4 handle_delta{};
+        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),whole?(scale_?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Y):ImGuizmo::TRANSLATE_Y):(scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE),ImGuizmo::LOCAL,model.data(),handle_delta.data());
         const bool using_now=ImGuizmo::IsUsing();
         if(using_now&&!gizmo_drag_){session.begin_drag();gizmo_drag_=true;}
         if(manipulated) {
             primitive_from_matrix(current.cloud.transform,model,selected_center,selected_radii);
             if(whole) {
                 try {
+                    const auto local_delta=world_to_local(current.cloud.transform,{handle_delta[12],handle_delta[13],handle_delta[14]})-world_to_local(current.cloud.transform,{0,0,0});
                     if(scale_) {
-                        const double width=selected_center.x*2,height=selected_center.y-current.cumulonimbus->parameters.cloud_base;
+                        const double width=current.cumulonimbus->parameters.width+2*local_delta.x,height=current.cumulonimbus->parameters.height+local_delta.y;
                         if(std::abs(width-current.cumulonimbus->parameters.width)>1e-4)
                             current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::width,width});
                         if(std::abs(height-current.cumulonimbus->parameters.height)>1e-4)
                             current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::height,height});
                     }else {
-                        current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::cloud_base,selected_center.y});
+                        const double base=current.cumulonimbus->parameters.cloud_base+local_delta.y;
+                        current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::cloud_base,base});
                     }
                     apply(std::move(current));
                 }catch(const std::exception& e){status_=e.what();}
