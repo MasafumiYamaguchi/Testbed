@@ -1,8 +1,9 @@
 #include "density.hlsli"
 RWTexture3D<float> field : register(u0, space1);
-cbuffer Params : register(b0, space2) { uint3 extent; uint fixture; };
+cbuffer Params : register(b0, space2) { uint3 extent; uint fixture; uint zStart;uint3 unused; };
 [numthreads(4,4,4)]
 void main(uint3 p : SV_DispatchThreadID) {
+    p.z+=zStart;
     if (any(p >= extent)) return;
     float ramp = (float(p.x) + 2.0 * float(p.y) + 4.0 * float(p.z)) / 256.0;
     if(fixture==0)field[p]=ramp;

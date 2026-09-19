@@ -1,7 +1,7 @@
 # ProjectWhite
 
 An original art-directable cloud creation tool. Implementation follows [the roadmap](https://github.com/MasafumiYamaguchi/Testbed/issues/2).
-Current milestone: Phase 0 cloud editing and noise (#3–#10). The Windows application previews
+Current milestone: Phase 0 cloud editing, noise and dense cache (#3–#11). The Windows application previews
 ellipsoid density with single scattering and provides primitive picking, Move/
 Scale gizmos, numeric inspection, a flat base, cuts, camera orbit, Undo/Redo and
 JSON Save/Open. Medium density modulation, micro edge erosion and bounded structural warp are
@@ -24,7 +24,7 @@ ctest --preset windows-debug
 .\build\windows\Debug\white_app.exe
 cmake --build --preset windows-release --parallel
 ctest --preset windows-release
-.\build\windows\Release\white_app.exe --self-test --lifecycle-test --frames 600 --capture evidence.bmp
+.\build\windows\Release\white_app.exe --self-test --lifecycle-test --frames 720 --capture evidence.bmp
 ```
 
 `SDL3.dll` is copied beside the executable. Keep it there. A clean checkout is

@@ -5,6 +5,7 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlgpu3.h>
 #include <charconv>
+#include <chrono>
 #include <iostream>
 #include <string_view>
 #include <cmath>
@@ -62,7 +63,7 @@ int main(int argc,char** argv) {
         }
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
-    if(self_test&&frames>0&&frames<520){std::cerr<<"--self-test requires --frames >= 520 to finish UI checks\n";return 2;}
+    if(self_test&&frames>0&&frames<620){std::cerr<<"--self-test requires --frames >= 620 to finish UI checks\n";return 2;}
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
     int exit_code=0;
     try {
@@ -97,16 +98,24 @@ int main(int argc,char** argv) {
                 if(e.type==SDL_EVENT_QUIT || e.type==SDL_EVENT_WINDOW_CLOSE_REQUESTED) running=false;
             }
             if(SDL_GetWindowFlags(gpu.window)&SDL_WINDOW_MINIMIZED) {SDL_Delay(16);continue;}
-            if(self_test&&frame>=180&&frame<=500&&(frame-180)%20==0) {
+            if(self_test&&frame>=180&&frame<=600&&(frame-180)%20==0) {
                 if(frame==400){gpu.internal_width=96;gpu.view_steps=32;gpu.shadow_steps=4;gpu.volume_dirty=true;}
-                editor.scripted_edit((frame-180)/20);
+                const int step=(frame-180)/20;
+                if(step==18){gpu.set_cache_resolution(128);gpu.use_cache=true;gpu.volume_dirty=true;}
+                if(step==19){gpu.set_cache_resolution(256);gpu.volume_dirty=true;}
+                if(step==20){const auto count=gpu.bake_count;auto scene=editor.session.document().scene();scene.camera.position.x+=5;editor.session.apply(scene);gpu.set_scene(scene,editor.session.document().revision());if(gpu.bake_count!=count)throw std::runtime_error("Camera-only change rebaked density");std::cout<<"camera_only_bake_count_unchanged PASS\n";}
+                if(step==21){const auto scene=editor.session.document().scene();const auto count=gpu.bake_count;bool rejected=false;try{gpu.create_field({512,512,512},2);}catch(const std::invalid_argument&){rejected=true;}if(!rejected||scene!=editor.session.document().scene()||count!=gpu.bake_count)throw std::runtime_error("Capacity rejection lost document/cache");std::cout<<"overbudget_document_and_cache_preserved PASS\n";}
+                editor.scripted_edit(step);
             }
             ImGui_ImplSDLGPU3_NewFrame(); ImGui_ImplSDL3_NewFrame();
             if(self_test)editor.scripted_input(frame);
             ImGui::NewFrame();
             editor.draw(gpu);
+            if(self_test&&gpu.scene_revision!=editor.session.document().revision())throw std::runtime_error("Self-test preview revision is stale");
             if(self_test)editor.verify_scripted_input(frame);
             ImGui::Render();
+            const bool hdr_work=gpu.volume_dirty&&gpu.show_volume;
+            const auto record_start=std::chrono::steady_clock::now();
             auto* cmd=SDL_AcquireGPUCommandBuffer(gpu.device);white::gpu_check(cmd != nullptr,"Acquire frame commands");
             SDL_GPUTexture* swap=nullptr;Uint32 w=0,h=0;
             if(!SDL_WaitAndAcquireGPUSwapchainTexture(cmd,gpu.window,&swap,&w,&h)) {
@@ -123,7 +132,11 @@ int main(int argc,char** argv) {
                 blit.load_op=SDL_GPU_LOADOP_DONT_CARE;blit.filter=SDL_GPU_FILTER_NEAREST;
                 SDL_BlitGPUTexture(cmd,&blit);
             }
-            white::gpu_check(SDL_SubmitGPUCommandBuffer(cmd),"Submit frame");
+            if(self_test) {
+                const auto recorded=std::chrono::steady_clock::now();auto* fence=SDL_SubmitGPUCommandBufferAndAcquireFence(cmd);white::gpu_check(fence!=nullptr,"Submit timed frame");
+                const bool waited=SDL_WaitForGPUFences(gpu.device,true,&fence,1);SDL_ReleaseGPUFence(gpu.device,fence);white::gpu_check(waited,"Wait timed frame");
+                if(hdr_work)std::cout<<"frame_revision="<<gpu.scene_revision<<" mode="<<(gpu.use_cache?"cache":"direct")<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(recorded-record_start).count()<<" submit_to_fence_wall_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-recorded).count()<<" gpu_timestamp_ms=unavailable\n";
+            }else white::gpu_check(SDL_SubmitGPUCommandBuffer(cmd),"Submit frame");
             if(swap && !capture.empty() && !captured && frame>=60) {
                 gpu.save_capture(capture);captured=true;std::cout<<"capture="<<capture<<" frame="<<frame<<'\n';
                 if(gpu.show_volume&&gpu.fixture==2) {
@@ -139,8 +152,8 @@ int main(int argc,char** argv) {
                 gpu.view_steps/=2;gpu.volume_dirty=true;convergence_frame=-1;baseline_hdr.clear();
             }
             if(self_test&&swap&&(frame==116||frame==156))gpu.save_capture(std::filesystem::path(capture).parent_path()/(frame==116?"gizmo-move.bmp":"gizmo-scale.bmp"));
-            if(self_test&&swap&&frame>=190&&frame<=510&&(frame-190)%20==0) {
-                gpu.validate();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("editor-step-"+std::to_string((frame-190)/20)+".bmp"));
+            if(self_test&&swap&&frame>=190&&frame<=610&&(frame-190)%20==0) {
+                gpu.validate();if(gpu.use_cache)gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("editor-step-"+std::to_string((frame-190)/20)+".bmp"));
             }
             SDL_Delay(16);
         }
