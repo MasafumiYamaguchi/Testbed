@@ -34,6 +34,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure
+        run: ./scripts/fetch-dxc.ps1
+      - name: Configure CMake
         run: cmake --preset windows
       - name: Build
         run: cmake --build build/windows --config ${{ matrix.config }} --parallel 4
@@ -45,7 +47,10 @@ jobs:
         run: |
           Copy-Item LICENSE,THIRD_PARTY.md evidence/
           Copy-Item build/windows/_deps/sdl3-src/LICENSE.txt evidence/SDL-LICENSE.txt
-          "commit=${{ github.sha }}`nconfiguration=${{ matrix.config }}`nrunner=windows-2022`nGPU=not-validated" | Out-File evidence/build-info.txt
+          Copy-Item build/windows/_deps/imgui-src/LICENSE.txt evidence/IMGUI-LICENSE.txt
+          Get-ChildItem tools/dxc -Filter '*LICENSE*' | Copy-Item -Destination evidence/
+          Get-CimInstance Win32_VideoController | Select-Object Name,DriverVersion,AdapterRAM | Format-List | Out-File evidence/adapters.txt
+          "commit=${{ github.sha }}`nconfiguration=${{ matrix.config }}`nrunner=windows-2022`nbackend=D3D12`nRTX-performance=not-validated" | Out-File evidence/build-info.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -54,4 +59,5 @@ jobs:
             evidence/
             build/windows/${{ matrix.config }}/white_app.exe
             build/windows/${{ matrix.config }}/SDL3.dll
+            build/windows/${{ matrix.config }}/shaders/
             build/windows/Testing/Temporary/
