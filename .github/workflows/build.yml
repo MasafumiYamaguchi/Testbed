@@ -1,0 +1,57 @@
+name: Native build and evidence
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cpu:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        config: [debug, release]
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset cpu-${{ matrix.config }}
+      - run: cmake --build --preset cpu-${{ matrix.config }} --parallel 2
+      - run: ctest --preset cpu-${{ matrix.config }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cpu-${{ matrix.config }}-logs
+          path: build/cpu-${{ matrix.config }}/Testing/Temporary/
+  windows:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake --preset windows
+      - name: Build
+        run: cmake --build build/windows --config ${{ matrix.config }} --parallel 4
+      - name: CPU and command-line tests
+        run: ctest --test-dir build/windows -C ${{ matrix.config }} --output-on-failure
+      - name: Capture actual Windows app
+        run: ./scripts/capture-window.ps1 -Executable ./build/windows/${{ matrix.config }}/white_app.exe
+      - name: Dependency notices
+        run: |
+          Copy-Item LICENSE,THIRD_PARTY.md evidence/
+          Copy-Item build/windows/_deps/sdl3-src/LICENSE.txt evidence/SDL-LICENSE.txt
+          "commit=${{ github.sha }}`nconfiguration=${{ matrix.config }}`nrunner=windows-2022`nGPU=not-validated" | Out-File evidence/build-info.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-${{ matrix.config }}-evidence
+          path: |
+            evidence/
+            build/windows/${{ matrix.config }}/white_app.exe
+            build/windows/${{ matrix.config }}/SDL3.dll
+            build/windows/Testing/Temporary/

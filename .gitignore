@@ -1,0 +1,4 @@
+/build/
+/evidence/
+CMakeUserPresets.json
+*.user
