@@ -39,12 +39,25 @@ void draw_primitive(const Scene& scene,Vec3 center,Vec3 radii,bool selected,bool
 }
 }
 void EditorUi::apply(Scene scene) {
-    try{session.apply(std::move(scene));status_="Edited";}catch(const std::exception& e){status_=e.what();}
+    try {
+        const auto& before=session.document().scene();
+        if(scene.cumulonimbus) {
+            if(before.cumulonimbus&&scene.cumulonimbus==before.cumulonimbus&&scene.cloud!=before.cloud)
+                scene.cumulonimbus=edit_cumulonimbus_recipe(*before.cumulonimbus,scene.cloud);
+            scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);
+        }
+        session.apply(std::move(scene));status_="Edited";
+    }catch(const std::exception& e){status_=e.what();}
 }
 void EditorUi::inspector_item(bool changed,Scene scene,bool affects_transport) {
     if(ImGui::IsItemActivated()&&!inspector_drag_){session.begin_drag();inspector_drag_=true;inspector_transport_=affects_transport;}
     if(changed)apply(std::move(scene));
     if(ImGui::IsItemDeactivated()&&inspector_drag_){session.end_drag();inspector_drag_=false;}
+}
+void EditorUi::prefab_item(bool changed,const CumulonimbusCommand& command) {
+    auto scene=session.document().scene();
+    if(changed)try{scene=scene_with_cumulonimbus_command(std::move(scene),command);}catch(const std::exception& e){status_=e.what();changed=false;}
+    inspector_item(changed,std::move(scene));
 }
 void EditorUi::camera_preset(int direction) {
     auto s=session.document().scene();const auto target=s.camera.target;
@@ -63,7 +76,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(!io.WantTextInput&&io.KeyCtrl&&ImGui::IsKeyPressed(ImGuiKey_Y))session.redo();
     ImGui::SetNextWindowPos({15,15},ImGuiCond_Always);ImGui::SetNextWindowSize({260,io.DisplaySize.y-30},ImGuiCond_Always);
     ImGui::Begin("Cloud editor",nullptr,ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoCollapse);
-    ImGui::Text("PROJECT WHITE / PHASE 1");ImGui::TextUnformatted(session.modified()?"Unsaved changes":"Saved");
+    ImGui::Text("PROJECT WHITE / PHASE 2");ImGui::TextUnformatted(session.modified()?"Unsaved changes":"Saved");
     const bool dragging=gizmo_drag_||inspector_drag_||orbit_drag_;
     ImGui::BeginDisabled(dragging);
     if(ImGui::Button("Undo"))session.undo();
@@ -84,6 +97,50 @@ void EditorUi::draw(GpuSpike& gpu) {
         }
         ImGui::SameLine();if(ImGui::Button("Cancel"))ImGui::CloseCurrentPopup();ImGui::EndPopup();
     }
+    if(ImGui::Button("New Cumulonimbus")) {
+        try{session.apply(new_cumulonimbus_scene(session.document().scene()));prefab_group_=true;select_cuts_=false;status_="Cumulonimbus created; Undo restores the previous cloud";}catch(const std::exception& e){status_=e.what();}
+    }
+    if(session.document().scene().cumulonimbus) {
+        if(ImGui::Button("Convert to Custom Cloud")){apply(custom_cloud_scene(session.document().scene()));prefab_group_=false;}
+    }
+    ImGui::EndDisabled();
+    if(session.document().scene().cumulonimbus) {
+        ImGui::SetNextItemOpen(true,ImGuiCond_Once);
+        if(ImGui::CollapsingHeader("Cumulonimbus")) {
+            ImGui::Checkbox("Edit whole cloud",&prefab_group_);
+            ImGui::PushItemWidth(110);
+            for(const auto parameter:{CumulonimbusParameter::width,CumulonimbusParameter::height,CumulonimbusParameter::cloud_base,CumulonimbusParameter::density}) {
+                auto value=std::get<double>(cumulonimbus_value(session.document().scene().cumulonimbus->parameters,parameter));
+                const char* label=parameter==CumulonimbusParameter::width?"Width m":parameter==CumulonimbusParameter::height?"Height m":parameter==CumulonimbusParameter::cloud_base?"Cloud base m":"Density scale";
+                const bool changed=ImGui::InputDouble(label,&value,0,0,"%.2f");prefab_item(changed,{parameter,value});
+                ImGui::SameLine();ImGui::PushID(int(parameter));
+                ImGui::BeginDisabled(gizmo_drag_||inspector_drag_||orbit_drag_);
+                if(ImGui::SmallButton("Reset"))try{apply(scene_with_cumulonimbus_command(session.document().scene(),{parameter,cumulonimbus_value(CumulonimbusParameters{},parameter)}));}catch(const std::exception& e){status_=e.what();}
+                ImGui::EndDisabled();ImGui::PopID();
+            }
+            auto direction=session.document().scene().cumulonimbus->parameters.growth_direction;
+            ImGui::SetNextItemWidth(-1);bool changed=ImGui::InputScalarN("##Growth",ImGuiDataType_Double,&direction.x,3,nullptr,nullptr,"%.3f");
+            // A direction edit specifies orientation. Normalize once before the common command.
+            const double length=std::sqrt(dot(direction,direction));
+            if(changed&&length>0)direction=direction*(1/length);
+            prefab_item(changed,{CumulonimbusParameter::growth_direction,direction});
+            ImGui::TextUnformatted("Growth: unit direction, y >= 0.2");
+            ImGui::BeginDisabled(gizmo_drag_||inspector_drag_||orbit_drag_);
+            if(ImGui::SmallButton("Reset growth"))apply(scene_with_cumulonimbus_command(session.document().scene(),{CumulonimbusParameter::growth_direction,CumulonimbusParameters{}.growth_direction}));
+            ImGui::EndDisabled();
+            for(const auto parameter:{CumulonimbusParameter::structure_seed,CumulonimbusParameter::detail_seed}) {
+                auto value=std::get<std::uint64_t>(cumulonimbus_value(session.document().scene().cumulonimbus->parameters,parameter));
+                changed=ImGui::InputScalar(parameter==CumulonimbusParameter::structure_seed?"Structure seed":"Detail seed",ImGuiDataType_U64,&value);
+                prefab_item(changed,{parameter,value});
+                ImGui::SameLine();ImGui::PushID(int(parameter));ImGui::BeginDisabled(gizmo_drag_||inspector_drag_||orbit_drag_);
+                if(ImGui::SmallButton("Reset"))apply(scene_with_cumulonimbus_command(session.document().scene(),{parameter,cumulonimbus_value(CumulonimbusParameters{},parameter)}));
+                ImGui::EndDisabled();ImGui::PopID();
+            }
+            ImGui::TextWrapped("Width 10..2000 m; height 10..4000 m; base -100000..100000 m; density 0..1000. Seeds: unsigned 64-bit.");
+            ImGui::PopItemWidth();
+        }
+    }
+    ImGui::BeginDisabled(dragging);
     ImGui::Separator();ImGui::Checkbox("Select cuts",&select_cuts_);
     if(ImGui::Button("Add cell"))try{selected_=session.add_cell();select_cuts_=false;}catch(const std::exception& e){status_=e.what();}
     ImGui::SameLine();if(ImGui::Button("Add cut")) try {
@@ -97,8 +154,8 @@ void EditorUi::draw(GpuSpike& gpu) {
     }
     ImGui::EndDisabled();
     const auto& scene=session.document().scene();
-    if(select_cuts_){for(const auto& cut:scene.cloud.cuts){auto label="Cut "+std::to_string(cut.id);if(ImGui::Selectable(label.c_str(),selected_==cut.id))selected_=cut.id;}}
-    else {for(const auto& cell:scene.cloud.cells){auto label="Cell "+std::to_string(cell.id);if(ImGui::Selectable(label.c_str(),selected_==cell.id))selected_=cell.id;}}
+    if(select_cuts_){for(const auto& cut:scene.cloud.cuts){auto label="Cut "+std::to_string(cut.id);if(ImGui::Selectable(label.c_str(),(!scene.cumulonimbus||!prefab_group_)&&selected_==cut.id)){selected_=cut.id;prefab_group_=false;}}}
+    else {for(const auto& cell:scene.cloud.cells){auto label="Cell "+std::to_string(cell.id);if(ImGui::Selectable(label.c_str(),(!scene.cumulonimbus||!prefab_group_)&&selected_==cell.id)){selected_=cell.id;prefab_group_=false;}}}
     if(ImGui::RadioButton("Move",!scale_))scale_=false;
     ImGui::SameLine();if(ImGui::RadioButton("Scale",scale_))scale_=true;
     ImGui::Separator();
@@ -221,6 +278,8 @@ void EditorUi::draw(GpuSpike& gpu) {
     auto current=session.document().scene();Vec3 selected_center{},selected_radii{};bool selected=false;
     if(select_cuts_){for(auto& c:current.cloud.cuts)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
     else {for(auto& c:current.cloud.cells)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
+    const bool whole=current.cumulonimbus&&prefab_group_;
+    if(whole){const auto& p=current.cumulonimbus->parameters;selected_center={0,p.cloud_base+p.height*0.5,0};selected_radii={p.width*0.5,p.height*0.5,p.width*0.5};selected=true;}
     if(gpu.show_volume){
         for(const auto& c:current.cloud.cells)draw_primitive(current,c.center,c.radii,!select_cuts_&&selected_==c.id,false,vx,vy,vw,vh);
         for(const auto& c:current.cloud.cuts)draw_primitive(current,c.center,c.radii,select_cuts_&&selected_==c.id,true,vx,vy,vw,vh);
@@ -230,14 +289,29 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(gizmo_active) {
         auto view=camera_view(current.camera),projection=camera_projection(current.camera,vw/vh),model=primitive_matrix(current.cloud.transform,selected_center,selected_radii);
         ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());ImGuizmo::SetRect(vx,vy,vw,vh);ImGuizmo::SetOrthographic(false);
-        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE,ImGuizmo::LOCAL,model.data());
+        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),whole?(scale_?ImGuizmo::OPERATION(ImGuizmo::SCALE_X|ImGuizmo::SCALE_Y):ImGuizmo::TRANSLATE_Y):(scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE),ImGuizmo::LOCAL,model.data());
         const bool using_now=ImGuizmo::IsUsing();
         if(using_now&&!gizmo_drag_){session.begin_drag();gizmo_drag_=true;}
         if(manipulated) {
             primitive_from_matrix(current.cloud.transform,model,selected_center,selected_radii);
-            if(select_cuts_){for(auto& c:current.cloud.cuts)if(c.id==selected_){c.center=selected_center;c.radii=selected_radii;}}
-            else {for(auto& c:current.cloud.cells)if(c.id==selected_){c.center=selected_center;c.radii=selected_radii;}}
-            apply(std::move(current));
+            if(whole) {
+                try {
+                    if(scale_) {
+                        if(std::abs(selected_radii.x*2-current.cumulonimbus->parameters.width)>1e-4)
+                            current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::width,selected_radii.x*2});
+                        if(std::abs(selected_radii.y*2-current.cumulonimbus->parameters.height)>1e-4)
+                            current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::height,selected_radii.y*2});
+                    }else {
+                        const double base=selected_center.y-current.cumulonimbus->parameters.height*0.5;
+                        current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::cloud_base,base});
+                    }
+                    apply(std::move(current));
+                }catch(const std::exception& e){status_=e.what();}
+            }else {
+                if(select_cuts_){for(auto& c:current.cloud.cuts)if(c.id==selected_){c.center=selected_center;c.radii=selected_radii;}}
+                else {for(auto& c:current.cloud.cells)if(c.id==selected_){c.center=selected_center;c.radii=selected_radii;}}
+                apply(std::move(current));
+            }
         }
         if(!using_now&&gizmo_drag_){session.end_drag();gizmo_drag_=false;}
     }
@@ -245,7 +319,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(over&&!modal&&!(gizmo_active&&ImGuizmo::IsOver())&&!gizmo_drag_&&!inspector_drag_) {
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume) {
             const auto& sc=session.document().scene();auto ray=camera_ray(sc.camera,(io.MousePos.x-vx)/vw,(io.MousePos.y-vy)/vh,vw/vh);
-            if(auto pick=pick_primitive(sc.cloud,ray,select_cuts_))selected_=*pick;
+            if(auto pick=pick_primitive(sc.cloud,ray,select_cuts_)){selected_=*pick;prefab_group_=false;}
         }
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Right)){session.begin_drag();orbit_drag_=true;}
         if(io.MouseWheel!=0&&!orbit_drag_) {
@@ -336,5 +410,62 @@ void EditorUi::scripted_edit(int step) {
     }
     if(step==17){auto compare=fixture_scene(4);compare.cloud.noise.medium_strength=0.8;compare.cloud.noise.micro_erosion=8;compare.cloud.noise.warp_amplitude=8;compare.cloud.noise.micro_frequency=0.15;session.apply(compare);}
     std::cout<<"editor_smoke_step="<<step<<" revision="<<session.document().revision()<<" PASS\n";
+}
+
+void EditorUi::start_prefab_test() {
+    auto scene=new_cumulonimbus_scene(session.document().scene());
+    scene.camera.position={0,60,250};scene.camera.target={0,60,0};
+    // Existing local edits must survive public width/height manipulation.
+    scene.cumulonimbus->cell_adjustments.push_back({scene.cumulonimbus->cell_ids[4],{2,1,-3},{1.1,0.9,1},91});
+    scene.cumulonimbus->modifiers.cuts.push_back({100,{15,45,10},{7,12,9},2});
+    scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);session.apply(scene);
+    prefab_group_=true;select_cuts_=false;scale_=true;smoke_original_=scene;
+}
+void EditorUi::prefab_test_input(int frame) {
+    auto& io=ImGui::GetIO();
+    if(frame==90||frame==135||frame==175) {
+        smoke_before_=session.document().scene();prefab_group_=true;scale_=frame!=175;
+        const auto& p=smoke_before_.cumulonimbus->parameters;
+        const auto center=local_to_world(smoke_before_.cloud.transform,{0,p.cloud_base+p.height*.5,0});
+        const auto& c=smoke_before_.camera;
+        const double pixels=(io.DisplaySize.y-90)/(2*(c.position.z-center.z)*std::tan(c.vertical_fov_degrees*3.141592653589793/360));
+        smoke_x_=290+(io.DisplaySize.x-310)*.5f+float((center.x-c.target.x)*pixels);
+        smoke_y_=60+(io.DisplaySize.y-90)*.5f-float((center.y-c.target.y)*pixels);
+        if(frame==135)smoke_x_+=18;else smoke_y_-=18;
+    }
+    for(int start:{100,140,180})if(frame>=start-5&&frame<=start+16) {
+        const float distance=float(std::clamp(frame-start,0,14))*2;
+        io.AddFocusEvent(true);io.AddMousePosEvent(smoke_x_+(start==140?distance:0),smoke_y_-(start==140?0:distance));
+        if(frame==start)io.AddMouseButtonEvent(0,true);
+        if(frame==start+15)io.AddMouseButtonEvent(0,false);
+    }
+    if(frame==215) {
+        const auto before=session.document().scene();
+        auto changed=before;changed.cloud.cells[0].center.x+=3;apply(changed);
+        const auto adjusted=session.document().scene();
+        if(adjusted.cloud.cells[0].center.x!=before.cloud.cells[0].center.x+3)throw std::runtime_error("Prefab local edit adapter did not preserve the requested position");
+        auto taller=scene_with_cumulonimbus_command(adjusted,{CumulonimbusParameter::height,adjusted.cumulonimbus->parameters.height+20});
+        session.apply(taller);
+        if(taller.cumulonimbus->cell_adjustments!=adjusted.cumulonimbus->cell_adjustments||taller.cumulonimbus->modifiers!=adjusted.cumulonimbus->modifiers||taller.cumulonimbus->cell_ids!=before.cumulonimbus->cell_ids)
+            throw std::runtime_error("Prefab parameter update lost local edits, IDs or modifiers");
+        session.save("prefab-smoke.white.json");session.load("prefab-smoke.white.json");
+        if(session.document().scene()!=taller)throw std::runtime_error("Prefab source save/reload mismatch");
+        const auto custom=custom_cloud_scene(taller);session.apply(custom);
+        if(custom.cloud!=taller.cloud||custom.cumulonimbus||!session.undo()||session.document().scene()!=taller)
+            throw std::runtime_error("Explicit Custom conversion or Undo failed");
+        std::cout<<"prefab_source_preservation=true source_only_save_reload=true conversion_undo=true PASS\n";
+    }
+}
+void EditorUi::verify_prefab_test(int frame) {
+    if(frame!=120&&frame!=160&&frame!=200)return;
+    const auto edited=session.document().scene();
+    const auto parameter=frame==120?CumulonimbusParameter::height:frame==160?CumulonimbusParameter::width:CumulonimbusParameter::cloud_base;
+    const double old=std::get<double>(cumulonimbus_value(smoke_before_.cumulonimbus->parameters,parameter));
+    const double actual=std::get<double>(cumulonimbus_value(edited.cumulonimbus->parameters,parameter));
+    const auto commanded=scene_with_cumulonimbus_command(smoke_before_,{parameter,actual});
+    if(!(actual>old+.1)||edited!=commanded||gizmo_drag_)throw std::runtime_error("Prefab ImGuizmo edit differs from the same typed parameter command");
+    if(!session.undo()||session.document().scene()!=smoke_before_||!session.redo()||session.document().scene()!=edited)
+        throw std::runtime_error("Prefab gizmo drag must Undo/Redo in one existing EditorSession command");
+    std::cout<<"prefab_gizmo="<<(frame==120?"height":frame==160?"width":"cloud_base")<<" before="<<old<<" after="<<actual<<" command_equal=true single_undo=true redo=true PASS\n";
 }
 }

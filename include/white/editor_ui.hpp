@@ -1,6 +1,7 @@
 #pragma once
 #include "white/gpu_spike.hpp"
 #include "white/persistence.hpp"
+#include "white/cumulonimbus.hpp"
 namespace white {
 class EditorUi {
 public:
@@ -12,8 +13,12 @@ public:
     void scripted_edit(int step);
     void scripted_input(int frame);
     void verify_scripted_input(int frame);
+    void start_prefab_test();
+    void prefab_test_input(int frame);
+    void verify_prefab_test(int frame);
     const std::string& status() const{return status_;}
 private:
+    bool prefab_group_=true;
     bool focus_noise_=false;
     std::uint64_t last_scene_attempt_=0;
     Scene smoke_original_{},smoke_before_{};
@@ -26,5 +31,6 @@ private:
     void apply(Scene);
     void inspector_item(bool changed,Scene,bool affects_transport=true);
     void camera_preset(int direction);
+    void prefab_item(bool,const CumulonimbusCommand&);
 };
 }

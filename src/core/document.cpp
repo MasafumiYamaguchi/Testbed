@@ -1,4 +1,5 @@
 #include "white/document.hpp"
+#include "white/cumulonimbus.hpp"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -71,9 +72,15 @@ Dirty classify_change(const Scene& a,const Scene& b) {
 std::vector<std::string> validate(const Scene& s) {
     std::vector<std::string> errors;
     auto check=[&](bool ok,const std::string& text){if(!ok)errors.push_back(text);};
-    check(s.schema_version==4,"Unsupported scene schema_version");
+    check(s.schema_version==5,"Unsupported scene schema_version");
     check(std::isfinite(s.preview_approx.strength)&&s.preview_approx.strength>=0&&s.preview_approx.strength<=1,"Preview approximation strength outside 0..1");
     check(s.algorithm_version==2,"Unsupported scene algorithm_version");
+    if(s.cumulonimbus) {
+        const auto source_errors=validate_cumulonimbus(*s.cumulonimbus);
+        for(const auto& error:source_errors)errors.push_back("Cumulonimbus source: "+error);
+        if(source_errors.empty())check(s.cloud==derive_cumulonimbus_recipe(*s.cumulonimbus),
+            "Cumulonimbus derived Recipe differs from authoritative source");
+    }
     const auto& c=s.cloud;
     check(c.id!=0,"Cloud ID must be nonzero");
     check(valid_transform(c.transform),"Cloud transform requires finite translation, positive scale and unit quaternion");

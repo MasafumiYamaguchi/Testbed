@@ -1,0 +1,226 @@
+{
+  "A": "transmittance T; NOT opacity; do not alpha composite RGB",
+  "RGB": "L_scatter + T * background; already composited",
+  "actual_density_extent": [
+    32,
+    32,
+    32
+  ],
+  "background_linear": [
+    0.015,
+    0.022,
+    0.035
+  ],
+  "cached_density": true,
+  "commit": "09395c6b3410f7be88f5d90ddcdd365929951ffb",
+  "diagnostic_display_scale": 1.0,
+  "diagnostic_mode": 0,
+  "diagnostic_name": "radiance",
+  "display_transform": "exposure 2^EV -> Reinhard x/(1+x) -> sRGB",
+  "empty_space_skipping": false,
+  "format_version": 1,
+  "frame": "256",
+  "height": 9,
+  "jitter": "pixel footprint; no ray-step jitter",
+  "jitter_seed": "4294967313",
+  "reference": {
+    "all_attempted_paths_complete": true,
+    "attempted_paths": 36864,
+    "background": "primary camera transmittance times fixed RGB only; no background illumination or secondary escape radiance",
+    "bounce_limited_paths": 0,
+    "collision_events": 2640,
+    "complete": true,
+    "complete_paths": 36864,
+    "completed_sample_planes": 256,
+    "density_bake_probe_comparison": {
+      "count": 729,
+      "maximum_absolute": 0.2744458056117613,
+      "meaning": "procedural recipe vs frozen trilinear grid at fixed 9x9x9 interior probes; not a global bound or radiance error",
+      "rms": 0.031729326822698745
+    },
+    "error_categories": {
+      "bake": "finite frozen density grid; not measured by MC standard error",
+      "monte_carlo": "reported variance of each pixel sample mean; no denoising or adaptive sampling",
+      "numerical": "double integration/random walks over R32F density; compare deterministic quadrature independently",
+      "optical_model": "grey scalar extinction/albedo, RGB sun, HG, no background medium illumination"
+    },
+    "event_limit_per_tracking_call": 100000,
+    "event_limited_paths": 0,
+    "grid_extent": [
+      32,
+      32,
+      32
+    ],
+    "grid_values_and_layout_fnv1a64": "ac585b4f179584c8",
+    "integrator": "CPU delta tracking + directional sun NEE + independent ratio tracking",
+    "integrator_version": 1,
+    "maximum_bounces": 64,
+    "mean_pixel_estimator_variance": 0.00022240828085192158,
+    "mean_radiance": 0.0739298382064532,
+    "medium": "immutable R32F voxel centers, trilinear clamp, original hard base/cut/envelope constraints",
+    "mode": "multiple scattering",
+    "numerical_failures": 0,
+    "pixel_jitter": true,
+    "random_streams": {
+      "delta": 20,
+      "phase": 50,
+      "pixel": 0,
+      "primary_transmittance": 10,
+      "roulette": 40,
+      "sun_ratio": 30
+    },
+    "ray_extent": "primary camera near/far clipping only; sun visibility and secondary transport extend to the frozen medium boundary",
+    "requested_sample_budget_complete": true,
+    "requested_samples_per_pixel": 256,
+    "roulette": "after configured bounce: survival clamp(beta, 0.05, 0.95), survivor beta /= survival",
+    "roulette_start": 3,
+    "roulette_terminations": 50,
+    "seed": "4294967313",
+    "status": "complete bounded reference",
+    "sun": "one directional delta light, exclusively next-event estimation; phase-sampled sun hit contributes zero",
+    "throughput": "sigma_s/sigma_t=albedo each real extinction event, HG/pdf, roulette survival division",
+    "tracking_event_counter_scope": "candidate events from successfully completed tracking calls; a throwing call's consumed work is not included",
+    "tracking_events": 25756
+  },
+  "revision": "0",
+  "row_order": "top to bottom",
+  "samples_per_pixel": 256,
+  "scene": {
+    "algorithm_version": 2,
+    "camera": {
+      "far_plane": 10000.0,
+      "near_plane": 0.1,
+      "position": [
+        120.0,
+        70.0,
+        120.0
+      ],
+      "target": [
+        0.0,
+        35.0,
+        0.0
+      ],
+      "up": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "vertical_fov_degrees": 45.0
+    },
+    "cloud": {
+      "base": {
+        "enabled": false,
+        "height": 0.0,
+        "transition": 2.0
+      },
+      "blend_width": 12.0,
+      "cells": [
+        {
+          "center": [
+            -12.0,
+            35.0,
+            0.0
+          ],
+          "id": "2",
+          "radii": [
+            18.0,
+            48.0,
+            18.0
+          ],
+          "structure_seed": "0"
+        },
+        {
+          "center": [
+            15.0,
+            30.0,
+            0.0
+          ],
+          "id": "3",
+          "radii": [
+            25.0,
+            36.0,
+            22.0
+          ],
+          "structure_seed": "7"
+        }
+      ],
+      "cuts": [],
+      "density": 1.0,
+      "detail_seed": "17",
+      "envelope": {
+        "max": [
+          50.0,
+          100.0,
+          50.0
+        ],
+        "min": [
+          -50.0,
+          -20.0,
+          -50.0
+        ]
+      },
+      "id": "1",
+      "noise": {
+        "medium_frequency": 0.12,
+        "medium_strength": 0.0,
+        "micro_erosion": 0.0,
+        "micro_frequency": 0.6,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "warp_amplitude": 0.0,
+        "warp_frequency": 0.035
+      },
+      "optics": {
+        "albedo": 0.9,
+        "extinction_scale": 0.02,
+        "g": 0.0
+      },
+      "overlap": 0.0,
+      "structure_seed": "42",
+      "transform": {
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "exposure_ev": 1.0,
+    "preview_approx": {
+      "enabled": false,
+      "strength": 0.5
+    },
+    "schema_version": 4,
+    "sun": {
+      "direction_to_light": [
+        -0.5019327955006592,
+        0.6246950475544243,
+        0.5981802122787655
+      ],
+      "irradiance": [
+        15.0,
+        15.0,
+        15.0
+      ]
+    }
+  },
+  "shadow_steps": 0,
+  "sun_tau_cache_resolution": 0,
+  "view_steps": 0,
+  "width": 16,
+  "working_space": "linear Rec.709 / D65"
+}

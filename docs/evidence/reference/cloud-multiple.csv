@@ -1,0 +1,5 @@
+samples_per_pixel,seed,mean_radiance,mean_pixel_estimator_variance,complete_paths,partial_paths,collision_events,tracking_events
+32,42,0.0773451,0.00179574,18432,0,1370,12748
+64,42,0.0769832,0.000903931,36864,0,2722,25295
+96,42,0.0775707,0.000620819,55296,0,4142,38257
+128,42,0.0766566,0.000453128,73728,0,5444,51034
