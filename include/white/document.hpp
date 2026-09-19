@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -113,10 +114,12 @@ public:
     const Scene& scene() const {return scene_;}
     std::uint64_t revision() const {return revision_;}
     Dirty last_change() const {return last_change_;}
+    std::chrono::steady_clock::time_point changed_at()const{return changed_at_;}
     bool replace(Scene scene);
 private:
     Scene scene_;
     std::uint64_t revision_=1;
     Dirty last_change_=Dirty::none;
+    std::chrono::steady_clock::time_point changed_at_=std::chrono::steady_clock::now();
 };
 }

@@ -63,7 +63,7 @@ int main(int argc,char** argv) {
         }
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
-    if(self_test&&frames>0&&frames<620){std::cerr<<"--self-test requires --frames >= 620 to finish UI checks\n";return 2;}
+    if(self_test&&frames>0&&frames<760){std::cerr<<"--self-test requires --frames >= 760 to finish UI checks\n";return 2;}
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
     int exit_code=0;
     try {
@@ -107,10 +107,25 @@ int main(int argc,char** argv) {
                 if(step==21){const auto scene=editor.session.document().scene();const auto count=gpu.bake_count;bool rejected=false;try{gpu.create_field({512,512,512},2);}catch(const std::invalid_argument&){rejected=true;}if(!rejected||scene!=editor.session.document().scene()||count!=gpu.bake_count)throw std::runtime_error("Capacity rejection lost document/cache");std::cout<<"overbudget_document_and_cache_preserved PASS\n";}
                 editor.scripted_edit(step);
             }
+            if(self_test&&frame==630){gpu.use_cache=false;gpu.set_test_delay(30);}
+            if(self_test&&frame>=630&&frame<690) {
+                auto scene=editor.session.document().scene();scene.cloud.cells[0].center.x+=0.05;
+                if(frame%5==0)scene.sun.direction_to_light.x*=-1;
+                if(frame%7==0)scene.exposure_ev=scene.exposure_ev==1?1.5:1;
+                editor.session.apply(scene);
+                if(frame%11==0){editor.session.undo();editor.session.redo();}
+                if(frame==650)white::gpu_check(SDL_SetWindowSize(gpu.window,800,520),"Stress resize smaller");
+                if(frame==680)white::gpu_check(SDL_SetWindowSize(gpu.window,900,600),"Stress resize restore");
+            }
+            if(self_test&&frame==700){gpu.set_test_delay(0);gpu.use_cache=true;gpu.set_cache_resolution(128);gpu.internal_width=256;gpu.view_steps=96;gpu.shadow_steps=8;gpu.volume_dirty=true;}
             ImGui_ImplSDLGPU3_NewFrame(); ImGui_ImplSDL3_NewFrame();
             if(self_test)editor.scripted_input(frame);
             ImGui::NewFrame();
             editor.draw(gpu);
+            gpu.poll_bakes();
+            if(self_test&&frame>=630&&frame<690)gpu.set_interacting(true);
+            if(self_test&&frame==710)gpu.wait_bakes();
+            if(self_test&&frame>=190&&frame<=610&&(frame-190)%20==0)gpu.wait_bakes();
             if(self_test&&gpu.scene_revision!=editor.session.document().revision())throw std::runtime_error("Self-test preview revision is stale");
             if(self_test)editor.verify_scripted_input(frame);
             ImGui::Render();
@@ -134,9 +149,10 @@ int main(int argc,char** argv) {
             }
             if(self_test) {
                 const auto recorded=std::chrono::steady_clock::now();auto* fence=SDL_SubmitGPUCommandBufferAndAcquireFence(cmd);white::gpu_check(fence!=nullptr,"Submit timed frame");
+                if(swap)gpu.note_present(gpu.rendered_revision);
                 const bool waited=SDL_WaitForGPUFences(gpu.device,true,&fence,1);SDL_ReleaseGPUFence(gpu.device,fence);white::gpu_check(waited,"Wait timed frame");
                 if(hdr_work)std::cout<<"frame_revision="<<gpu.scene_revision<<" mode="<<(gpu.use_cache?"cache":"direct")<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(recorded-record_start).count()<<" submit_to_fence_wall_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-recorded).count()<<" gpu_timestamp_ms=unavailable\n";
-            }else white::gpu_check(SDL_SubmitGPUCommandBuffer(cmd),"Submit frame");
+            }else {white::gpu_check(SDL_SubmitGPUCommandBuffer(cmd),"Submit frame");if(swap)gpu.note_present(gpu.rendered_revision);}
             if(swap && !capture.empty() && !captured && frame>=60) {
                 gpu.save_capture(capture);captured=true;std::cout<<"capture="<<capture<<" frame="<<frame<<'\n';
                 if(gpu.show_volume&&gpu.fixture==2) {
@@ -155,6 +171,7 @@ int main(int argc,char** argv) {
             if(self_test&&swap&&frame>=190&&frame<=610&&(frame-190)%20==0) {
                 gpu.validate();if(gpu.use_cache)gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("editor-step-"+std::to_string((frame-190)/20)+".bmp"));
             }
+            if(self_test&&swap&&frame==730){gpu.wait_bakes();gpu.validate();gpu.save_capture(std::filesystem::path(capture).parent_path()/"stress-idle.bmp");std::cout<<"stress_final_revision="<<gpu.scene_revision<<" expected="<<editor.session.document().revision()<<" idle_width=256 view_steps=96 shadow_steps=8 pending="<<gpu.bake_pending()<<'\n';if(gpu.scene_revision!=editor.session.document().revision()||gpu.bake_pending())throw std::runtime_error("Stress did not settle latest revision");}
             SDL_Delay(16);
         }
         if(!capture.empty() && !captured) throw std::runtime_error("No valid frame was available for screenshot");

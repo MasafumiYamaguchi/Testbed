@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include "white/density.hpp"
+#include "white/gpu_bake_worker.hpp"
+#include <memory>
+#include <chrono>
 
 namespace white {
 class GpuSpike {
@@ -37,16 +40,24 @@ public:
     std::string report;
     bool claimed = false;
     int cloud_preset = 2;
-    GpuSpike() = default;
+    GpuSpike();
     GpuSpike(const GpuSpike&) = delete;
     GpuSpike& operator=(const GpuSpike&) = delete;
     ~GpuSpike();
     void initialize();
     void create_field(std::array<Uint32,3> dims, Uint32 kind);
     void create_cloud(int preset);
-    void set_scene(const Scene&,std::uint64_t revision);
+    void set_scene(const Scene&,std::uint64_t revision,std::chrono::steady_clock::time_point accepted=std::chrono::steady_clock::now());
     std::uint64_t scene_revision=0;
     void validate();
+    void poll_bakes();
+    void wait_bakes();
+    void set_interacting(bool);
+    void note_present(std::uint64_t revision);
+    bool bake_pending()const;
+    bool cache_current()const;
+    void set_test_delay(unsigned milliseconds);
+    std::uint64_t rendered_revision=0;
     void resize(Uint32 w, Uint32 h);
     void draw(SDL_GPUCommandBuffer* cmd, float slice, Uint32 axis);
     void save_capture(const std::filesystem::path& path);
@@ -55,8 +66,15 @@ public:
     std::vector<float> read_hdr();
 private:
     Scene scene_snapshot_{};
+    std::unique_ptr<GpuBakeWorker> bake_worker_;
+    std::uint64_t field_density_hash_=0;
+    std::uint64_t validated_bake_=~std::uint64_t(0),last_present_revision_=0;
+    std::chrono::steady_clock::time_point accepted_{};
+    std::vector<double> latency_samples_;
+    bool interacting_=false,rendered_cache_=false;
+    int rendered_steps_=64;
+    void queue_bake(std::array<Uint32,3>);
     std::vector<float> cache_reference_;
-    std::uint64_t validated_bake_=~std::uint64_t(0);
     std::vector<Uint8> shader(const char* name);
     void initialize_volume();
     void render_volume(SDL_GPUCommandBuffer* cmd);
