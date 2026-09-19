@@ -29,8 +29,9 @@ int main(int argc, char** argv) {
         }
     }
     if (!SDL_Init(SDL_INIT_VIDEO)) { std::cerr << SDL_GetError() << '\n'; return 1; }
-    SDL_Window* window = SDL_CreateWindow("ProjectWhite | Phase 0 foundation", 1100, 700, SDL_WINDOW_RESIZABLE);
+    SDL_Window* window = SDL_CreateWindow("ProjectWhite | Phase 0 foundation", 900, 600, SDL_WINDOW_RESIZABLE);
     if (!window) { std::cerr << SDL_GetError() << '\n'; SDL_Quit(); return 1; }
+    SDL_SetWindowPosition(window, 40, 40);
     std::cout << white::app_name << ' ' << white::version << " SDL=" << SDL_GetVersion()
               << " video=" << SDL_GetCurrentVideoDriver() << " GPU=not-initialized\n";
     bool running = true;
