@@ -17,6 +17,7 @@ private:
     CloudRecipe recipe_;
 };
 CloudRecipe density_fixture(int preset); // 0 tall, 1 wide, 2 fusion, 3 flat, 4 cut
+Scene fixture_scene(int preset);
 struct alignas(16) Float4 {float x=0,y=0,z=0,w=0;};
 struct alignas(16) GpuDensityParams {
     std::array<Float4,8> centers{},radii{},cut_centers{},cut_radii{};

@@ -1,7 +1,7 @@
 name: Native build and evidence
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -48,6 +48,7 @@ jobs:
           Copy-Item LICENSE,THIRD_PARTY.md evidence/
           Copy-Item build/windows/_deps/sdl3-src/LICENSE.txt evidence/SDL-LICENSE.txt
           Copy-Item build/windows/_deps/imgui-src/LICENSE.txt evidence/IMGUI-LICENSE.txt
+          Copy-Item build/windows/_deps/imguizmo-src/LICENSE evidence/IMGUIZMO-LICENSE.txt
           Copy-Item build/windows/_deps/nlohmann_json-src/LICENSE.MIT evidence/JSON-LICENSE.txt
           Get-ChildItem tools/dxc -Filter '*LICENSE*' | Copy-Item -Destination evidence/
           Get-CimInstance Win32_VideoController | Select-Object Name,DriverVersion,AdapterRAM | Format-List | Out-File evidence/adapters.txt

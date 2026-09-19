@@ -21,3 +21,7 @@ FetchContent_Declare(imgui
 FetchContent_Declare(shadercross
   GIT_REPOSITORY https://github.com/libsdl-org/SDL_shadercross.git
   GIT_TAG ${WHITE_SHADERCROSS_REVISION})
+FetchContent_Declare(imguizmo
+  GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
+  GIT_TAG 18cef5e031d8c6973d80284c67f60549fafd78c1
+  SOURCE_SUBDIR white-no-upstream-targets)

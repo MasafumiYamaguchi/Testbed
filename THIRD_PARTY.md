@@ -11,6 +11,7 @@ intentional reproducibility pins, not claims of being the latest release.
 | SDL_shadercross | `1ff05bec573988a98ef9e0260b4da44f512b8367` | https://github.com/libsdl-org/SDL_shadercross | zlib (`LICENSE.txt`) | Candidate for Issue #4; not linked yet |
 | Microsoft DXC v1.8.2505.1 | archive SHA256 `9ad895a6b039e3a8f8c22a1009f866800b840a74b50db9218d13319e215ea8a4` | https://github.com/microsoft/DirectXShaderCompiler/releases/tag/v1.8.2505.1 | LLVM-derived license (`LICENSE-LLVM.txt`) and MIT (`LICENSE-MS.txt`); see release notices | Build-time HLSL -> DXIL, not shipped with app |
 | nlohmann/json 3.12.0 | `55f93686c01528224f448c19128836e7df245f72` | https://github.com/nlohmann/json | MIT (`LICENSE.MIT`) | Native JSON persistence, header-only |
+| ImGuizmo | `18cef5e031d8c6973d80284c67f60549fafd78c1` | https://github.com/CedricGuillemet/ImGuizmo | MIT (`LICENSE`) | Translation/scale gizmo only; upstream source unmodified |
 
 SDL_shadercross's DXC/SPIRV-Cross toolchain and OpenVDB's transitive dependencies
 are not distributed or downloaded in Issue #3. Their resolved versions and notices
