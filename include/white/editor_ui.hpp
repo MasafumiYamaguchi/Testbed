@@ -14,6 +14,7 @@ public:
     void verify_scripted_input(int frame);
     const std::string& status() const{return status_;}
 private:
+    bool focus_noise_=false;
     Scene smoke_original_{},smoke_before_{};
     float smoke_x_=0,smoke_y_=0;
     Id selected_=2;

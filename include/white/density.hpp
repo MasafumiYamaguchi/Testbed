@@ -19,10 +19,14 @@ private:
 CloudRecipe density_fixture(int preset); // 0 tall, 1 wide, 2 fusion, 3 flat, 4 cut
 Scene fixture_scene(int preset);
 struct alignas(16) Float4 {float x=0,y=0,z=0,w=0;};
+struct alignas(16) UInt4 {std::uint32_t x=0,y=0,z=0,w=0;};
 struct alignas(16) GpuDensityParams {
     std::array<Float4,8> centers{},radii{},cut_centers{},cut_radii{};
     Float4 envelope_min{},envelope_max{},settings{},config{};
+    std::array<UInt4,8> cell_keys{};
+    Float4 noise_origin{},noise_bands{},noise_warp{};
+    UInt4 noise_seeds{};
 };
-static_assert(sizeof(GpuDensityParams)==576);
+static_assert(sizeof(GpuDensityParams)==768);
 GpuDensityParams gpu_density_params(const DensityField&);
 }

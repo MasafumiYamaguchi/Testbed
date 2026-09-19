@@ -1,3 +1,4 @@
+#include "noise.hlsli"
 // Shared pointwise field for preview, bake and future export.
 // Approximate ellipsoid implicit distance; never use as a sphere-tracing step.
 #ifndef DENSITY_SPACE
@@ -6,6 +7,7 @@
 cbuffer Cloud : register(b1, DENSITY_SPACE) {
     float4 centers[8]; float4 radii[8]; float4 cutCenters[8]; float4 cutRadii[8];
     float4 envelopeMin; float4 envelopeMax; float4 settings; float4 config;
+    uint4 cellKeys[8];float4 noiseOrigin,noiseBands,noiseWarp;uint4 noiseSeeds;
 };
 float smooth01(float x) {x=saturate(x);return x*x*(3-2*x);}
 float ellipsoid(float3 p,float3 c,float3 r) {return (length((p-c)/r)-1)*min(r.x,min(r.y,r.z));}
@@ -20,10 +22,15 @@ float densityAt(float3 p) {
     if(config.y!=0&&p.y<=settings.x)return 0;
     float merged=0,sum=0;
     for(uint i=0;i<count;++i) {
-        float d=ellipsoid(p,centers[i].xyz,radii[i].xyz);
+        float3 q=p;
+        if(noiseWarp.y>0)q+=domainDisplacement((p-noiseOrigin.xyz)*noiseWarp.x,cellKeys[i].x,noiseWarp.y);
+        float d=ellipsoid(q,centers[i].xyz,radii[i].xyz);
         merged=i==0?d:smoothUnion(merged,d,settings.w);sum+=coverage(d);
     }
+    float3 n=p-noiseOrigin.xyz;
+    if(noiseBands.w>0)merged+=noiseBands.w*detailNoise(n*noiseBands.z,noiseSeeds.x^0x6c8e9cf5u);
     float value=settings.z*coverage(merged)*(1+config.x*max(0,sum-1));
+    if(noiseBands.y>0)value*=1-noiseBands.y*detailNoise(n*noiseBands.x,noiseSeeds.x);
     if(config.y!=0&&settings.y>0)value*=smooth01((p.y-settings.x)/settings.y);
     for(uint c=0;c<cutCount;++c) {
         float d=ellipsoid(p,cutCenters[c].xyz,cutRadii[c].xyz);

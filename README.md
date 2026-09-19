@@ -1,10 +1,11 @@
 # ProjectWhite
 
 An original art-directable cloud creation tool. Implementation follows [the roadmap](https://github.com/MasafumiYamaguchi/Testbed/issues/2).
-Current milestone: Phase 0 cloud editing (#3–#9). The Windows application previews
+Current milestone: Phase 0 cloud editing and noise (#3–#10). The Windows application previews
 ellipsoid density with single scattering and provides primitive picking, Move/
 Scale gizmos, numeric inspection, a flat base, cuts, camera orbit, Undo/Redo and
-JSON Save/Open. Detailed noise, dense preview caches and production export are
+JSON Save/Open. Medium density modulation, micro edge erosion and bounded structural warp are
+available in Shape details. Dense preview caches and production export remain
 later milestones. Physical RTX validation is still outstanding.
 
 ## Windows build

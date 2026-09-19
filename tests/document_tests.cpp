@@ -34,7 +34,7 @@ int main() {
     bad=s;bad.cloud.cells.resize(9);check(!validate(bad).empty(),"cell limit rejected");
     bad=s;bad.cloud.cuts.push_back({2});check(!validate(bad).empty(),"cross-type duplicate ID rejected");
     bad=s;bad.camera.target=bad.camera.position;check(!validate(bad).empty(),"degenerate camera rejected");
-    bad=s;bad.schema_version=2;check(!validate(bad).empty(),"future schema rejected");
+    bad=s;bad.schema_version=999;check(!validate(bad).empty(),"future schema rejected");
     auto c=s;c.camera.position.x++;check(classify_change(s,c)==Dirty::camera,"camera change only");
     c=s;c.exposure_ev++;check(classify_change(s,c)==Dirty::display,"exposure change only");
     c=s;c.sun.irradiance.x++;check(classify_change(s,c)==Dirty::sun,"sun change only");

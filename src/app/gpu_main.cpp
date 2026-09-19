@@ -62,7 +62,7 @@ int main(int argc,char** argv) {
         }
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
-    if(self_test&&frames>0&&frames<400){std::cerr<<"--self-test requires --frames >= 400 to finish UI checks\n";return 2;}
+    if(self_test&&frames>0&&frames<520){std::cerr<<"--self-test requires --frames >= 520 to finish UI checks\n";return 2;}
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
     int exit_code=0;
     try {
@@ -97,7 +97,10 @@ int main(int argc,char** argv) {
                 if(e.type==SDL_EVENT_QUIT || e.type==SDL_EVENT_WINDOW_CLOSE_REQUESTED) running=false;
             }
             if(SDL_GetWindowFlags(gpu.window)&SDL_WINDOW_MINIMIZED) {SDL_Delay(16);continue;}
-            if(self_test&&frame>=180&&frame<=380&&(frame-180)%20==0)editor.scripted_edit((frame-180)/20);
+            if(self_test&&frame>=180&&frame<=500&&(frame-180)%20==0) {
+                if(frame==400){gpu.internal_width=96;gpu.view_steps=32;gpu.shadow_steps=4;gpu.volume_dirty=true;}
+                editor.scripted_edit((frame-180)/20);
+            }
             ImGui_ImplSDLGPU3_NewFrame(); ImGui_ImplSDL3_NewFrame();
             if(self_test)editor.scripted_input(frame);
             ImGui::NewFrame();
@@ -136,7 +139,7 @@ int main(int argc,char** argv) {
                 gpu.view_steps/=2;gpu.volume_dirty=true;convergence_frame=-1;baseline_hdr.clear();
             }
             if(self_test&&swap&&(frame==116||frame==156))gpu.save_capture(std::filesystem::path(capture).parent_path()/(frame==116?"gizmo-move.bmp":"gizmo-scale.bmp"));
-            if(self_test&&swap&&frame>=190&&frame<=390&&(frame-190)%20==0) {
+            if(self_test&&swap&&frame>=190&&frame<=510&&(frame-190)%20==0) {
                 gpu.validate();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("editor-step-"+std::to_string((frame-190)/20)+".bmp"));
             }
             SDL_Delay(16);
