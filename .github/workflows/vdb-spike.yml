@@ -1,0 +1,52 @@
+name: Optional OpenVDB spike
+on:
+  pull_request:
+    paths: ['spikes/vdb/**', '.github/workflows/vdb-spike.yml', 'CMakeLists.txt']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: vdb-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows-vdb:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    env:
+      VCPKG_MAX_CONCURRENCY: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          ref: e6f9e70a29a3e80a1fc510d8503304315447112f
+          path: tools/vcpkg
+      - name: Bootstrap pinned vcpkg
+        run: ./tools/vcpkg/bootstrap-vcpkg.bat -disableMetrics
+      - name: Configure standalone spike
+        run: cmake -S spikes/vdb -B build/vdb -A x64 -DCMAKE_TOOLCHAIN_FILE="$pwd/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DBUILD_TESTING=ON
+      - name: Build
+        run: cmake --build build/vdb --config Release --parallel 2
+      - name: Write and independently reopen density grid
+        run: ctest --test-dir build/vdb -C Release --verbose --output-on-failure
+      - name: Dependency versions and notices
+        if: always()
+        run: |
+          New-Item -ItemType Directory -Force build/vdb/notices | Out-Null
+          if (Test-Path build/vdb/vcpkg_installed/vcpkg/status) { Copy-Item build/vdb/vcpkg_installed/vcpkg/status build/vdb/notices/installed-status.txt }
+          Get-ChildItem build/vdb/vcpkg_installed/x64-windows/share -Filter copyright -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+            $destination = "build/vdb/notices/" + $_.Directory.Name
+            New-Item -ItemType Directory -Force $destination | Out-Null
+            Copy-Item $_.FullName $destination
+          }
+          Copy-Item LICENSE,spikes/vdb/README.md build/vdb/notices/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-openvdb-spike
+          path: |
+            build/vdb/Release/
+            build/vdb/evidence/
+            build/vdb/Testing/Temporary/
+            build/vdb/notices/
+            build/vdb/vcpkg-manifest-install.log
