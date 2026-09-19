@@ -149,6 +149,7 @@ void EditorUi::draw(GpuSpike& gpu) {
         }catch(const std::exception& e){status_=e.what();}
         int resolution=gpu.cache_resolution==256?1:0;
         if(ImGui::Combo("Grid",&resolution,"128 cubed\0 256 cubed\0"))try{gpu.set_cache_resolution(resolution?256:128);}catch(const std::exception& e){status_=e.what();}
+        if(ImGui::Checkbox("Skip truly empty bricks",&gpu.empty_skip))gpu.volume_dirty=true;
         ImGui::Text("Bakes: %llu",static_cast<unsigned long long>(gpu.bake_count));
         ImGui::Text("Resource budget: %.1f MiB",gpu.estimated_gpu_bytes/1048576.0);
         ImGui::TextWrapped("Filtering changes fine edges. Base and full cuts remain clipped.");

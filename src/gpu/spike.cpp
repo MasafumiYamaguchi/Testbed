@@ -2,6 +2,7 @@
 #include "white/benchmark.hpp"
 #include "white/phase.hpp"
 #include "white/sun_cache.hpp"
+#include "white/majorant.hpp"
 #include "white/build_info.hpp"
 #include "white/optics.hpp"
 #include "white/dense_cache.hpp"
@@ -58,6 +59,8 @@ GpuSpike::~GpuSpike() {
     bake_worker_.reset();
     if (device) {
         SDL_WaitForGPUIdle(device);
+        if(majorant_texture_)SDL_ReleaseGPUTexture(device,majorant_texture_);
+        if(majorant_generate_)SDL_ReleaseGPUComputePipeline(device,majorant_generate_);
         if(sun_tau_)SDL_ReleaseGPUTexture(device,sun_tau_);
         if(sun_generate_)SDL_ReleaseGPUComputePipeline(device,sun_generate_);
         if(volume_pipeline)SDL_ReleaseGPUGraphicsPipeline(device,volume_pipeline);
@@ -187,7 +190,7 @@ void GpuSpike::set_scene(const Scene& scene,std::uint64_t revision,std::chrono::
 }
 void GpuSpike::queue_bake(std::array<Uint32,3> dims) {
     const std::uint64_t old=64ull*1024*1024; // reserve the largest supported published cache
-    const auto other=std::uint64_t(width)*height*4+std::uint64_t(hdr_width)*hdr_height*16+2*1024*1024;
+    const auto other=std::uint64_t(width)*height*4+std::uint64_t(hdr_width)*hdr_height*16+3*1024*1024;
     (void)cache_budget(dims,old,other);
     bake_worker_->request({scene_revision,density_job_hash(scene_snapshot_,dims),scene_snapshot_,dims,old,other});
     report="Latest density queued; direct preview remains live";
@@ -343,7 +346,7 @@ void GpuSpike::initialize_volume() {
         auto* vs=make_shader("fullscreen.vert.hlsl.dxil",SDL_GPU_SHADERSTAGE_VERTEX,0,0);
         SDL_GPUShader* fs=nullptr;SDL_GPUGraphicsPipeline* p=nullptr;
         try {
-            fs=make_shader(name,SDL_GPU_SHADERSTAGE_FRAGMENT,tone?1:2,tone?1:2);
+            fs=make_shader(name,SDL_GPU_SHADERSTAGE_FRAGMENT,tone?1:3,tone?1:2);
             SDL_GPUColorTargetDescription color{};color.format=tone?SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
             SDL_GPUGraphicsPipelineCreateInfo ci{};ci.vertex_shader=vs;ci.fragment_shader=fs;ci.primitive_type=SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
             ci.target_info.num_color_targets=1;ci.target_info.color_target_descriptions=&color;
@@ -364,6 +367,8 @@ void GpuSpike::initialize_volume() {
     cache_sample_test=SDL_CreateGPUComputePipeline(device,&ci);gpu_check(cache_sample_test!=nullptr,"Create cache sample test pipeline");
     bytes=shader("sun_cache.comp.hlsl.dxil");ci.code=bytes.data();ci.code_size=bytes.size();ci.num_readwrite_storage_buffers=0;ci.num_readwrite_storage_textures=1;ci.threadcount_x=ci.threadcount_y=ci.threadcount_z=4;
     sun_generate_=SDL_CreateGPUComputePipeline(device,&ci);gpu_check(sun_generate_!=nullptr,"Create sun cache pipeline");
+    bytes=shader("majorant.comp.hlsl.dxil");ci.code=bytes.data();ci.code_size=bytes.size();ci.num_uniform_buffers=1;
+    majorant_generate_=SDL_CreateGPUComputePipeline(device,&ci);gpu_check(majorant_generate_!=nullptr,"Create majorant pipeline");
 }
 void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     if(!volume_dirty)return;
@@ -411,17 +416,44 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
             std::cout<<"sun_cache_build revision="<<scene_revision<<" key="<<key<<" resolution="<<sun_extent_<<" bytes="<<std::uint64_t(sun_extent_)*sun_extent_*sun_extent_*4<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count()<<" gpu_time=included_in_frame_fence_wall\n";
         }
     }
-    const std::array<Float4,11> view{
+    rendered_skip_=empty_skip&&rendered_cache_;
+    if(rendered_skip_){
+        const std::array<Uint32,3> dims{(extent[0]+7)/8,(extent[1]+7)/8,(extent[2]+7)/8};
+        if(!majorant_texture_||majorant_extent_!=dims){
+            auto* replacement=texture(device,SDL_GPU_TEXTURETYPE_3D,SDL_GPU_TEXTUREFORMAT_R32_FLOAT,SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE|SDL_GPU_TEXTUREUSAGE_SAMPLER,dims[0],dims[1],dims[2]);
+            if(majorant_texture_)SDL_ReleaseGPUTexture(device,majorant_texture_);majorant_texture_=replacement;majorant_extent_=dims;majorant_key_=0;
+        }
+        const auto key=density_job_hash(scene_snapshot_,extent);
+        if(majorant_key_!=key){
+            const auto start=std::chrono::steady_clock::now();const std::array<Uint32,4> params{extent[0],extent[1],extent[2],0};SDL_PushGPUComputeUniformData(cmd,0,params.data(),sizeof(params));
+            SDL_GPUStorageTextureReadWriteBinding output{};output.texture=majorant_texture_;
+            auto* compute=SDL_BeginGPUComputePass(cmd,&output,1,nullptr,0);SDL_BindGPUComputePipeline(compute,majorant_generate_);
+            const SDL_GPUTextureSamplerBinding input{field,sampler};SDL_BindGPUComputeSamplers(compute,0,&input,1);
+            SDL_DispatchGPUCompute(compute,(dims[0]+3)/4,(dims[1]+3)/4,(dims[2]+3)/4);SDL_EndGPUComputePass(compute);majorant_key_=key;
+            std::cout<<"majorant_build key="<<key<<" bytes="<<std::uint64_t(dims[0])*dims[1]*dims[2]*4<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count()<<" execution=in_frame_fence_wall\n";
+        }
+    }
+    const std::array<Float4,12> view{
         pack(eye,float(camera.near_plane)),pack(right,float(std::tan(camera.vertical_fov_degrees*3.141592653589793/360))),pack(up,float(recipe.optics.g)),pack(forward,float(recipe.optics.extinction_scale)),
         pack(sun,float(recipe.optics.albedo)),pack(scene_snapshot_.sun.irradiance,float(camera.far_plane)),
         Float4{float(x.x),float(y.x),float(z.x),float(origin.x)},Float4{float(x.y),float(y.y),float(z.y),float(origin.y)},Float4{float(x.z),float(y.z),float(z.z),float(origin.z)},
-        Float4{float(rendered_steps_),float(render_shadows),float(w)/float(h),rendered_cache_?1.0f:0.0f},Float4{rendered_sun_?1.0f:0.0f,0,0,0}};
+        Float4{float(rendered_steps_),float(render_shadows),float(w)/float(h),rendered_cache_?1.0f:0.0f},Float4{rendered_sun_?1.0f:0.0f,0,0,0},Float4{float(extent[0]),float(extent[1]),float(extent[2]),rendered_skip_?1.f:0.f}};
     SDL_PushGPUFragmentUniformData(cmd,0,view.data(),sizeof(view));
     SDL_PushGPUFragmentUniformData(cmd,1,&field_params,sizeof(field_params));
     SDL_GPUColorTargetInfo color{};color.texture=hdr;color.load_op=SDL_GPU_LOADOP_CLEAR;color.store_op=SDL_GPU_STOREOP_STORE;
     auto* pass=SDL_BeginGPURenderPass(cmd,&color,1,nullptr);SDL_BindGPUGraphicsPipeline(pass,volume_pipeline);
-    const SDL_GPUTextureSamplerBinding inputs[2]{{field,sampler},{rendered_sun_?sun_tau_:field,sampler}};SDL_BindGPUFragmentSamplers(pass,0,inputs,2);
+    const SDL_GPUTextureSamplerBinding inputs[3]{{field,sampler},{rendered_sun_?sun_tau_:field,sampler},{rendered_skip_?majorant_texture_:field,point_sampler}};SDL_BindGPUFragmentSamplers(pass,0,inputs,3);
     SDL_DrawGPUPrimitives(pass,3,1,0,0);SDL_EndGPURenderPass(pass);volume_dirty=false;
+}
+void GpuSpike::validate_majorant(){
+    if(!rendered_skip_)throw std::runtime_error("Skipping requested without current dense field");
+    if(cache_reference_.empty())validate();
+    const auto expected=build_majorant({scene_snapshot_.cloud.envelope,extent},cache_reference_);const auto n=majorant_extent_;const Uint32 pitch=(n[0]+63)/64*64;Transfer transfer(device,pitch*n[1]*n[2]*4);
+    auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire majorant readback");auto* pass=SDL_BeginGPUCopyPass(cmd);
+    SDL_GPUTextureRegion source{};source.texture=majorant_texture_;source.w=n[0];source.h=n[1];source.d=n[2];const SDL_GPUTextureTransferInfo dest{transfer.buffer,0,pitch,n[1]};SDL_DownloadFromGPUTexture(pass,&source,&dest);SDL_EndGPUCopyPass(pass);submit_wait(device,cmd);
+    const auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map majorant");bool exact=true;unsigned empty=0;
+    for(unsigned z=0;z<n[2];++z)for(unsigned y=0;y<n[1];++y)for(unsigned x=0;x<n[0];++x){float v=values[(z*n[1]+y)*pitch+x];exact=exact&&v==expected.levels[0].maxima[(z*n[1]+y)*n[0]+x];empty+=v==0;}
+    SDL_UnmapGPUTransferBuffer(device,transfer.buffer);std::cout<<"majorant_verified bricks="<<n[0]*n[1]*n[2]<<" empty="<<empty<<" CPU_GPU_exact="<<exact<<" hierarchy_levels="<<expected.levels.size()<<'\n';if(!exact)throw std::runtime_error("Majorant differs from conservative CPU reference");
 }
 void GpuSpike::validate_sun_cache() {
     if(!rendered_sun_)throw std::runtime_error("Sun cache comparison requested but direct fallback rendered");
