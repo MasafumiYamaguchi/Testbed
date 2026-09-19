@@ -26,7 +26,7 @@ float shadowOpticalDepth(float3 origin,out uint evaluations) {
         if(any(origin<=envelopeMin.xyz)||any(origin>=envelopeMax.xyz))return 0;
         return max(0,sunTau.SampleLevel(sunLinear,(origin-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz),0));
     }
-    float3 direction=localVector(lightAlbedo.xyz);float entry=0,exit=irradianceFar.w;
+    float3 direction=localVector(lightAlbedo.xyz);float entry=0,exit=3.402823466e38; // Sun visibility is independent of camera clipping.
     if(!intersectBox(origin,direction,envelopeMin.xyz,envelopeMax.xyz,entry,exit))return 0;
     float dt=(exit-entry)/quality.y,tau=0;
     evaluations=(uint)quality.y;

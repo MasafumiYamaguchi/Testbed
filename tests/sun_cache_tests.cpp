@@ -14,8 +14,14 @@ int main(int argc,char** argv){try{
         for(unsigned steps:{1,8,32}){const auto interval=white::intersect_bounds({0,0,0},sun,s.cloud.envelope,0,s.camera.far_plane);const double expected=interval->exit*.02;
             check(std::abs(white::sun_optical_depth(s,grid,values,{0,0,0},steps)-expected)<1e-12);}
     }
+    // Camera clipping affects primary rays only, never directional-light visibility.
+    s.sun.direction_to_light={1,0,0};s.camera.far_plane=1;
+    check(std::abs(white::sun_optical_depth(s,grid,values,{0,0,0},8)-.2)<1e-12);
+    s.cloud.transform.translation={1e12,-1e12,1e12};
+    check(std::abs(white::sun_optical_depth(s,grid,values,{0,0,0},8)-.2)<1e-12);
+    s.cloud.transform.translation={};
     std::fill(values.begin(),values.end(),0);check(white::sun_optical_depth(s,grid,values,{0,0,0},8)==0);
-    const auto key=white::sun_cache_key(s,grid.extent,32,8);auto v=s;v.exposure_ev=2;v.camera.position.x+=1;v.cloud.optics.g=.5;v.cloud.optics.albedo=.5;v.sun.irradiance.x+=2;
+    const auto key=white::sun_cache_key(s,grid.extent,32,8);auto v=s;v.exposure_ev=2;v.camera.position.x+=1;v.camera.far_plane=10000;v.cloud.optics.g=.5;v.cloud.optics.albedo=.5;v.sun.irradiance.x+=2;
     check(white::sun_cache_key(v,grid.extent,32,8)==key);
     v=s;v.sun.direction_to_light={0,1,0};check(white::sun_cache_key(v,grid.extent,32,8)!=key);
     v=s;v.cloud.optics.extinction_scale*=2;check(white::sun_cache_key(v,grid.extent,32,8)!=key);

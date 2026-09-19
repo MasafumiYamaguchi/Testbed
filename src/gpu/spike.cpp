@@ -411,7 +411,8 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     const auto& camera=scene_snapshot_.camera;const auto eye=camera.position,target_point=camera.target;
     const auto forward=normalize(target_point-eye),right=normalize(cross(forward,camera.up)),up=cross(right,forward);
     const auto origin=world_to_local(recipe.transform,{0,0,0});
-    const auto x=world_to_local(recipe.transform,{1,0,0})-origin,y=world_to_local(recipe.transform,{0,1,0})-origin,z=world_to_local(recipe.transform,{0,0,1})-origin;
+    auto linear=recipe.transform;linear.translation={0,0,0};
+    const auto x=world_to_local(linear,{1,0,0}),y=world_to_local(linear,{0,1,0}),z=world_to_local(linear,{0,0,1});
     const auto sun=scene_snapshot_.sun.direction_to_light;
     auto pack=[](Vec3 v,float w=0){return Float4{float(v.x),float(v.y),float(v.z),w};};
     if(sun_cache_resolution!=0&&sun_cache_resolution!=32&&sun_cache_resolution!=64)throw std::invalid_argument("Sun cache must be 0/32/64");
@@ -423,7 +424,7 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
             if(sun_tau_)SDL_ReleaseGPUTexture(device,sun_tau_);sun_tau_=replacement;sun_extent_=sun_cache_resolution;sun_key_=0;
         }
         if(sun_key_!=key){
-            const auto start=std::chrono::steady_clock::now();const auto direction=world_to_local(recipe.transform,sun)-origin;
+            const auto start=std::chrono::steady_clock::now();const auto direction=world_to_local(linear,sun);
             const std::array<Float4,3> params{pack(direction,float(recipe.optics.extinction_scale)),Float4{float(sun_extent_),float(sun_extent_),float(sun_extent_),float(render_shadows)},Float4{float(camera.far_plane),0,0,0}};
             SDL_PushGPUComputeUniformData(cmd,0,params.data(),sizeof(params));SDL_PushGPUComputeUniformData(cmd,1,&field_params,sizeof(field_params));
             SDL_GPUStorageTextureReadWriteBinding output{};output.texture=sun_tau_;

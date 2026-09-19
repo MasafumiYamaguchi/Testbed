@@ -16,7 +16,7 @@ namespace {
 struct Moments {
     unsigned n=0;double mean=0,m2=0;
     void add(double value){++n;double d=value-mean;mean+=d/n;m2+=d*(value-mean);}
-    double stderr()const{return n>1?std::sqrt(m2/(n-1)/n):0;}
+    double standard_error()const{return n>1?std::sqrt(m2/(n-1)/n):0;}
 };
 // A deterministic central ray in a homogeneous box. The sun and view are
 // parallel or antiparallel, so shadow optical depth is analytic and does not
@@ -83,7 +83,7 @@ int main(int argc,char** argv) {
             seed_min=std::min(seed_min,per_seed.mean);seed_max=std::max(seed_max,per_seed.mean);
         }
         const auto elapsed=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
-        const double off_error=std::abs(single-pooled.mean),on_error=std::abs(approx-pooled.mean),se=pooled.stderr();
+        const double off_error=std::abs(single-pooled.mean),on_error=std::abs(approx-pooled.mean),se=pooled.standard_error();
         off_squared+=off_error*off_error;on_squared+=on_error*on_error;++rows;improved+=on_error<off_error;
         // Since ON >= OFF, its absolute error is lower precisely when the true
         // mean exceeds their midpoint. Use a deliberately broad +/-6 estimated
@@ -95,7 +95,7 @@ int main(int argc,char** argv) {
         if(midpoint_z>6){verdict="improved";++resolved_improved;}
         else if(midpoint_z< -6){verdict="worse";++resolved_worse;}
         std::cout<<(set?"held_out":"predeclared")<<','<<tau<<','<<albedo<<','<<g<<','<<mu<<','<<pooled.n<<','<<single<<','<<approx<<','<<pooled.mean<<','<<se<<','<<off_error<<','<<on_error<<','<<(se>0?on_error/se:0)<<','<<quadrature<<','<<seed_max-seed_min<<','<<elapsed<<','<<midpoint_z<<','<<verdict;
-        for(const auto& seed:seed_moments)std::cout<<','<<seed.mean<<','<<seed.stderr();
+        for(const auto& seed:seed_moments)std::cout<<','<<seed.mean<<','<<seed.standard_error();
         std::cout<<'\n';
         if(pooled.n!=samples*4||quadrature>1e-5)++failures;
     }

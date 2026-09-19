@@ -15,7 +15,7 @@ white::TrackingSnapshot slab(double sigma,double albedo,double g=0,white::Vec3 s
     white::Scene scene;scene.cloud.base.enabled=false;scene.cloud.cuts.clear();scene.cloud.envelope={{-1,-1,-1},{1,1,1}};scene.cloud.optics={sigma,albedo,g};scene.sun.direction_to_light=sun;scene.camera.position={0,0,-3};scene.camera.target={0,0,0};scene.camera.near_plane=.01;
     white::GridLayout grid{scene.cloud.envelope,{8,8,8}};return {scene,grid,std::vector<float>(512,1)};
 }
-struct Moments {double sum=0,square=0;unsigned n=0;void add(double x){sum+=x;square+=x*x;++n;}double mean()const{return sum/n;}double variance()const{return std::max(0.,(square-sum*sum/n)/(n-1));}double stderr()const{return std::sqrt(variance()/n);}};
+struct Moments {double sum=0,square=0;unsigned n=0;void add(double x){sum+=x;square+=x*x;++n;}double mean()const{return sum/n;}double variance()const{return std::max(0.,(square-sum*sum/n)/(n-1));}double standard_error()const{return std::sqrt(variance()/n);}};
 void analytic_single(){
     white::ReferenceSettings settings;settings.mode=white::ReferenceMode::single_scattering;const white::TrackingRay ray{{0,0,-3},{0,0,1},0,100};
     for(double g:{-.6,0.,.6})for(double sign:{-1.,1.}){
@@ -24,8 +24,8 @@ void analytic_single(){
         const auto marched=white::reference_raymarch(medium,ray,512,64);require(std::abs(marched.radiance.x-analytic)<2e-7);
         for(std::uint64_t seed:std::array<std::uint64_t,4>{17,42,99991,4294967313ull}){
             Moments stats;for(unsigned i=0;i<8192;++i){const auto r=white::reference_sample(medium,ray,settings,{seed,0,i,0,0});require(r.status==white::ReferenceStatus::complete);stats.add(r.radiance.x);}
-            require(std::abs(stats.mean()-analytic)<6*stats.stderr()+2e-5);
-            std::cout<<"single_slab,"<<g<<','<<sign<<','<<seed<<','<<stats.n<<','<<analytic<<','<<stats.mean()<<','<<stats.stderr()<<'\n';
+            require(std::abs(stats.mean()-analytic)<6*stats.standard_error()+2e-5);
+            std::cout<<"single_slab,"<<g<<','<<sign<<','<<seed<<','<<stats.n<<','<<analytic<<','<<stats.mean()<<','<<stats.standard_error()<<'\n';
         }
     }
 }
@@ -34,7 +34,7 @@ void boundaries(){
     auto empty=slab(0,1);const auto vacuum=white::reference_sample(empty,ray,settings,{1,0,0,0,0});require(vacuum.radiance==white::reference_background&&vacuum.transmittance==1&&vacuum.collision_events==0);
     const auto absorbing=slab(.7,0);Moments t;
     for(unsigned i=0;i<8192;++i){const auto r=white::reference_sample(absorbing,ray,settings,{17,0,i,0,0});require(r.status==white::ReferenceStatus::complete&&r.collision_events==0);require(r.radiance.x==white::reference_background.x*r.transmittance);t.add(r.transmittance);}
-    require(std::abs(t.mean()-std::exp(-1.4))<6*t.stderr());
+    require(std::abs(t.mean()-std::exp(-1.4))<6*t.standard_error());
     const auto internal=white::reference_raymarch(absorbing,{{0,0,0},{0,0,1},0,100},512,16);require(std::abs(internal.transmittance-std::exp(-.7))<1e-12);
     const auto conservative=slab(1,1,.6);for(unsigned i=0;i<256;++i){const auto r=white::reference_sample(conservative,ray,settings,{99991,0,i,0,0});require(r.status==white::ReferenceStatus::complete&&std::isfinite(r.radiance.x));}
     // A safety ceiling is distinguishable from a legitimate escaping path.
@@ -96,7 +96,7 @@ void multiple_seeds(){
     for(std::uint64_t seed:std::array<std::uint64_t,4>{17,42,99991,4294967313ull}){
         Moments stats;
         for(unsigned i=0;i<4096;++i){const auto r=white::reference_sample(medium,ray,settings,{seed,0,i,0,0});require(r.status==white::ReferenceStatus::complete);stats.add(r.radiance.x);
-            if(i==511||i==4095){std::cout<<"multi_slab,"<<seed<<','<<i+1<<','<<stats.mean()<<','<<stats.variance()<<','<<stats.stderr()<<'\n';if(i==511)low_variance+=stats.variance()/stats.n;}
+            if(i==511||i==4095){std::cout<<"multi_slab,"<<seed<<','<<i+1<<','<<stats.mean()<<','<<stats.variance()<<','<<stats.standard_error()<<'\n';if(i==511)low_variance+=stats.variance()/stats.n;}
         }
         seed_means.add(stats.mean());average_variance+=stats.variance()/stats.n;
     }
@@ -117,7 +117,7 @@ void roulette_weighting(){
             require(a.status==white::ReferenceStatus::complete&&b.status==white::ReferenceStatus::complete);
             roulette.add(a.radiance.x);unthinned.add(b.radiance.x);terminations+=a.roulette_terminations;
         }
-        const double error=std::hypot(roulette.stderr(),unthinned.stderr());
+        const double error=std::hypot(roulette.standard_error(),unthinned.standard_error());
         require(terminations>0&&std::abs(roulette.mean()-unthinned.mean())<6*error+2e-5);
         std::cout<<"roulette_weighting,"<<seed<<','<<roulette.n<<','<<roulette.mean()<<','<<unthinned.mean()<<','<<error<<','<<terminations<<'\n';
     }
