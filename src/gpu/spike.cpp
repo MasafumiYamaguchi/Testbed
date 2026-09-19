@@ -178,6 +178,7 @@ void GpuSpike::set_scene(const Scene& scene,std::uint64_t revision) {
     if(has(dirty,Dirty::camera)||has(dirty,Dirty::sun)||has(dirty,Dirty::optics)||density_changed)volume_dirty=true;
 }
 void GpuSpike::validate() {
+    if(validated_bake_==bake_count&&(!use_cache||!cache_reference_.empty())){std::cout<<"density_validation_reused bake="<<bake_count<<'\n';return;}
     // D3D12 texture row pitch is 256 bytes; explicitly pad the 17-wide fixture.
     const Uint32 pitch=(extent[0]+63)/64*64;
     const auto count=checked_volume_bytes(pitch,extent[1],extent[2],4);
@@ -238,6 +239,7 @@ void GpuSpike::validate() {
         } catch(...) { SDL_ReleaseGPUBuffer(device,result); throw; }
         SDL_ReleaseGPUBuffer(device,result);
     }
+    validated_bake_=bake_count;
     report="PASS: all voxels / finite values / CPU reference";
     std::cout << "fixture=" << fixture << " extent=" << extent[0] << 'x' << extent[1] << 'x' << extent[2]
               << " row_bytes=" << pitch*4 << " max_abs_error=" << max_error

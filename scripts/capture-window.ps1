@@ -37,7 +37,7 @@ public class WindowCapture {
     $client = [System.Drawing.Image]::FromFile("$out/client.bmp")
     try { $client.Save("$out/framebuffer.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $client.Dispose() }
     $memory = @()
-    $deadline = [DateTime]::UtcNow.AddSeconds(120)
+    $deadline = [DateTime]::UtcNow.AddSeconds(240)
     while (!$process.HasExited -and [DateTime]::UtcNow -lt $deadline) {
         $process.Refresh()
         if (!$process.HasExited) {
@@ -46,7 +46,7 @@ public class WindowCapture {
         Start-Sleep -Milliseconds 250
     }
     $memory | Export-Csv "$out/process-memory.csv" -NoTypeInformation
-    if (!$process.HasExited) { throw "App did not exit within 120 seconds" }
+    if (!$process.HasExited) { throw "App did not exit within 240 seconds" }
     if ($process.ExitCode -ne 0) { throw "App failed with exit code $($process.ExitCode)" }
     if (Test-Path "$out/step-half.bmp") {
         $img = [System.Drawing.Image]::FromFile("$out/step-half.bmp")

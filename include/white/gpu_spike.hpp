@@ -56,6 +56,7 @@ public:
 private:
     Scene scene_snapshot_{};
     std::vector<float> cache_reference_;
+    std::uint64_t validated_bake_=~std::uint64_t(0);
     std::vector<Uint8> shader(const char* name);
     void initialize_volume();
     void render_volume(SDL_GPUCommandBuffer* cmd);
