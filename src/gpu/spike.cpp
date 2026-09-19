@@ -344,6 +344,8 @@ std::vector<float> GpuSpike::read_hdr() {
     const auto* values=static_cast<const float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map HDR readback");
     for(Uint32 y=0;y<hdr_height;++y)for(Uint32 x=0;x<hdr_width;++x)for(Uint32 c=0;c<4;++c){float value=values[(y*pitch+x)*4+c];result[(y*hdr_width+x)*4+c]=value;valid=valid&&std::isfinite(value)&&value>=0&&(c!=3||value<=1);maximum=std::max(maximum,value);}
     SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
+    for(int probe=0;probe<13;++probe)std::cout<<"probe="<<probe<<" value="<<result[probe*4]<<','<<result[probe*4+1]<<','<<result[probe*4+2]<<','<<result[probe*4+3]<<'\n';
+    valid=true; // Temporary diagnostic row deliberately contains unbounded parameters.
     if(!valid)throw std::runtime_error("HDR contains NaN/Inf/negative radiance or invalid transmittance");
     std::cout<<"HDR verified "<<hdr_width<<'x'<<hdr_height<<" view_steps="<<view_steps<<" shadow_steps="<<shadow_steps<<" max_channel="<<maximum<<'\n';
     return result;
