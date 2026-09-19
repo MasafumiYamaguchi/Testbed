@@ -7,7 +7,7 @@ function(white_compile_shader filename profile)
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/shaders"
     COMMAND "${WHITE_DXC}" -T ${profile} -E main -Ges -WX -O3
       "${CMAKE_SOURCE_DIR}/shaders/${filename}" -Fo "${output}"
-    DEPENDS "${CMAKE_SOURCE_DIR}/shaders/${filename}" "${CMAKE_SOURCE_DIR}/shaders/density.hlsli" "${CMAKE_SOURCE_DIR}/shaders/optics.hlsli" "${CMAKE_SOURCE_DIR}/shaders/noise.hlsli" "${CMAKE_SOURCE_DIR}/shaders/cache.hlsli" "${CMAKE_SOURCE_DIR}/shaders/phase.hlsli" "${CMAKE_SOURCE_DIR}/shaders/preview_approx.hlsli" VERBATIM)
+    DEPENDS "${CMAKE_SOURCE_DIR}/shaders/${filename}" "${CMAKE_SOURCE_DIR}/shaders/density.hlsli" "${CMAKE_SOURCE_DIR}/shaders/altitude_density.hlsli" "${CMAKE_SOURCE_DIR}/shaders/optics.hlsli" "${CMAKE_SOURCE_DIR}/shaders/noise.hlsli" "${CMAKE_SOURCE_DIR}/shaders/cache.hlsli" "${CMAKE_SOURCE_DIR}/shaders/phase.hlsli" "${CMAKE_SOURCE_DIR}/shaders/preview_approx.hlsli" VERBATIM)
   string(REPLACE "." "_" target_name "${filename}")
   add_custom_target(shader_${target_name} DEPENDS "${output}")
   add_dependencies(white_app shader_${target_name})

@@ -4,8 +4,8 @@
 #include <variant>
 
 namespace white {
-inline constexpr std::uint32_t field_graph_version=1;
-inline constexpr std::uint32_t field_density_algorithm_version=2;
+inline constexpr std::uint32_t field_graph_version=2;
+inline constexpr std::uint32_t field_density_algorithm_version=3;
 inline constexpr std::size_t max_field_nodes=64;
 inline constexpr std::size_t max_field_inputs=8;
 
@@ -32,6 +32,7 @@ struct FieldNoise {
 };
 struct FieldDensity {
     double scale=1;
+    AltitudeDensityProfile altitude_density{};
     bool operator==(const FieldDensity&)const=default;
 };
 struct FieldMask {

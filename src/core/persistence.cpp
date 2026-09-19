@@ -1,5 +1,6 @@
 #include "white/persistence.hpp"
 #include "white/cumulonimbus.hpp"
+#include "white/centerline.hpp"
 #include <nlohmann/json.hpp>
 #include <algorithm>
 #include <atomic>
@@ -120,6 +121,38 @@ CumulonimbusGroup cumulonimbus_from_json(const Json& j) {
     for(const auto& c:cuts)modifiers.cuts.push_back(cut_from_json(c));
     return group;
 }
+Json altitude_density_json(const AltitudeDensityProfile& profile) {
+    Json knots=Json::array();for(const auto& knot:profile.knots)knots.push_back({{"t",knot.t},{"scale",knot.scale}});
+    return {{"enabled",profile.enabled},{"base",profile.base},{"height",profile.height},{"knots",knots}};
+}
+AltitudeDensityProfile altitude_density_from_json(const Json& j) {
+    shape(j,{"enabled","base","height","knots"});
+    if(!j.at("enabled").is_boolean())throw std::invalid_argument("Altitude density enabled must be boolean");
+    const auto& knots=j.at("knots");
+    if(!knots.is_array()||knots.size()<2||knots.size()>max_altitude_density_knots)throw std::invalid_argument("Altitude density requires 2..8 knots");
+    AltitudeDensityProfile profile{j.at("enabled").get<bool>(),number(j.at("base")),number(j.at("height")),{}};
+    for(const auto& knot:knots){shape(knot,{"t","scale"});profile.knots.push_back({number(knot.at("t")),number(knot.at("scale"))});}
+    return profile;
+}
+Json centerline_json(const CenterlineShape& source) {
+    Json points=Json::array(),profile=Json::array();
+    for(const auto& p:source.points)points.push_back({{"id",std::to_string(p.id)},{"t",p.t},{"offset",vec(p.offset)}});
+    for(const auto& p:source.profile)profile.push_back({{"id",std::to_string(p.id)},{"t",p.t},{"radius_scale",p.radius_scale},{"density_scale",p.density_scale}});
+    return {{"contract_version",source.contract_version},{"source",cumulonimbus_json(source.source)},{"points",points},{"profile",profile}};
+}
+CenterlineShape centerline_from_json(const Json& j) {
+    shape(j,{"contract_version","source","points","profile"});
+    if(!j.at("contract_version").is_number_unsigned()||j.at("contract_version")!=centerline_contract_version)
+        throw std::invalid_argument("Unsupported centerline contract version");
+    CenterlineShape source;source.source=cumulonimbus_from_json(j.at("source"));
+    const auto& points=j.at("points");const auto& profile=j.at("profile");
+    if(!points.is_array()||points.size()<2||points.size()>max_centerline_points||!profile.is_array()||profile.size()<2||profile.size()>max_centerline_profile_points)
+        throw std::invalid_argument("Centerline requires 2..6 points and 2..8 profile knots");
+    source.points.clear();source.profile.clear();
+    for(const auto& p:points){shape(p,{"id","t","offset"});source.points.push_back({id(p.at("id")),number(p.at("t")),vec(p.at("offset"))});}
+    for(const auto& p:profile){shape(p,{"id","t","radius_scale","density_scale"});source.profile.push_back({id(p.at("id")),number(p.at("t")),number(p.at("radius_scale")),number(p.at("density_scale"))});}
+    return source;
+}
 void push_bounded(std::vector<Scene>& history,Scene scene) {
     if(history.size()==128)history.erase(history.begin());
     history.push_back(std::move(scene));
@@ -140,13 +173,14 @@ std::string scene_json(const Scene& s) {
             {"base",{{"enabled",c.base.enabled},{"height",c.base.height},{"transition",c.base.transition}}},
             {"density",c.density},{"blend_width",c.blend_width},{"overlap",c.overlap},
             {"structure_seed",std::to_string(c.structure_seed)},{"detail_seed",std::to_string(c.detail_seed)},
-            {"noise",noise_json(c.noise)},
+            {"noise",noise_json(c.noise)},{"altitude_density",altitude_density_json(c.altitude_density)},
             {"optics",{{"extinction_scale",c.optics.extinction_scale},{"albedo",c.optics.albedo},{"g",c.optics.g}}}}},
         {"camera",{{"position",vec(s.camera.position)},{"target",vec(s.camera.target)},{"up",vec(s.camera.up)},
             {"vertical_fov_degrees",s.camera.vertical_fov_degrees},{"near_plane",s.camera.near_plane},{"far_plane",s.camera.far_plane}}},
         {"sun",{{"direction_to_light",vec(s.sun.direction_to_light)},{"irradiance",vec(s.sun.irradiance)}}},
         {"exposure_ev",s.exposure_ev},{"preview_approx",{{"enabled",s.preview_approx.enabled},{"strength",s.preview_approx.strength}}}};
-    if(s.cumulonimbus)j["cloud"]={{"kind","cumulonimbus"},{"source",cumulonimbus_json(*s.cumulonimbus)}};
+    if(s.centerline)j["cloud"]={{"kind","centerline"},{"source",centerline_json(*s.centerline)}};
+    else if(s.cumulonimbus)j["cloud"]={{"kind","cumulonimbus"},{"source",cumulonimbus_json(*s.cumulonimbus)}};
     return j.dump(2)+"\n";
 }
 Scene parse_scene_json(std::string_view text) {
@@ -155,27 +189,38 @@ Scene parse_scene_json(std::string_view text) {
         if(depth>32)throw std::invalid_argument("Scene nesting exceeds 32 levels");
         return true;
     });
-    if((j.value("schema_version",0u)==4||j.value("schema_version",0u)==5))shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev","preview_approx"});
+    if((j.value("schema_version",0u)==4||j.value("schema_version",0u)==5||j.value("schema_version",0u)==6))shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev","preview_approx"});
     else shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev"});
     if(!j.at("schema_version").is_number_unsigned()||!j.at("algorithm_version").is_number_unsigned())throw std::invalid_argument("Version must be an unsigned integer");
     const bool legacy=j.at("schema_version")==1&&j.at("algorithm_version")==1;
     const bool version2=j.at("schema_version")==2&&j.at("algorithm_version")==2;
-    if(!legacy&&!version2&&((j.at("schema_version")!=3&&j.at("schema_version")!=4&&j.at("schema_version")!=5)||j.at("algorithm_version")!=2))throw std::invalid_argument("Unsupported schema/algorithm version");
+    const bool old_schema=(j.at("schema_version")==3||j.at("schema_version")==4||j.at("schema_version")==5)&&j.at("algorithm_version")==2;
+    const bool current_schema=j.at("schema_version")==6&&j.at("algorithm_version")==3;
+    if(!legacy&&!version2&&!old_schema&&!current_schema)throw std::invalid_argument("Unsupported schema/algorithm version");
     if(legacy) {
         shape(j.at("cloud"),{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics"});
         j["cloud"]["noise"]=noise_json(NoiseSettings{}); // exact old shape: all noise amplitudes zero
     }
     if(legacy||version2){shape(j["cloud"]["optics"],{"extinction_scale","albedo"});j["cloud"]["optics"]["g"]=0;}
     Scene s;
-    if(j.at("schema_version")==4||j.at("schema_version")==5){const auto& a=j.at("preview_approx");shape(a,{"enabled","strength"});if(!a.at("enabled").is_boolean())throw std::invalid_argument("Approximation enabled must be boolean");s.preview_approx={a.at("enabled").get<bool>(),number(a.at("strength"))};}
+    if(j.at("schema_version")==4||j.at("schema_version")==5||j.at("schema_version")==6){const auto& a=j.at("preview_approx");shape(a,{"enabled","strength"});if(!a.at("enabled").is_boolean())throw std::invalid_argument("Approximation enabled must be boolean");s.preview_approx={a.at("enabled").get<bool>(),number(a.at("strength"))};}
+    if(!current_schema&&!j.at("cloud").contains("kind")) {
+        if(j.at("cloud").contains("altitude_density"))throw std::invalid_argument("Legacy schema cannot contain altitude density fields");
+        j["cloud"]["altitude_density"]=altitude_density_json(AltitudeDensityProfile{});
+    }
     auto& c=s.cloud;const auto& cj=j.at("cloud");
-    if(j.at("schema_version")==5&&cj.is_object()&&cj.contains("kind")) {
+    if((j.at("schema_version")==5||current_schema)&&cj.is_object()&&cj.contains("kind")) {
         shape(cj,{"kind","source"});
-        if(cj.at("kind")!="cumulonimbus")throw std::invalid_argument("Unsupported cloud object kind");
-        s.cumulonimbus=cumulonimbus_from_json(cj.at("source"));
-        c=derive_cumulonimbus_recipe(*s.cumulonimbus);
+        if(cj.at("kind")=="cumulonimbus") {
+            s.cumulonimbus=cumulonimbus_from_json(cj.at("source"));
+            c=derive_cumulonimbus_recipe(*s.cumulonimbus);
+        } else if(current_schema&&cj.at("kind")=="centerline") {
+            s.centerline=centerline_from_json(cj.at("source"));
+            c=lower_centerline_to_recipe(*s.centerline);
+        } else throw std::invalid_argument("Unsupported cloud object kind");
     } else {
-    shape(cj,{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics","noise"});
+    shape(cj,{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics","noise","altitude_density"});
+    c.altitude_density=altitude_density_from_json(cj.at("altitude_density"));
     const auto& noise=cj.at("noise");shape(noise,{"origin","medium_frequency","medium_strength","micro_frequency","micro_erosion","warp_frequency","warp_amplitude"});
     c.noise={vec(noise.at("origin")),number(noise.at("medium_frequency")),number(noise.at("medium_strength")),number(noise.at("micro_frequency")),number(noise.at("micro_erosion")),number(noise.at("warp_frequency")),number(noise.at("warp_amplitude"))};
     c.id=id(cj.at("id"));c.structure_seed=id(cj.at("structure_seed"));c.detail_seed=id(cj.at("detail_seed"));
@@ -277,7 +322,10 @@ bool EditorSession::apply(Scene scene) {
 }
 Id EditorSession::add_cell(Cell cell) {
     auto scene=document_.scene();cell.id=next_id(scene);
-    if(scene.cumulonimbus) {
+    if(scene.centerline) {
+        scene.centerline->source.modifiers.manual_cells.push_back(cell);
+        scene.cloud=lower_centerline_to_recipe(*scene.centerline);
+    } else if(scene.cumulonimbus) {
         scene.cumulonimbus->modifiers.manual_cells.push_back(cell);
         scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);
     } else scene.cloud.cells.push_back(cell);
@@ -285,7 +333,13 @@ Id EditorSession::add_cell(Cell cell) {
 }
 bool EditorSession::remove_cell(Id id) {
     auto scene=document_.scene();
-    if(scene.cumulonimbus) {
+    if(scene.centerline) {
+        const auto& ids=scene.centerline->source.cell_ids;
+        if(std::find(ids.begin(),ids.end(),id)!=ids.end())
+            throw std::invalid_argument("Generated centerline cells cannot be deleted; explicitly convert to Custom Cloud first");
+        std::erase_if(scene.centerline->source.modifiers.manual_cells,[=](const auto& c){return c.id==id;});
+        scene.cloud=lower_centerline_to_recipe(*scene.centerline);
+    } else if(scene.cumulonimbus) {
         const auto& ids=scene.cumulonimbus->cell_ids;
         if(std::find(ids.begin(),ids.end(),id)!=ids.end())
             throw std::invalid_argument("Generated prefab cells cannot be deleted; explicitly convert to Custom Cloud first");

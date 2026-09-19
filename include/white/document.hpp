@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include "white/preview_approx.hpp"
+#include "white/density_profile.hpp"
 #include <chrono>
 #include <cstddef>
 #include <optional>
@@ -81,6 +82,7 @@ struct CloudRecipe {
     std::uint64_t structure_seed=42,detail_seed=17;
     Optics optics{};
     NoiseSettings noise{};
+    AltitudeDensityProfile altitude_density{};
     bool operator==(const CloudRecipe&) const = default;
 };
 inline constexpr std::uint32_t cumulonimbus_contract_version=1;
@@ -124,6 +126,31 @@ struct CumulonimbusGroup {
     bool operator==(const CumulonimbusGroup&)const=default;
 };
 
+inline constexpr std::uint32_t centerline_contract_version=1;
+inline constexpr std::size_t max_centerline_points=6,max_centerline_profile_points=8;
+inline constexpr double max_centerline_curvature=0.1; // conservative bound, inverse local metre
+
+// Control and profile IDs each use a separate namespace from stable Cell IDs.
+// t is normalized height above the fixed local cloud base, not arc length.
+// offsets are absolute local metres; y must be zero to preserve monotone height.
+struct CenterlinePoint {
+    Id id=0;
+    double t=0;
+    Vec3 offset{};
+    bool operator==(const CenterlinePoint&)const=default;
+};
+struct CenterlineProfilePoint {
+    Id id=0;
+    double t=0,radius_scale=1,density_scale=1;
+    bool operator==(const CenterlineProfilePoint&)const=default;
+};
+struct CenterlineShape {
+    std::uint32_t contract_version=centerline_contract_version;
+    CumulonimbusGroup source{};
+    std::vector<CenterlinePoint> points{{1,0,{}},{2,0.5,{}},{3,1,{}}};
+    std::vector<CenterlineProfilePoint> profile{{1,0,1,1},{2,1,1,1}};
+    bool operator==(const CenterlineShape&)const=default;
+};
 struct Camera {
     Vec3 position{120,70,120},target{0,20,0},up{0,1,0};
     double vertical_fov_degrees=45,near_plane=0.1,far_plane=10000;
@@ -135,9 +162,10 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=5,algorithm_version=2;
+    std::uint32_t schema_version=6,algorithm_version=3;
     CloudRecipe cloud{}; // Derived render snapshot when cumulonimbus is present.
     std::optional<CumulonimbusGroup> cumulonimbus{};
+    std::optional<CenterlineShape> centerline{}; // Exclusive source alternative.
     Camera camera{};
     Sun sun{};
     double exposure_ev=0;

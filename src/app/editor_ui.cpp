@@ -1,5 +1,6 @@
 #include "white/editor_ui.hpp"
 #include "white/editor_geometry.hpp"
+#include "white/cell_actions_ui.hpp"
 #include <imgui.h>
 #include <ImGuizmo.h>
 #include <algorithm>
@@ -41,7 +42,11 @@ void draw_primitive(const Scene& scene,Vec3 center,Vec3 radii,bool selected,bool
 void EditorUi::apply(Scene scene) {
     try {
         const auto& before=session.document().scene();
-        if(scene.cumulonimbus) {
+        if(scene.centerline) {
+            if(before.centerline&&scene.centerline==before.centerline&&scene.cloud!=before.cloud)
+                scene.centerline=edit_centerline_recipe(*before.centerline,scene.cloud);
+            scene.cloud=lower_centerline_to_recipe(*scene.centerline);
+        }else if(scene.cumulonimbus) {
             if(before.cumulonimbus&&scene.cumulonimbus==before.cumulonimbus&&scene.cloud!=before.cloud)
                 scene.cumulonimbus=edit_cumulonimbus_recipe(*before.cumulonimbus,scene.cloud);
             scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);
@@ -57,6 +62,11 @@ void EditorUi::inspector_item(bool changed,Scene scene,bool affects_transport) {
 void EditorUi::prefab_item(bool changed,const CumulonimbusCommand& command) {
     auto scene=session.document().scene();
     if(changed)try{scene=scene_with_cumulonimbus_command(std::move(scene),command);}catch(const std::exception& e){status_=e.what();changed=false;}
+    inspector_item(changed,std::move(scene));
+}
+void EditorUi::centerline_item(bool changed,const CenterlineCommand& command) {
+    auto scene=session.document().scene();
+    if(changed)try{scene=scene_with_centerline_command(std::move(scene),command);}catch(const std::exception& e){status_=e.what();changed=false;}
     inspector_item(changed,std::move(scene));
 }
 void EditorUi::camera_preset(int direction) {
@@ -100,17 +110,54 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(ImGui::Button("New Cumulonimbus")) {
         try{session.apply(new_cumulonimbus_scene(session.document().scene()));prefab_group_=true;select_cuts_=false;status_="Cumulonimbus created; Undo restores the previous cloud";}catch(const std::exception& e){status_=e.what();}
     }
-    if(session.document().scene().cumulonimbus) {
-        if(ImGui::Button("Convert to Custom Cloud")){apply(custom_cloud_scene(session.document().scene()));prefab_group_=false;}
+    if(prefab_source(session.document().scene())) {
+        if(ImGui::Button("Convert to Custom Cloud")){apply(custom_cloud_scene(session.document().scene()));prefab_group_=false;curve_point_=0;}
+    }
+    if(prefab_source(session.document().scene())&&!session.document().scene().centerline) {
+        if(ImGui::Button("Enable centerline")){apply(new_centerline_scene(session.document().scene()));curve_point_=2;prefab_group_=false;scale_=false;}
     }
     ImGui::EndDisabled();
-    if(session.document().scene().cumulonimbus) {
+    if(session.document().scene().centerline) {
+        if(ImGui::CollapsingHeader("Centerline and profiles",ImGuiTreeNodeFlags_DefaultOpen)) {
+            const auto shape=*session.document().scene().centerline;
+            for(const auto& point:shape.points){const auto label="Point "+std::to_string(point.id)+" / "+std::to_string(int(point.t*100))+"%";
+                if(ImGui::Selectable(label.c_str(),curve_point_==point.id&&!prefab_group_)){curve_point_=point.id;prefab_group_=false;scale_=false;}}
+            const auto point=std::find_if(shape.points.begin(),shape.points.end(),[&](const auto& p){return p.id==curve_point_;});
+            if(point!=shape.points.end()) {
+                auto position=sample_centerline(shape,point->t).position;
+                ImGui::TextUnformatted("Control position (local m)");ImGui::SetNextItemWidth(-1);
+                bool changed=ImGui::InputScalarN("##CurvePosition",ImGuiDataType_Double,&position.x,3,nullptr,nullptr,"%.2f");
+                centerline_item(changed,CenterlineMovePoint{point->id,position});
+                ImGui::BeginDisabled(gizmo_drag_||inspector_drag_||orbit_drag_);
+                if(ImGui::SmallButton("Insert halfway")) {
+                    try{const auto fresh=*session.document().scene().centerline;const auto at=std::find_if(fresh.points.begin(),fresh.points.end(),[&](const auto& p){return p.id==curve_point_;});
+                        if(at==fresh.points.end()||at+1==fresh.points.end())throw std::invalid_argument("Select a control before the top endpoint");
+                        Id id=0;for(const auto& p:fresh.points)id=std::max(id,p.id);if(id==UINT64_MAX)throw std::overflow_error("Control ID exhausted");
+                        apply(scene_with_centerline_command(session.document().scene(),CenterlineInsertPoint{id+1,(at->t+(at+1)->t)*.5}));curve_point_=id+1;
+                    }catch(const std::exception& e){status_=e.what();}
+                }
+                ImGui::SameLine();if(ImGui::SmallButton("Remove point"))try{apply(scene_with_centerline_command(session.document().scene(),CenterlineRemovePoint{curve_point_}));}catch(const std::exception& e){status_=e.what();}
+                ImGui::EndDisabled();
+            }
+            ImGui::TextUnformatted("Profile by height");
+            for(const auto& knot:shape.profile) {
+                ImGui::PushID(int(knot.id));ImGui::Text("Height %.0f%%",knot.t*100);ImGui::PushItemWidth(100);
+                auto current_knot=*std::find_if(session.document().scene().centerline->profile.begin(),session.document().scene().centerline->profile.end(),[&](const auto& p){return p.id==knot.id;});
+                bool changed=ImGui::InputDouble("Radius scale",&current_knot.radius_scale,0,0,"%.3f");centerline_item(changed,CenterlineSetProfile{knot.id,current_knot.radius_scale,current_knot.density_scale});
+                current_knot=*std::find_if(session.document().scene().centerline->profile.begin(),session.document().scene().centerline->profile.end(),[&](const auto& p){return p.id==knot.id;});
+                changed=ImGui::InputDouble("Density scale",&current_knot.density_scale,0,0,"%.3f");centerline_item(changed,CenterlineSetProfile{knot.id,current_knot.radius_scale,current_knot.density_scale});
+                ImGui::PopItemWidth();ImGui::PopID();
+            }
+            ImGui::TextWrapped("Radius scales generated lobes at their center heights (0.125..4). Density is continuous by local height (0..1). Flat base and saved noise origin stay fixed.");
+        }
+    }
+    if(prefab_source(session.document().scene())) {
         ImGui::SetNextItemOpen(true,ImGuiCond_Once);
-        if(ImGui::CollapsingHeader("Cumulonimbus")) {
-            ImGui::Checkbox("Edit whole cloud",&prefab_group_);
+        if(ImGui::CollapsingHeader("Cumulonimbus",ImGuiTreeNodeFlags_DefaultOpen)) {
+            if(ImGui::Checkbox("Edit whole cloud",&prefab_group_)&&prefab_group_)curve_point_=0;
             ImGui::PushItemWidth(110);
             for(const auto parameter:{CumulonimbusParameter::width,CumulonimbusParameter::height,CumulonimbusParameter::cloud_base,CumulonimbusParameter::density}) {
-                auto value=std::get<double>(cumulonimbus_value(session.document().scene().cumulonimbus->parameters,parameter));
+                auto value=std::get<double>(cumulonimbus_value(prefab_source(session.document().scene())->parameters,parameter));
                 const char* label=parameter==CumulonimbusParameter::width?"Width m":parameter==CumulonimbusParameter::height?"Height m":parameter==CumulonimbusParameter::cloud_base?"Cloud base m":"Density scale";
                 const bool changed=ImGui::InputDouble(label,&value,0,0,"%.2f");prefab_item(changed,{parameter,value});
                 ImGui::SameLine();ImGui::PushID(int(parameter));
@@ -118,7 +165,7 @@ void EditorUi::draw(GpuSpike& gpu) {
                 if(ImGui::SmallButton("Reset"))try{apply(scene_with_cumulonimbus_command(session.document().scene(),{parameter,cumulonimbus_value(CumulonimbusParameters{},parameter)}));}catch(const std::exception& e){status_=e.what();}
                 ImGui::EndDisabled();ImGui::PopID();
             }
-            auto direction=session.document().scene().cumulonimbus->parameters.growth_direction;
+            auto direction=prefab_source(session.document().scene())->parameters.growth_direction;
             ImGui::SetNextItemWidth(-1);bool changed=ImGui::InputScalarN("##Growth",ImGuiDataType_Double,&direction.x,3,nullptr,nullptr,"%.3f");
             // A direction edit specifies orientation. Normalize once before the common command.
             const double length=std::sqrt(dot(direction,direction));
@@ -129,7 +176,7 @@ void EditorUi::draw(GpuSpike& gpu) {
             if(ImGui::SmallButton("Reset growth"))apply(scene_with_cumulonimbus_command(session.document().scene(),{CumulonimbusParameter::growth_direction,CumulonimbusParameters{}.growth_direction}));
             ImGui::EndDisabled();
             for(const auto parameter:{CumulonimbusParameter::structure_seed,CumulonimbusParameter::detail_seed}) {
-                auto value=std::get<std::uint64_t>(cumulonimbus_value(session.document().scene().cumulonimbus->parameters,parameter));
+                auto value=std::get<std::uint64_t>(cumulonimbus_value(prefab_source(session.document().scene())->parameters,parameter));
                 changed=ImGui::InputScalar(parameter==CumulonimbusParameter::structure_seed?"Structure seed":"Detail seed",ImGuiDataType_U64,&value);
                 prefab_item(changed,{parameter,value});
                 ImGui::SameLine();ImGui::PushID(int(parameter));ImGui::BeginDisabled(gizmo_drag_||inspector_drag_||orbit_drag_);
@@ -142,9 +189,9 @@ void EditorUi::draw(GpuSpike& gpu) {
     }
     ImGui::BeginDisabled(dragging);
     ImGui::Separator();ImGui::Checkbox("Select cuts",&select_cuts_);
-    if(ImGui::Button("Add cell"))try{selected_=session.add_cell();select_cuts_=false;}catch(const std::exception& e){status_=e.what();}
+    if(ImGui::Button("Add cell"))try{selected_=session.add_cell();select_cuts_=false;prefab_group_=false;curve_point_=0;}catch(const std::exception& e){status_=e.what();}
     ImGui::SameLine();if(ImGui::Button("Add cut")) try {
-        auto s=session.document().scene();selected_=next_id(s);s.cloud.cuts.push_back({selected_,{12,40,0},{17,20,26},3});apply(std::move(s));select_cuts_=true;
+        auto s=session.document().scene();selected_=next_id(s);s.cloud.cuts.push_back({selected_,{12,40,0},{17,20,26},3});apply(std::move(s));select_cuts_=true;prefab_group_=false;curve_point_=0;
     }catch(const std::exception& e){status_=e.what();}
     if(ImGui::Button("Delete selected")) {
         auto s=session.document().scene();
@@ -153,11 +200,12 @@ void EditorUi::draw(GpuSpike& gpu) {
         apply(std::move(s));
     }
     ImGui::EndDisabled();
+    draw_cell_actions_ui(session,selected_,!dragging&&!select_cuts_&&!curve_point_&&!prefab_group_,status_);
     const auto& scene=session.document().scene();
-    if(select_cuts_){for(const auto& cut:scene.cloud.cuts){auto label="Cut "+std::to_string(cut.id);if(ImGui::Selectable(label.c_str(),(!scene.cumulonimbus||!prefab_group_)&&selected_==cut.id)){selected_=cut.id;prefab_group_=false;}}}
-    else {for(const auto& cell:scene.cloud.cells){auto label="Cell "+std::to_string(cell.id);if(ImGui::Selectable(label.c_str(),(!scene.cumulonimbus||!prefab_group_)&&selected_==cell.id)){selected_=cell.id;prefab_group_=false;}}}
+    if(select_cuts_){for(const auto& cut:scene.cloud.cuts){auto label="Cut "+std::to_string(cut.id);if(ImGui::Selectable(label.c_str(),(!prefab_source(scene)||!prefab_group_)&&selected_==cut.id)){selected_=cut.id;prefab_group_=false;curve_point_=0;}}}
+    else {for(const auto& cell:scene.cloud.cells){auto label="Cell "+std::to_string(cell.id);if(ImGui::Selectable(label.c_str(),(!prefab_source(scene)||!prefab_group_)&&selected_==cell.id)){selected_=cell.id;prefab_group_=false;curve_point_=0;}}}
     if(ImGui::RadioButton("Move",!scale_))scale_=false;
-    ImGui::SameLine();if(ImGui::RadioButton(session.document().scene().cumulonimbus&&prefab_group_?"Size":"Scale",scale_))scale_=true;
+    ImGui::SameLine();if(ImGui::RadioButton(prefab_source(session.document().scene())&&prefab_group_?"Size":"Scale",scale_))scale_=true;
     ImGui::Separator();
     auto s=session.document().scene();Vec3* center=nullptr;Vec3* radii=nullptr;
     if(select_cuts_){for(auto& cut:s.cloud.cuts)if(cut.id==selected_){center=&cut.center;radii=&cut.radii;}}
@@ -278,8 +326,12 @@ void EditorUi::draw(GpuSpike& gpu) {
     auto current=session.document().scene();Vec3 selected_center{},selected_radii{};bool selected=false;
     if(select_cuts_){for(auto& c:current.cloud.cuts)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
     else {for(auto& c:current.cloud.cells)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
-    const bool whole=current.cumulonimbus&&prefab_group_;
-    if(whole){const auto& p=current.cumulonimbus->parameters;selected_center=scale_?Vec3{p.width*.5,p.cloud_base+p.height,0}:Vec3{0,p.cloud_base,0};selected_radii={1,1,1};selected=true;}
+    bool curve=current.centerline&&curve_point_&&!prefab_group_;
+    bool curve_endpoint=false;
+    if(curve){const auto point=std::find_if(current.centerline->points.begin(),current.centerline->points.end(),[&](const auto& p){return p.id==curve_point_;});
+        if(point!=current.centerline->points.end()){selected_center=sample_centerline(*current.centerline,point->t).position;selected_radii={1,1,1};selected=true;curve_endpoint=point->t==0||point->t==1;}else {curve_point_=0;curve=false;}}
+    const bool whole=prefab_source(current)&&prefab_group_;
+    if(whole){const auto& p=prefab_source(current)->parameters;selected_center=scale_?Vec3{p.width*.5,p.cloud_base+p.height,0}:Vec3{0,p.cloud_base,0};selected_radii={1,1,1};selected=true;}
     if(gpu.show_volume){
         for(const auto& c:current.cloud.cells)draw_primitive(current,c.center,c.radii,!select_cuts_&&selected_==c.id,false,vx,vy,vw,vh);
         for(const auto& c:current.cloud.cuts)draw_primitive(current,c.center,c.radii,select_cuts_&&selected_==c.id,true,vx,vy,vw,vh);
@@ -290,22 +342,25 @@ void EditorUi::draw(GpuSpike& gpu) {
         auto view=camera_view(current.camera),projection=camera_projection(current.camera,vw/vh),model=primitive_matrix(current.cloud.transform,selected_center,selected_radii);
         ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());ImGuizmo::SetRect(vx,vy,vw,vh);ImGuizmo::SetOrthographic(false);
         Matrix4 handle_delta{};
-        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),whole?(scale_?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Y):ImGuizmo::TRANSLATE_Y):(scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE),ImGuizmo::LOCAL,model.data(),handle_delta.data());
+        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),curve?(curve_endpoint?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Z):ImGuizmo::TRANSLATE):whole?(scale_?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Y):ImGuizmo::TRANSLATE_Y):(scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE),ImGuizmo::LOCAL,model.data(),handle_delta.data());
         const bool using_now=ImGuizmo::IsUsing();
         if(using_now&&!gizmo_drag_){session.begin_drag();gizmo_drag_=true;}
         if(manipulated) {
             primitive_from_matrix(current.cloud.transform,model,selected_center,selected_radii);
-            if(whole) {
+            if(curve) {
+                if(curve_endpoint){const auto point=std::find_if(current.centerline->points.begin(),current.centerline->points.end(),[&](const auto& p){return p.id==curve_point_;});selected_center.y=sample_centerline(*current.centerline,point->t).position.y;}
+                try{apply(scene_with_centerline_command(std::move(current),CenterlineMovePoint{curve_point_,selected_center}));}catch(const std::exception& e){status_=e.what();}
+            }else if(whole) {
                 try {
                     const auto local_delta=world_to_local(current.cloud.transform,{handle_delta[12],handle_delta[13],handle_delta[14]})-world_to_local(current.cloud.transform,{0,0,0});
                     if(scale_) {
-                        const double width=current.cumulonimbus->parameters.width+2*local_delta.x,height=current.cumulonimbus->parameters.height+local_delta.y;
-                        if(std::abs(width-current.cumulonimbus->parameters.width)>1e-4)
+                        const double width=prefab_source(current)->parameters.width+2*local_delta.x,height=prefab_source(current)->parameters.height+local_delta.y;
+                        if(std::abs(width-prefab_source(current)->parameters.width)>1e-4)
                             current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::width,width});
-                        if(std::abs(height-current.cumulonimbus->parameters.height)>1e-4)
+                        if(std::abs(height-prefab_source(current)->parameters.height)>1e-4)
                             current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::height,height});
                     }else {
-                        const double base=current.cumulonimbus->parameters.cloud_base+local_delta.y;
+                        const double base=prefab_source(current)->parameters.cloud_base+local_delta.y;
                         current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::cloud_base,base});
                     }
                     apply(std::move(current));
@@ -320,9 +375,9 @@ void EditorUi::draw(GpuSpike& gpu) {
     }
     const bool over=io.MousePos.x>=vx&&io.MousePos.x<vx+vw&&io.MousePos.y>=vy&&io.MousePos.y<vy+vh;
     if(over&&!modal&&!(gizmo_active&&ImGuizmo::IsOver())&&!gizmo_drag_&&!inspector_drag_) {
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole) {
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole&&!curve) {
             const auto& sc=session.document().scene();auto ray=camera_ray(sc.camera,(io.MousePos.x-vx)/vw,(io.MousePos.y-vy)/vh,vw/vh);
-            if(auto pick=pick_primitive(sc.cloud,ray,select_cuts_)){selected_=*pick;prefab_group_=false;}
+            if(auto pick=pick_primitive(sc.cloud,ray,select_cuts_)){selected_=*pick;prefab_group_=false;curve_point_=0;}
         }
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Right)){session.begin_drag();orbit_drag_=true;}
         if(io.MouseWheel!=0&&!orbit_drag_) {
@@ -470,5 +525,54 @@ void EditorUi::verify_prefab_test(int frame) {
     if(!session.undo()||session.document().scene()!=smoke_before_||!session.redo()||session.document().scene()!=edited)
         throw std::runtime_error("Prefab gizmo drag must Undo/Redo in one existing EditorSession command");
     std::cout<<"prefab_gizmo="<<(frame==120?"height":frame==160?"width":"cloud_base")<<" before="<<old<<" after="<<actual<<" command_equal=true single_undo=true redo=true PASS\n";
+}
+
+void EditorUi::start_centerline_test() {
+    auto scene=new_centerline_scene(new_cumulonimbus_scene(session.document().scene()));
+    scene.camera.position={0,60,260};scene.camera.target={0,60,0};
+    scene.centerline->source.cell_adjustments.push_back({scene.centerline->source.cell_ids[4],{2,1,-3},{1.1,.9,1},91});
+    scene.cloud=lower_centerline_to_recipe(*scene.centerline);session.apply(scene);
+    curve_point_=2;prefab_group_=false;scale_=false;select_cuts_=false;smoke_original_=scene;
+}
+void EditorUi::centerline_test_input(int frame) {
+    auto& io=ImGui::GetIO();
+    if(frame==90) {
+        smoke_before_=session.document().scene();curve_point_=2;prefab_group_=false;scale_=false;
+        const auto center=sample_centerline(*smoke_before_.centerline,.5).position;
+        const auto& c=smoke_before_.camera;
+        const double pixels=(io.DisplaySize.y-90)/(2*(c.position.z-center.z)*std::tan(c.vertical_fov_degrees*3.141592653589793/360));
+        smoke_x_=290+(io.DisplaySize.x-310)*.5f+float((center.x-c.target.x)*pixels)+18;
+        smoke_y_=60+(io.DisplaySize.y-90)*.5f-float((center.y-c.target.y)*pixels);
+    }
+    if(frame>=95&&frame<=116) {
+        const float distance=float(std::clamp(frame-100,0,14))*2;
+        io.AddFocusEvent(true);io.AddMousePosEvent(smoke_x_+distance,smoke_y_);
+        if(frame==100)io.AddMouseButtonEvent(0,true);
+        if(frame==115)io.AddMouseButtonEvent(0,false);
+    }
+    if(frame==140) {
+        auto scene=session.document().scene();
+        scene=scene_with_centerline_command(scene,CenterlineSetProfile{2,1.35,.25});
+        scene=scene_with_centerline_command(scene,CenterlineSetProfile{3,.7,.8});
+        const auto expected=scene.centerline->source;session.apply(scene);
+        if(scene.centerline->source!=expected||scene.cloud.base!=smoke_original_.cloud.base||scene.cloud.noise.origin!=smoke_original_.cloud.noise.origin)
+            throw std::runtime_error("Centerline profile changed base/noise source");
+        if(!scene.cloud.altitude_density.enabled)throw std::runtime_error("Nonuniform density profile was omitted from shared GPU Recipe");
+        session.save("centerline-smoke.white.json");session.load("centerline-smoke.white.json");
+        if(session.document().scene()!=scene)throw std::runtime_error("Centerline source Save/Open mismatch");
+        auto side=scene;side.camera.position={260,60,0};side.camera.target={0,60,0};save_scene_atomic(side,"centerline-side.white.json");
+        std::cout<<"centerline_profile_source=true flat_base_preserved=true noise_origin_preserved=true save_reload=true PASS\n";
+    }
+}
+void EditorUi::verify_centerline_test(int frame) {
+    if(frame!=120)return;
+    const auto edited=session.document().scene();const auto& point=edited.centerline->points[1];
+    const auto position=sample_centerline(*edited.centerline,point.t).position;
+    const auto commanded=scene_with_centerline_command(smoke_before_,CenterlineMovePoint{point.id,position});
+    if(!(point.offset.x>.1)||edited!=commanded||gizmo_drag_)throw std::runtime_error("Centerline control gizmo differs from identical point command");
+    if(!session.undo()||session.document().scene()!=smoke_before_||!session.redo()||session.document().scene()!=edited)
+        throw std::runtime_error("Centerline control drag did not use one EditorSession undo command");
+    if(edited.centerline->source!=smoke_before_.centerline->source)throw std::runtime_error("Control-point edit changed prefab modifiers or seed source");
+    std::cout<<"centerline_gizmo=control_x command_equal=true single_undo=true redo=true stable_source=true PASS\n";
 }
 }

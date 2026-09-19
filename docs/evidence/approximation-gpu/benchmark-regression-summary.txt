@@ -1,0 +1,36 @@
+camera-cache-0.stdout.log
+benchmark_samples=60 edit_to_submission_p50_ms=0.6187 edit_to_submission_p95_ms=0.7657 edit_to_gpu_complete_p50_ms=96.6038 edit_to_gpu_complete_p95_ms=103.6526 serial_work_updates_per_second=10.3525972 cached_samples=0 direct_samples=60 hdr_updates=60 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=5796.15 completed_update_hz=10.3517
+benchmark_bakes=0 final_revision=62 requested_cache=0 csv=camera-cache-0.csv
+camera-cache-128.stdout.log
+benchmark_samples=60 edit_to_submission_p50_ms=0.8303 edit_to_submission_p95_ms=0.9532 edit_to_gpu_complete_p50_ms=47.9399 edit_to_gpu_complete_p95_ms=49.9941 serial_work_updates_per_second=20.8757241 cached_samples=60 direct_samples=0 hdr_updates=60 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=2874.65 completed_update_hz=20.8721
+benchmark_bakes=0 final_revision=62 requested_cache=128 csv=camera-cache-128.csv
+camera-cache-256.stdout.log
+benchmark_samples=60 edit_to_submission_p50_ms=0.9376 edit_to_submission_p95_ms=0.979 edit_to_gpu_complete_p50_ms=48.0469 edit_to_gpu_complete_p95_ms=50.3079 serial_work_updates_per_second=20.6968448 cached_samples=60 direct_samples=0 hdr_updates=60 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=2899.77 completed_update_hz=20.6913
+benchmark_bakes=0 final_revision=62 requested_cache=256 csv=camera-cache-256.csv
+density-cache-0.stdout.log
+benchmark_samples=60 edit_to_submission_p50_ms=8.9463 edit_to_submission_p95_ms=9.0915 edit_to_gpu_complete_p50_ms=100.4101 edit_to_gpu_complete_p95_ms=110.5016 serial_work_updates_per_second=9.88166818 cached_samples=0 direct_samples=60 hdr_updates=60 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=6072.35 completed_update_hz=9.88086
+benchmark_bakes=1 final_revision=62 requested_cache=0 csv=density-cache-0.csv
+density-cache-128.stdout.log
+benchmark_samples=60 edit_to_submission_p50_ms=28.8581 edit_to_submission_p95_ms=29.2273 edit_to_gpu_complete_p50_ms=117.9525 edit_to_gpu_complete_p95_ms=124.2709 serial_work_updates_per_second=8.42045262 cached_samples=0 direct_samples=60 hdr_updates=60 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=7126.02 completed_update_hz=8.41984
+benchmark_bakes=1 final_revision=62 requested_cache=128 csv=density-cache-128.csv
+density-cache-256.stdout.log
+benchmark_samples=60 edit_to_submission_p50_ms=110.4982 edit_to_submission_p95_ms=111.4935 edit_to_gpu_complete_p50_ms=199.8807 edit_to_gpu_complete_p95_ms=207.8522 serial_work_updates_per_second=4.91668167 cached_samples=0 direct_samples=60 hdr_updates=60 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=12204.1 completed_update_hz=4.91639
+benchmark_bakes=1 final_revision=62 requested_cache=256 csv=density-cache-256.csv
+exposure-cache-0.stdout.log
+benchmark_samples=60 edit_to_submission_p50_ms=0.4997 edit_to_submission_p95_ms=0.551 edit_to_gpu_complete_p50_ms=15.9943 edit_to_gpu_complete_p95_ms=16.2673 serial_work_updates_per_second=61.4600133 cached_samples=0 direct_samples=60 hdr_updates=0 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=976.485 completed_update_hz=61.4449
+benchmark_bakes=0 final_revision=62 requested_cache=0 csv=exposure-cache-0.csv
+exposure-cache-128.stdout.log
+benchmark_samples=60 edit_to_submission_p50_ms=0.6044 edit_to_submission_p95_ms=0.6474 edit_to_gpu_complete_p50_ms=15.9928 edit_to_gpu_complete_p95_ms=16.2844 serial_work_updates_per_second=61.5115668 cached_samples=60 direct_samples=0 hdr_updates=0 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=975.703 completed_update_hz=61.4941
+benchmark_bakes=0 final_revision=62 requested_cache=128 csv=exposure-cache-128.csv
+exposure-cache-256.stdout.log
+benchmark_samples=60 edit_to_submission_p50_ms=0.6066 edit_to_submission_p95_ms=0.646 edit_to_gpu_complete_p50_ms=15.991 edit_to_gpu_complete_p95_ms=16.1344 serial_work_updates_per_second=60.5220145 cached_samples=60 direct_samples=0 hdr_updates=0 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=991.637 completed_update_hz=60.506
+benchmark_bakes=0 final_revision=62 requested_cache=256 csv=exposure-cache-256.csv

@@ -7,10 +7,13 @@ candidate remains **OFF by default** and is rejected for default adoption. This
 assessment permits no claim of a physical Go, a production Final renderer, a
 finished denoiser, or an accepted target-machine performance result.
 
-This report distinguishes the earlier verified Windows Actions runs below from
-the combined Issues #22–27 integration snapshot. That snapshot still requires
-its own Actions build, runtime logs and screenshot review; earlier artifacts
-must not be presented as verification of a later commit.
+The combined Issues #22–27 integration snapshot has now passed
+[Native Actions run 35425272616](https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35425272616)
+and [CPU reference run 35425272605](https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35425272605).
+These test PR #73 head `8e5c02b4e327df7dfa1976da876ed526362049ac` as merge
+`6503ea6a3885b3cdf6fbb8c135b9157c1e71efcc`. Its new approximation and short-far
+screenshots, EXRs and regression logs were downloaded and reviewed; these
+artifacts do not imply verification of later Phase 2 commits.
 
 ## Fixed comparisons and what they establish
 
@@ -28,9 +31,10 @@ not an unbaked continuous procedural field.
 | Empty, homogeneous, cut boundary, low sun, thick cloud | `tests/fixtures/sun/`, `capture-sun.ps1`, `capture-majorant.ps1` | [Sun cache](evidence/sun/README.md) and [empty skipping](evidence/majorant/README.md) compare against the same cached density. |
 | Fixed versus settled pixel accumulation | `capture-progressive.ps1` | [Repeated 64-sample images](evidence/progressive/README.md) match every RGB/T pixel exactly. Fixed versus jittered output differs because pixel footprints differ. |
 | Majorant bounds, thin features, faces and noncubic grids | `white_majorant_tests`, `white_delta_tracking_tests`, `white_ratio_tracking_tests` | Full halo hierarchy validation; malformed underestimates fail before sampling. Zero-direction, boundary, transform and internal-origin cases are tested. |
-| Analytic single scattering and multiple-scattering uncertainty | `white_reference_tests`, `capture-reference.ps1` | [CPU contract evidence](evidence/reference-contract/README.md); fixed empty/absorbing/internal/thick fixtures and independent image seeds. The new image script still needs Actions artifact review for the integration commit. |
+| Analytic single scattering and multiple-scattering uncertainty | `white_reference_tests`, `capture-reference.ps1` | [CPU contract evidence](evidence/reference-contract/README.md) and [reviewed reference Actions images](evidence/reference/README.md); 31 bundles checked for seed, snapshot and completion provenance. |
 | Thin/thick, forward/back approximation comparison | `white_preview_reference_tests` | [24-case CPU report](evidence/preview-approx/report.md), including 12 held-out rectangular boxes, fixed model constants and four seeds. |
-| Editing, Undo, persistence and update work | `capture-window.ps1`, `capture-gate.ps1`, `benchmark-editor.ps1` | [Prior nine-track benchmark](evidence/benchmark/README.md) and [Phase 0 gate](phase-0-gate.md). The integrated build must repeat these checks. |
+| GPU approximation and camera-independent sun visibility | `capture-approx.ps1`, `sun/short-far.white.json` | [Seven new reviewed Windows images](evidence/approximation-gpu/README.md); approximation preserves T, and direct-shadow RGB agrees with independent homogeneous-box sunlight integration to 1.49240e-7. |
+| Editing, Undo, persistence and update work | `capture-window.ps1`, `capture-gate.ps1`, `benchmark-editor.ps1` | [Prior nine-track benchmark](evidence/benchmark/README.md), [Phase 0 gate](phase-0-gate.md) and [integration regression summary](evidence/approximation-gpu/README.md). The integrated run repeated the suites successfully. |
 
 The fixtures are currently split among these focused suites. They are not yet a
 single accepted all-renderer image matrix: heterogeneous MC/preview image error,
@@ -53,7 +57,8 @@ in the thick fixture. Sun caching remains opt-in. These errors are not MC varian
 
 **Conservative acceleration.** All 4,096 GPU leaf maxima match the CPU hierarchy
 exactly. Skipping OFF/ON gives identical RGB/T for every pixel of all five tested
-fixtures. Empty bricks are 4,096 for vacuum, zero for homogeneous density, 3,366
+fixtures in the earlier run; all six integration fixtures, including short-far,
+also match exactly. Empty bricks are 4,096 for vacuum, zero for homogeneous density, 3,366
 for the cut scene and 3,306 for low-sun/thick scenes. No sampled majorant violation
 was accepted; deliberate underestimates are rejected. This describes the tested
 fixed-grid model and does not prove a bound for arbitrary future field operators.
@@ -136,9 +141,11 @@ practical debugging sequence, not a substitute for a failing numerical test.
 - **Retain baseline:** physical single scattering with approximation OFF. Sun
   caching and progressive sampling remain explicit choices with their own error
   and reset contracts.
-- **Hold acceptance:** attach the combined commit's Actions results, inspect its
-  new diagnostic/reference/approximation screenshots, finish the same-grid image
-  matrix and record physical memory/latency before issuing a physical Go.
+- **Hold acceptance:** the combined commit's Actions results and its
+  new diagnostic/reference/approximation evidence are attached and reviewed.
+  Finish the all-renderer same-grid image matrix and record physical
+  memory/latency before issuing a physical Go. The separate CPU heterogeneous
+  image comparison does not by itself establish native GPU equality.
 - **Revise if reference contracts fail:** majorant underestimates, incomplete paths
   represented as complete, or unexplained analytic discrepancies require fixes.
   User authorization to continue phases does not convert incorrect references

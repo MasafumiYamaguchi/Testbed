@@ -20,13 +20,13 @@ double smooth_min(double a,double b,double k) {
 double coverage(double d) {return 1-smooth((d+2)/2);}
 Float4 pack(Vec3 p,float w=0) {return {float(p.x),float(p.y),float(p.z),w};}
 }
-DensityField::DensityField(CloudRecipe recipe):recipe_(std::move(recipe)) {
+DensityField::DensityField(CloudRecipe recipe):recipe_(std::move(recipe)),altitude_density_(recipe_.altitude_density) {
     Scene s;s.cloud=recipe_;require_valid(s);
     std::sort(recipe_.cells.begin(),recipe_.cells.end(),[](auto& a,auto& b){return a.id<b.id;});
     std::sort(recipe_.cuts.begin(),recipe_.cuts.end(),[](auto& a,auto& b){return a.id<b.id;});
 }
 double DensityField::maximum() const {
-    return recipe_.cells.empty()?0:recipe_.density*(1+recipe_.overlap*double(recipe_.cells.size()-1));
+    return recipe_.cells.empty()?0:recipe_.density*(1+recipe_.overlap*double(recipe_.cells.size()-1))*altitude_density_.maximum();
 }
 double DensityField::at(Vec3 p) const {
     if(!std::isfinite(p.x)||!std::isfinite(p.y)||!std::isfinite(p.z))throw std::invalid_argument("Non-finite field sample");
@@ -50,6 +50,7 @@ double DensityField::at(Vec3 p) const {
         if(d<=0)return 0;
         if(cut.transition>0)value*=smooth(d/cut.transition);
     }
+    value*=altitude_density_.at(p.y);
     return std::clamp(value,0.0,maximum());
 }
 Bounds DensityField::local_support() const {
@@ -90,6 +91,9 @@ GpuDensityParams gpu_density_params(const DensityField& field) {
     for(size_t i=0;i<r.cells.size();++i)out.cell_keys[i].x=noise_seed(cell_random_key(r,r.cells[i]));
     out.noise_origin=pack(r.noise.origin);out.noise_bands={float(r.noise.medium_frequency),float(r.noise.medium_strength),float(r.noise.micro_frequency),float(r.noise.micro_erosion)};
     out.noise_warp={float(r.noise.warp_frequency),float(r.noise.warp_amplitude),0,0};out.noise_seeds.x=noise_seed(r.detail_seed);
+    const auto& profile=r.altitude_density;
+    out.altitude_density_params={float(profile.base),float(profile.height),profile.enabled?float(profile.knots.size()):0.0f,float(AltitudeDensityEvaluator(profile).maximum())};
+    for(size_t i=0;i<profile.knots.size();++i)out.altitude_density_knots[i]={float(profile.knots[i].t),float(profile.knots[i].scale),0,0};
     return out;
 }
 Scene fixture_scene(int preset) {

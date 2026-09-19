@@ -1,0 +1,7 @@
+Independent homogeneous-box closed-form diagnostic over all 160x90 RGB/T pixels.
+Primary segment [0.1,1.0] world metres, sigma_t=0.02/m; sunlight traced to the box boundary.
+analytic_T=0.982161032358
+RGB_max_abs=1.49239273599e-07
+RGB_mean_abs=1.00942223539e-07
+T_max_abs=3.98079503783e-06
+T error agrees with the application CPU_T_max_error and remains a reported float-accumulation discrepancy, not a zero-error claim.

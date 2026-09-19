@@ -94,6 +94,7 @@ Analysis analyze(const FieldGraph& graph) {
     r.id=metadata.cloud_id;r.transform=metadata.transform;r.optics=metadata.optics;
     r.cells=shape.cells;r.blend_width=shape.blend_width;r.overlap=shape.overlap;
     r.density=std::get<FieldDensity>(density.parameters).scale;
+    r.altitude_density=std::get<FieldDensity>(density.parameters).altitude_density;
     r.envelope=mask.envelope;r.base=mask.base;r.cuts=mask.cuts;
     r.structure_seed=warp.structure_seed;r.detail_seed=noise.detail_seed;
     r.noise.origin=noise.origin;r.noise.medium_frequency=noise.medium_frequency;r.noise.medium_strength=noise.medium_strength;
@@ -116,7 +117,7 @@ FieldGraph canonical(FieldGraph graph) {
 }
 FieldType field_type(const FieldNode& node) {
     // Variant order and FieldType order are deliberately the same and fixed by
-    // graph version 1. valueless variants are rejected, never sent to a shader.
+    // graph versions 1/2. valueless variants are rejected, never sent to a shader.
     if(node.parameters.valueless_by_exception())throw std::invalid_argument("Field node has no parameters");
     return static_cast<FieldType>(node.parameters.index());
 }
@@ -130,7 +131,7 @@ FieldGraph field_graph_from_recipe(const CloudRecipe& r) {
         {1,FieldShape{r.cells,r.blend_width,r.overlap},{}},
         {2,FieldWarp{r.noise.origin,r.noise.warp_frequency,r.noise.warp_amplitude,r.structure_seed},{1}},
         {3,FieldNoise{r.noise.origin,r.noise.medium_frequency,r.noise.medium_strength,r.noise.micro_frequency,r.noise.micro_erosion,r.detail_seed},{2}},
-        {4,FieldDensity{r.density},{3}},
+        {4,FieldDensity{r.density,r.altitude_density},{3}},
         {5,FieldMask{r.envelope,r.base,r.cuts},{}},
         {6,FieldOutput{r.id,r.transform,r.optics},{4,5}}
     };

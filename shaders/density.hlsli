@@ -1,4 +1,5 @@
 #include "noise.hlsli"
+#include "altitude_density.hlsli"
 // Shared pointwise field for preview, bake and future export.
 // Approximate ellipsoid implicit distance; never use as a sphere-tracing step.
 #ifndef DENSITY_SPACE
@@ -8,6 +9,7 @@ cbuffer Cloud : register(b1, DENSITY_SPACE) {
     float4 centers[8]; float4 radii[8]; float4 cutCenters[8]; float4 cutRadii[8];
     float4 envelopeMin; float4 envelopeMax; float4 settings; float4 config;
     uint4 cellKeys[8];float4 noiseOrigin,noiseBands,noiseWarp;uint4 noiseSeeds;
+    float4 altitudeDensityParams;float4 altitudeDensityKnots[8];
 };
 float smooth01(float x) {x=saturate(x);return x*x*(3-2*x);}
 float ellipsoid(float3 p,float3 c,float3 r) {return (length((p-c)/r)-1)*min(r.x,min(r.y,r.z));}
@@ -37,5 +39,6 @@ float densityAt(float3 p) {
         if(d<=0)return 0;
         if(cutRadii[c].w>0)value*=smooth01(d/cutRadii[c].w);
     }
-    return clamp(value,0,settings.z*(1+config.x*(count-1)));
+    value*=altitudeDensityScale(p.y,altitudeDensityParams,altitudeDensityKnots);
+    return clamp(value,0,settings.z*(1+config.x*(count-1))*altitudeDensityParams.w);
 }
