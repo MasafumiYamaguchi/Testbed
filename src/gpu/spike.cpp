@@ -1,4 +1,5 @@
 #include "white/gpu_spike.hpp"
+#include "white/benchmark.hpp"
 #include "white/build_info.hpp"
 #include "white/optics.hpp"
 #include "white/dense_cache.hpp"
@@ -83,17 +84,17 @@ std::vector<Uint8> GpuSpike::shader(const char* name) {
     if (!in) throw std::runtime_error("Incomplete shader read");
     return bytes;
 }
-void GpuSpike::initialize() {
+void GpuSpike::initialize(bool validation) {
     SDL_SetLogPriority(SDL_LOG_CATEGORY_GPU, SDL_LOG_PRIORITY_INFO);
     window=SDL_CreateWindow("ProjectWhite | GPU field laboratory",900,600,SDL_WINDOW_RESIZABLE);
     gpu_check(window != nullptr,"Create window");
     SDL_SetWindowPosition(window,40,40);
     SDL_SetWindowMinimumSize(window,640,480);
-    device=SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_DXIL, true, "direct3d12");
+    device=SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_DXIL, validation, "direct3d12");
     gpu_check(device != nullptr,"Create D3D12 device (no silent CPU fallback)");
     gpu_check(SDL_ClaimWindowForGPUDevice(device,window),"Claim GPU window"); claimed=true;
     std::cout << "backend=" << SDL_GetGPUDeviceDriver(device) << " SDL=" << SDL_GetVersion()
-              << " requested_debug=true format=R32_FLOAT dimensions=17x19x23\n";
+              << " requested_debug="<<(validation?"true":"false")<<" format=R32_FLOAT dimensions=17x19x23\n";
     auto make_compute=[&](const char* name, bool sampling) {
         const auto bytes=shader(name);
         SDL_GPUComputePipelineCreateInfo ci{};
@@ -211,14 +212,13 @@ void GpuSpike::wait_bakes() {
     if(field_density_hash_!=density_input_hash(scene_snapshot_))throw std::runtime_error("Latest density bake unavailable");
 }
 void GpuSpike::set_interacting(bool value){if(value!=interacting_){interacting_=value;volume_dirty=true;}}
-void GpuSpike::note_present(std::uint64_t revision) {
+void GpuSpike::note_present(std::uint64_t revision,std::chrono::steady_clock::time_point submitted) {
     if(revision!=scene_revision||revision==last_present_revision_)return;
     last_present_revision_=revision;
-    const double elapsed=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-accepted_).count();
+    const double elapsed=std::chrono::duration<double,std::milli>(submitted-accepted_).count();
     if(latency_samples_.size()==512)latency_samples_.erase(latency_samples_.begin());
     latency_samples_.push_back(elapsed);
-    auto sorted=latency_samples_;std::sort(sorted.begin(),sorted.end());
-    std::cout<<"edit_to_present_submission revision="<<revision<<" ms="<<elapsed<<" samples="<<sorted.size()<<" p50_ms="<<sorted[(sorted.size()-1)/2]<<" p95_ms="<<sorted[std::min(sorted.size()-1,(sorted.size()*95)/100)]<<'\n';
+    std::cout<<"edit_to_present_submission revision="<<revision<<" ms="<<elapsed<<" samples="<<latency_samples_.size()<<" p50_ms="<<percentile(latency_samples_,0.5)<<" p95_ms="<<percentile(latency_samples_,0.95)<<'\n';
 }
 void GpuSpike::validate() {
     wait_bakes();

@@ -44,7 +44,7 @@ public:
     GpuSpike(const GpuSpike&) = delete;
     GpuSpike& operator=(const GpuSpike&) = delete;
     ~GpuSpike();
-    void initialize();
+    void initialize(bool validation=true);
     void create_field(std::array<Uint32,3> dims, Uint32 kind);
     void create_cloud(int preset);
     void set_scene(const Scene&,std::uint64_t revision,std::chrono::steady_clock::time_point accepted=std::chrono::steady_clock::now());
@@ -53,9 +53,10 @@ public:
     void poll_bakes();
     void wait_bakes();
     void set_interacting(bool);
-    void note_present(std::uint64_t revision);
+    void note_present(std::uint64_t revision,std::chrono::steady_clock::time_point submitted=std::chrono::steady_clock::now());
     bool bake_pending()const;
     bool cache_current()const;
+    bool rendered_from_cache()const{return rendered_cache_;}
     void set_test_delay(unsigned milliseconds);
     std::uint64_t rendered_revision=0;
     void resize(Uint32 w, Uint32 h);

@@ -6,8 +6,9 @@ ellipsoid density with single scattering and provides primitive picking, Move/
 Scale gizmos, numeric inspection, a flat base, cuts, camera orbit, Undo/Redo and
 JSON Save/Open. Medium density modulation, micro edge erosion and bounded structural warp are
 available in Shape details. Optional 128³/256³ density caches rebuild asynchronously
-and preserve the latest direct preview while editing. The [Phase-0 gate is Hold](docs/phase-0-gate.md):
-physical RTX validation is outstanding and Phase 1 has not started. Production export remains later work.
+and preserve the latest direct preview while editing. [Phase-0 physical acceptance remains pending](docs/phase-0-gate.md):
+physical RTX validation is outstanding. The user has authorized subsequent phases
+to proceed while that validation is deferred. Production export remains later work.
 
 ## Windows build
 

@@ -55,7 +55,7 @@ void GpuBakeWorker::run(){
             std::lock_guard lock(mutex_);
             const bool publish=queue_.finish(job.revision,job.input_hash,complete);
             if(publish)result_=std::move(built);else if(built.texture)SDL_ReleaseGPUTexture(device_,built.texture);
-            std::ostringstream trace;trace<<"density_job_revision="<<job.revision<<" input_hash="<<job.input_hash<<" publish="<<publish<<" coalesced="<<queue_.coalesced<<" discarded="<<queue_.discarded<<" pending="<<queue_.pending()<<" running="<<queue_.running()<<'\n';telemetry_=trace.str();
+            std::ostringstream trace;trace<<"density_job_revision="<<job.revision<<" input_hash="<<job.input_hash<<" publish="<<publish<<" coalesced="<<queue_.coalesced<<" discarded="<<queue_.discarded<<" pending="<<queue_.pending()<<" running="<<queue_.running()<<" generation_cpu_elapsed_excluding_fences_ms="<<built.record_ms<<" generation_submit_and_fence_wall_ms="<<built.wait_ms<<'\n';telemetry_=trace.str();
         }
         cv_.notify_all();
     }
