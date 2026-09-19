@@ -3,7 +3,8 @@ $ErrorActionPreference = "Stop"
 New-Item -ItemType Directory -Force $OutputDirectory | Out-Null
 $out = (Resolve-Path $OutputDirectory).Path
 $exe = (Resolve-Path $Executable).Path
-$process = Start-Process -FilePath $exe -ArgumentList @("--frames", "180", "--self-test", "--lifecycle-test", "--capture", "client.bmp") -WorkingDirectory $out -PassThru -RedirectStandardOutput "$out/app.stdout.log" -RedirectStandardError "$out/app.stderr.log"
+# Keep the process alive while PowerShell compiles the native capture helper.
+$process = Start-Process -FilePath $exe -ArgumentList @("--frames", "600", "--self-test", "--lifecycle-test", "--capture", "client.bmp") -WorkingDirectory $out -PassThru -RedirectStandardOutput "$out/app.stdout.log" -RedirectStandardError "$out/app.stderr.log"
 try {
     $ready = $false
     for ($i = 0; $i -lt 600; $i++) {
@@ -35,7 +36,17 @@ public class WindowCapture {
     } finally { $graphics.Dispose(); $bitmap.Dispose() }
     $client = [System.Drawing.Image]::FromFile("$out/client.bmp")
     try { $client.Save("$out/framebuffer.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $client.Dispose() }
-    if (!$process.WaitForExit(20000)) { throw "App did not exit within twenty seconds" }
+    $memory = @()
+    $deadline = [DateTime]::UtcNow.AddSeconds(30)
+    while (!$process.HasExited -and [DateTime]::UtcNow -lt $deadline) {
+        $process.Refresh()
+        if (!$process.HasExited) {
+            $memory += [pscustomobject]@{Utc=[DateTime]::UtcNow.ToString("o"); PrivateBytes=$process.PrivateMemorySize64; WorkingSet=$process.WorkingSet64; Handles=$process.HandleCount}
+        }
+        Start-Sleep -Milliseconds 250
+    }
+    $memory | Export-Csv "$out/process-memory.csv" -NoTypeInformation
+    if (!$process.HasExited) { throw "App did not exit within thirty seconds" }
     if ($process.ExitCode -ne 0) { throw "App failed with exit code $($process.ExitCode)" }
 } finally {
     if (!$process.HasExited) { Stop-Process -Id $process.Id -Force }

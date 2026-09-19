@@ -152,7 +152,7 @@ void GpuSpike::validate() {
     SDL_DownloadFromGPUTexture(copy,&region,&dest); SDL_EndGPUCopyPass(copy); submit_wait(device,cmd);
     auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));
     gpu_check(values != nullptr,"Map density readback");
-    max_error=0; bool finite=true;
+    max_error=0; interpolation_error=0; bool finite=true;
     for(Uint32 z=0;z<extent[2];++z) for(Uint32 y=0;y<extent[1];++y) for(Uint32 x=0;x<extent[0];++x) {
         const float value=values[(z*extent[1]+y)*pitch+x];
         finite=finite && std::isfinite(value);

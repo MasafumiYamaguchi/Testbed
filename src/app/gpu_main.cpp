@@ -62,6 +62,11 @@ int main(int argc,char** argv) {
             for(auto dims:{std::array<Uint32,3>{1,1,1},{17,19,23},{32,32,32}}) {
                 for(Uint32 fixture=0;fixture<2;++fixture) {gpu.create_field(dims,fixture);gpu.validate();}
             }
+            // Stress replacement and fenced readback without growing resource
+            // ownership; this is bounded and does not replace long-run testing.
+            for(int repeat=0;repeat<16;++repeat) {
+                gpu.create_field({17,19,23},Uint32(repeat%2));gpu.validate();
+            }
         }
         gpu.create_field({17,19,23},0);gpu.validate();
         Ui ui;ui.init(gpu);
@@ -89,9 +94,11 @@ int main(int argc,char** argv) {
             ImGui::Text("17 x 19 x 23 / R32 float");
             ImGui::Text("Backend: %s",SDL_GetGPUDeviceDriver(gpu.device));
             ImGui::Spacing();
+            ImGui::PushItemWidth(135);
             if(ImGui::Combo("Fixture",&kind,"XYZ ramp\0Center impulse\0")) {gpu.create_field({17,19,23},Uint32(kind));gpu.validate();}
             ImGui::Combo("Slice axis",&axis,"X (YZ)\0Y (XZ)\0Z (XY)\0");
             ImGui::SliderFloat("Position",&slice,0,1,"%.3f");
+            ImGui::PopItemWidth();
             if(ImGui::Button("Regenerate and verify")) {gpu.create_field(gpu.extent,gpu.fixture);gpu.validate();}
             ImGui::Spacing();ImGui::Separator();
             ImGui::TextColored({0.4f,0.95f,0.7f,1},"Readback verified");
