@@ -420,13 +420,13 @@ void GpuSpike::validate_cache_samples() {
     }catch(...){SDL_ReleaseGPUBuffer(device,output);throw;}SDL_ReleaseGPUBuffer(device,output);
 }
 void GpuSpike::validate_optics() {
-    SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,14*4*sizeof(float),0};
+    SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,24*4*sizeof(float),0};
     auto* output=SDL_CreateGPUBuffer(device,&bi);gpu_check(output!=nullptr,"Create optical result buffer");
     try {
         Transfer transfer(device,bi.size);auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire optical test commands");
         SDL_GPUStorageBufferReadWriteBinding binding{};binding.buffer=output;
         auto* pass=SDL_BeginGPUComputePass(cmd,nullptr,0,&binding,1);SDL_BindGPUComputePipeline(pass,optical_test);
-        SDL_DispatchGPUCompute(pass,14,1,1);SDL_EndGPUComputePass(pass);
+        SDL_DispatchGPUCompute(pass,24,1,1);SDL_EndGPUComputePass(pass);
         auto* copy=SDL_BeginGPUCopyPass(cmd);SDL_GPUBufferRegion source{output,0,bi.size};SDL_GPUTransferBufferLocation destination{transfer.buffer,0};
         SDL_DownloadFromGPUBuffer(copy,&source,&destination);SDL_EndGPUCopyPass(copy);submit_wait(device,cmd);
         auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map optical test");
@@ -436,7 +436,17 @@ void GpuSpike::validate_optics() {
         const std::array<Float4,6> bounds_expected{Float4{1,2,4,1},Float4{1,0,1,1},Float4{0,0,0,1},Float4{1,2,4,1},Float4{1,2,4,1},Float4{1,float(2*std::sqrt(3)),float(4*std::sqrt(3)),1}};
         double bounds_error=0;
         for(int i=0;i<6;++i){const float expected[]{bounds_expected[i].x,bounds_expected[i].y,bounds_expected[i].z,bounds_expected[i].w};for(int j=0;j<4;++j){finite=finite&&std::isfinite(values[(i+8)*4+j]);bounds_error=std::max(bounds_error,std::abs(double(values[(i+8)*4+j])-expected[j]));}}
+        const auto a=integrate_constant_source(.1,2,.3),b=integrate_constant_source(.5,1,.2);
+        const std::array<OpticalResult,6> expected_segments{integrate_constant_source(0,3,2),integrate_constant_source(1e-8,5,1e-9),compose_front_to_back(a,b),compose_front_to_back(b,a),integrate_constant_source(.025,40,.05),integrate_constant_source(.125,8,.3)};
+        bool contract_ok=true;
+        for(int i=0;i<6;++i){const int offset=(14+i)*4;const auto expected=expected_segments[i];const double te=std::abs(values[offset]-expected.transmittance),le=std::abs(values[offset+1]-expected.radiance);const double l_abs=i==1?1e-14:2e-5;
+            contract_ok=contract_ok&&std::isfinite(values[offset])&&std::isfinite(values[offset+1])&&te<=2e-5&&le<=l_abs+2e-5*std::abs(expected.radiance);
+            std::cout<<"GPU optical_contract case="<<i<<" T="<<values[offset]<<" L="<<values[offset+1]<<" T_abs_error="<<te<<" L_abs_error="<<le<<" L_absolute_tolerance="<<l_abs<<" relative_tolerance=2e-5\n";
+        }
+        double previous=1;for(int i=0;i<3;++i){const double actual=values[(20+i)*4],difference=std::abs(actual-std::exp(-1.2));contract_ok=contract_ok&&std::isfinite(actual)&&difference<previous*.35+2e-6;previous=difference;std::cout<<"GPU optical_convergence steps="<<(16<<i)<<" T_abs_error="<<difference<<'\n';}
+        contract_ok=contract_ok&&values[23*4]==0&&values[23*4+1]==0&&values[23*4+2]==0&&values[23*4+3]==1;
         SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
+        if(!contract_ok)throw std::runtime_error("GPU optical integration contract failed");
         std::cout<<"GPU ray/box six cases max_abs_error="<<bounds_error<<'\n';
         if(!finite||bounds_error>1e-4)throw std::runtime_error("GPU ray/box regression failed");
         std::cout<<"GPU homogeneous optics max_abs_error="<<error<<" tolerance=0.001\n";
