@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "white/density.hpp"
+#include "white/progressive.hpp"
 #include "white/gpu_bake_worker.hpp"
 #include <memory>
 #include <chrono>
@@ -31,6 +32,10 @@ public:
     std::uint64_t bake_count=0,estimated_gpu_bytes=0;
     double bake_record_ms=0,bake_wait_ms=0;
     void set_cache_resolution(int resolution);
+    bool progressive=false,progressive_paused=false;
+    unsigned progressive_budget=64;
+    PreviewState preview_state;
+    void prepare_preview();
     bool empty_skip=false;
     void validate_majorant();
     int sun_cache_resolution=0; // 0 direct, 32/64 tau cache
@@ -71,6 +76,10 @@ public:
     void validate_cache_samples();
     std::vector<float> read_hdr();
 private:
+    SDL_GPUTexture* accumulation_[2]{};
+    SDL_GPUGraphicsPipeline* accumulation_pipeline_=nullptr;
+    unsigned accumulation_next_=0,accumulation_width_=0,accumulation_height_=0;
+    SDL_GPUTexture* displayed_hdr()const;
     SDL_GPUTexture* majorant_texture_=nullptr;
     SDL_GPUComputePipeline* majorant_generate_=nullptr;
     std::uint64_t majorant_key_=0;

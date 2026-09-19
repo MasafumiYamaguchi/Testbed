@@ -44,6 +44,7 @@ int main(int argc,char** argv) {
     int frames=0,preset=2,render_width=160,view_steps=64,shadow_steps=8,cache=0,sun_cache=0;
     std::string recipe,benchmark_output="benchmark.csv",benchmark_track="density";
     int benchmark_updates=0;bool validation=true;
+    unsigned progressive_samples=0;
     bool empty_skip=false;
     std::string capture,hdr_output;
     bool lifecycle=false,self_test=false;
@@ -76,6 +77,7 @@ int main(int argc,char** argv) {
             std::cerr<<"--scene requires 0..4\n";return 2;
         }
         if(arg=="--lifecycle-test") {lifecycle=true;continue;}
+        if(arg=="--progressive"&&i+1<argc){std::string v=argv[++i];auto r=std::from_chars(v.data(),v.data()+v.size(),progressive_samples);if(r.ec==std::errc{}&&r.ptr==v.data()+v.size()&&progressive_samples>=1&&progressive_samples<=256)continue;std::cerr<<"--progressive requires 1..256\n";return 2;}
         if(arg=="--empty-skip"){empty_skip=true;continue;}
         if(arg=="--sun-cache"&&i+1<argc){std::string v=argv[++i];if(v=="0"||v=="32"||v=="64"){sun_cache=std::stoi(v);continue;}std::cerr<<"--sun-cache requires 0/32/64\n";return 2;}
         if(arg=="--export-hdr" && i+1<argc){hdr_output=argv[++i];continue;}
@@ -89,6 +91,7 @@ int main(int argc,char** argv) {
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
     if(!hdr_output.empty()&&(capture.empty()||!frames||self_test||lifecycle)){std::cerr<<"--export-hdr requires --capture and --frames, without self-test/lifecycle\n";return 2;}
+    if(progressive_samples&&(self_test||benchmark_updates)){std::cerr<<"Progressive mode excludes fixed self-test/benchmark\n";return 2;}
     if(self_test&&frames>0&&frames<760){std::cerr<<"--self-test requires --frames >= 760 to finish UI checks\n";return 2;}
     if(self_test&&!recipe.empty()){std::cerr<<"Use separate runs for fixed Recipe and scripted UI self-test\n";return 2;}
     if(benchmark_updates){
@@ -98,7 +101,7 @@ int main(int argc,char** argv) {
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
     int exit_code=0;
     try {
-        white::GpuSpike gpu; gpu.initialize(validation);gpu.empty_skip=empty_skip;gpu.sun_cache_resolution=sun_cache;gpu.validate_optics();
+        white::GpuSpike gpu; gpu.initialize(validation);gpu.progressive=progressive_samples>0;if(progressive_samples)gpu.progressive_budget=progressive_samples;gpu.empty_skip=empty_skip;gpu.sun_cache_resolution=sun_cache;gpu.validate_optics();
         if(self_test) {
             for(auto dims:{std::array<Uint32,3>{1,1,1},{17,19,23},{32,32,32}}) {
                 for(Uint32 fixture=0;fixture<2;++fixture) {gpu.create_field(dims,fixture);gpu.validate();}
@@ -182,7 +185,7 @@ int main(int argc,char** argv) {
             if(self_test&&gpu.scene_revision!=editor.session.document().revision())throw std::runtime_error("Self-test preview revision is stale");
             if(self_test)editor.verify_scripted_input(frame);
             ImGui::Render();
-            const bool hdr_work=gpu.volume_dirty&&gpu.show_volume;
+            bool hdr_work=false;
             const auto record_start=std::chrono::steady_clock::now();
             auto* cmd=SDL_AcquireGPUCommandBuffer(gpu.device);white::gpu_check(cmd != nullptr,"Acquire frame commands");
             SDL_GPUTexture* swap=nullptr;Uint32 w=0,h=0;
@@ -190,7 +193,7 @@ int main(int argc,char** argv) {
                 SDL_CancelGPUCommandBuffer(cmd);white::gpu_check(false,"Acquire swapchain");
             }
             if(swap) {
-                gpu.resize(w,h);gpu.draw(cmd,editor.slice,Uint32(editor.axis));
+                gpu.resize(w,h);gpu.prepare_preview();hdr_work=gpu.volume_dirty&&gpu.show_volume;gpu.draw(cmd,editor.slice,Uint32(editor.axis));
                 ImGui_ImplSDLGPU3_PrepareDrawData(ImGui::GetDrawData(),cmd);
                 SDL_GPUColorTargetInfo color{};color.texture=gpu.target;color.load_op=SDL_GPU_LOADOP_LOAD;color.store_op=SDL_GPU_STOREOP_STORE;
                 auto* pass=SDL_BeginGPURenderPass(cmd,&color,1,nullptr);
@@ -216,13 +219,13 @@ int main(int argc,char** argv) {
                 if(swap&&!benchmark_updates)gpu.note_present(gpu.rendered_revision,submitted);
                 if(hdr_work&&!benchmark_updates)std::cout<<"frame_revision="<<gpu.scene_revision<<" mode="<<(gpu.use_cache&&gpu.cache_current()?"cache":"direct")<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(recorded-record_start).count()<<" submit_to_fence_wall_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-recorded).count()<<" gpu_timestamp_ms=unavailable\n";
             }else {white::gpu_check(SDL_SubmitGPUCommandBuffer(cmd),"Submit frame");if(swap)gpu.note_present(gpu.rendered_revision);}
-            if(swap && !capture.empty() && !captured && frame>=(benchmark_updates?benchmark_updates+60:60)) {
+            if(swap && !capture.empty() && !captured && (!progressive_samples||gpu.preview_state.samples()>=progressive_samples) && frame>=(benchmark_updates?benchmark_updates+60:60)) {
                 gpu.save_capture(capture);captured=true;std::cout<<"capture="<<capture<<" frame="<<frame<<'\n';
                 if(gpu.show_volume&&gpu.fixture==2) {
                     baseline_hdr=gpu.read_hdr();if(empty_skip)gpu.validate_majorant();if(sun_cache)gpu.validate_sun_cache();
                     if(!hdr_output.empty()){
                         if(gpu.rendered_revision!=editor.session.document().revision())throw std::runtime_error("Export frame revision mismatch");
-                        white::export_hdr({gpu.hdr_width,gpu.hdr_height,baseline_hdr},{editor.session.document().scene(),std::uint64_t(frame),gpu.rendered_revision,unsigned(gpu.view_steps),unsigned(gpu.shadow_steps),gpu.rendered_from_cache(),unsigned(sun_cache),empty_skip},std::filesystem::u8path(hdr_output));
+                        white::export_hdr({gpu.hdr_width,gpu.hdr_height,baseline_hdr},{editor.session.document().scene(),std::uint64_t(frame),gpu.rendered_revision,unsigned(gpu.view_steps),unsigned(gpu.shadow_steps),gpu.rendered_from_cache(),unsigned(gpu.sun_cache_resolution),gpu.empty_skip,gpu.progressive?gpu.preview_state.samples():1},std::filesystem::u8path(hdr_output));
                         hdr_exported=true;std::cout<<"HDR exported="<<hdr_output<<'\n';
                     }
                     if(!recipe.empty())std::cout<<"fixed_capture width="<<gpu.hdr_width<<" height="<<gpu.hdr_height<<" revision="<<gpu.rendered_revision<<" pending="<<gpu.bake_pending()<<'\n';
