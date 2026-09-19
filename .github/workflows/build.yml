@@ -48,6 +48,7 @@ jobs:
           Copy-Item LICENSE,THIRD_PARTY.md evidence/
           Copy-Item build/windows/_deps/sdl3-src/LICENSE.txt evidence/SDL-LICENSE.txt
           Copy-Item build/windows/_deps/imgui-src/LICENSE.txt evidence/IMGUI-LICENSE.txt
+          Copy-Item build/windows/_deps/nlohmann_json-src/LICENSE.MIT evidence/JSON-LICENSE.txt
           Get-ChildItem tools/dxc -Filter '*LICENSE*' | Copy-Item -Destination evidence/
           Get-CimInstance Win32_VideoController | Select-Object Name,DriverVersion,AdapterRAM | Format-List | Out-File evidence/adapters.txt
           "commit=${{ github.sha }}`nconfiguration=${{ matrix.config }}`nrunner=windows-2022`nbackend=D3D12`nRTX-performance=not-validated" | Out-File evidence/build-info.txt
