@@ -1,4 +1,5 @@
 #include "phase.hlsli"
+#include "preview_approx.hlsli"
 #define DENSITY_SPACE space3
 #include "density.hlsli"
 #include "optics.hlsli"
@@ -11,7 +12,7 @@ Texture3D<float> brickMax : register(t2,space2);
 SamplerState brickPoint : register(s2,space2);
 cbuffer View : register(b0,space3) {
     float4 eyeNear, rightTan, upUnused, forwardExtinction, lightAlbedo, irradianceFar;
-    float4 inverse0,inverse1,inverse2,quality,sunSettings,majorantSettings,progressiveSettings,debugSettings;
+    float4 inverse0,inverse1,inverse2,quality,sunSettings,majorantSettings,progressiveSettings,debugSettings,approxSettings;
 };
 float3 localVector(float3 p) {return float3(dot(inverse0.xyz,p),dot(inverse1.xyz,p),dot(inverse2.xyz,p));}
 float3 localPoint(float3 p) {return localVector(p)+float3(inverse0.w,inverse1.w,inverse2.w);}
@@ -19,18 +20,18 @@ float evaluateDensity(float3 p) {
     if(quality.w==0)return densityAt(p);
     return constrainCache(p,cachedDensity.SampleLevel(cacheLinear,(p-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz),0));
 }
-float shadowTransmittance(float3 origin,out uint evaluations) {
+float shadowOpticalDepth(float3 origin,out uint evaluations) {
     evaluations=0;
     if(sunSettings.x!=0){
-        if(any(origin<=envelopeMin.xyz)||any(origin>=envelopeMax.xyz))return 1;
-        return exp(-max(0,sunTau.SampleLevel(sunLinear,(origin-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz),0)));
+        if(any(origin<=envelopeMin.xyz)||any(origin>=envelopeMax.xyz))return 0;
+        return max(0,sunTau.SampleLevel(sunLinear,(origin-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz),0));
     }
     float3 direction=localVector(lightAlbedo.xyz);float entry=0,exit=irradianceFar.w;
-    if(!intersectBox(origin,direction,envelopeMin.xyz,envelopeMax.xyz,entry,exit))return 1;
+    if(!intersectBox(origin,direction,envelopeMin.xyz,envelopeMax.xyz,entry,exit))return 0;
     float dt=(exit-entry)/quality.y,tau=0;
     evaluations=(uint)quality.y;
     for(uint i=0;i<(uint)quality.y;++i)tau+=evaluateDensity(origin+direction*(entry+(i+0.5)*dt))*forwardExtinction.w*dt;
-    return exp(-tau);
+    return tau;
 }
 float4 main(float4 position:SV_Position,float2 uv:TEXCOORD0):SV_Target0 {
     if(progressiveSettings.y!=0){uint pixel=uint(position.y)*uint(1/progressiveSettings.z)+uint(position.x);
@@ -69,9 +70,9 @@ float4 main(float4 position:SV_Position,float2 uv:TEXCOORD0):SV_Target0 {
                 if(debugSettings.x==11&&majorantSettings.w!=0){uint3 brick=min(uint3(max(0,(q-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz)*majorantSettings.xyz))/8,(uint3(majorantSettings.xyz)+7)/8-1);invalid=invalid||density>brickMax.Load(int4(brick,0))+2e-6;}
             }
             if(density>0) {
-                uint evaluations=0;float shadow=shadowTransmittance(q,evaluations);
+                uint evaluations=0;float tauSun=shadowOpticalDepth(q,evaluations);float shadow=exp(-tauSun);
                 if(debugSettings.x>0){totalEvaluations+=evaluations;sunSum+=shadow*density*dt;weight+=density*dt;}
-                float3 source=irradianceFar.xyz*(lightAlbedo.w*phaseHG(dot(lightAlbedo.xyz,direction),upUnused.w))*shadow;
+                float3 source=irradianceFar.xyz*previewApproxSource(tauSun,lightAlbedo.w,upUnused.w,dot(lightAlbedo.xyz,direction),1,approxSettings.x!=0&&debugSettings.x!=4,approxSettings.y);
                 integrateSegment(L,T,density*forwardExtinction.w,dt,source);
             }
             ++i;

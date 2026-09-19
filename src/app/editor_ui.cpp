@@ -41,8 +41,8 @@ void draw_primitive(const Scene& scene,Vec3 center,Vec3 radii,bool selected,bool
 void EditorUi::apply(Scene scene) {
     try{session.apply(std::move(scene));status_="Edited";}catch(const std::exception& e){status_=e.what();}
 }
-void EditorUi::inspector_item(bool changed,Scene scene) {
-    if(ImGui::IsItemActivated()&&!inspector_drag_){session.begin_drag();inspector_drag_=true;}
+void EditorUi::inspector_item(bool changed,Scene scene,bool affects_transport) {
+    if(ImGui::IsItemActivated()&&!inspector_drag_){session.begin_drag();inspector_drag_=true;inspector_transport_=affects_transport;}
     if(changed)apply(std::move(scene));
     if(ImGui::IsItemDeactivated()&&inspector_drag_){session.end_drag();inspector_drag_=false;}
 }
@@ -173,6 +173,13 @@ void EditorUi::draw(GpuSpike& gpu) {
         ImGui::TextWrapped("g=0: isotropic. Positive g favors forward photon scattering. Optical changes preserve density caches.");
         ImGui::PopItemWidth();
     }
+    if(ImGui::CollapsingHeader("Preview multiple scattering")) {
+        s=session.document().scene();bool enabled=s.preview_approx.enabled;
+        bool changed=ImGui::Checkbox("Approximation (experimental)",&enabled);s.preview_approx.enabled=enabled;inspector_item(changed,s);
+        s=session.document().scene();float strength=float(s.preview_approx.strength);
+        changed=ImGui::SliderFloat("Approximation strength",&strength,0,1);s.preview_approx.strength=strength;inspector_item(changed,s);
+        ImGui::TextWrapped("Preview-only appearance approximation. OFF is the single-scattering reference. Validation is recorded separately from physical optics.");
+    }
     if(ImGui::CollapsingHeader("Progressive preview")) {
         if(ImGui::Checkbox("Accumulate settled frames",&gpu.progressive)){gpu.preview_state=PreviewState{};gpu.volume_dirty=true;}
         ImGui::Checkbox("Pause accumulation",&gpu.progressive_paused);
@@ -186,7 +193,7 @@ void EditorUi::draw(GpuSpike& gpu) {
         if(ImGui::SliderInt("Shadow steps",&gpu.shadow_steps,1,32))gpu.volume_dirty=true;
         if(ImGui::SliderInt("Internal width",&gpu.internal_width,64,320))gpu.volume_dirty=true;
         s=session.document().scene();float exposure=float(s.exposure_ev);
-        const bool change=ImGui::SliderFloat("Exposure EV",&exposure,-4,4);s.exposure_ev=exposure;inspector_item(change,s);
+        const bool change=ImGui::SliderFloat("Exposure EV",&exposure,-4,4);s.exposure_ev=exposure;inspector_item(change,s,false);
         s=session.document().scene();float angle=float(std::atan2(s.sun.direction_to_light.x,s.sun.direction_to_light.z)*180/3.141592653589793);
         const bool sun_changed=ImGui::SliderFloat("Sun angle",&angle,-180,180);
         if(sun_changed){double a=angle*3.141592653589793/180;Vec3 d{std::sin(a),0.8,std::cos(a)};s.sun.direction_to_light=d*(1/std::sqrt(dot(d,d)));}
@@ -258,7 +265,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     const auto mode=std::string(actual_cache?"Dense ":"Direct ")+(actual_cache?std::to_string(gpu.extent[0])+"x"+std::to_string(gpu.extent[1])+"x"+std::to_string(gpu.extent[2]):"evaluator")+(gpu.bake_pending()?" | baking latest":"");
     ImGui::GetForegroundDrawList()->AddText({vx,40},IM_COL32(170,185,205,255),(mode+" | g="+std::to_string(session.document().scene().cloud.optics.g)).c_str());
     ImGui::GetForegroundDrawList()->AddText({vx,20},IM_COL32(220,225,235,255),"Click: select | Right-drag: orbit | Wheel: zoom | Esc: cancel");
-    gpu.set_interacting(gizmo_drag_||inspector_drag_||orbit_drag_);
+    gpu.set_interacting(gizmo_drag_||(inspector_drag_&&inspector_transport_)||orbit_drag_);
     if(session.document().revision()!=gpu.scene_revision&&session.document().revision()!=last_scene_attempt_) {
         last_scene_attempt_=session.document().revision();
         try{gpu.set_scene(session.document().scene(),session.document().revision(),session.document().changed_at());}

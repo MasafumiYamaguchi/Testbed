@@ -68,7 +68,7 @@ std::string scene_json(const Scene& s) {
         {"camera",{{"position",vec(s.camera.position)},{"target",vec(s.camera.target)},{"up",vec(s.camera.up)},
             {"vertical_fov_degrees",s.camera.vertical_fov_degrees},{"near_plane",s.camera.near_plane},{"far_plane",s.camera.far_plane}}},
         {"sun",{{"direction_to_light",vec(s.sun.direction_to_light)},{"irradiance",vec(s.sun.irradiance)}}},
-        {"exposure_ev",s.exposure_ev}};
+        {"exposure_ev",s.exposure_ev},{"preview_approx",{{"enabled",s.preview_approx.enabled},{"strength",s.preview_approx.strength}}}};
     return j.dump(2)+"\n";
 }
 Scene parse_scene_json(std::string_view text) {
@@ -77,17 +77,20 @@ Scene parse_scene_json(std::string_view text) {
         if(depth>32)throw std::invalid_argument("Scene nesting exceeds 32 levels");
         return true;
     });
-    shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev"});
+    if(j.value("schema_version",0u)==4)shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev","preview_approx"});
+    else shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev"});
     if(!j.at("schema_version").is_number_unsigned()||!j.at("algorithm_version").is_number_unsigned())throw std::invalid_argument("Version must be an unsigned integer");
     const bool legacy=j.at("schema_version")==1&&j.at("algorithm_version")==1;
     const bool version2=j.at("schema_version")==2&&j.at("algorithm_version")==2;
-    if(!legacy&&!version2&&(j.at("schema_version")!=3||j.at("algorithm_version")!=2))throw std::invalid_argument("Unsupported schema/algorithm version");
+    if(!legacy&&!version2&&((j.at("schema_version")!=3&&j.at("schema_version")!=4)||j.at("algorithm_version")!=2))throw std::invalid_argument("Unsupported schema/algorithm version");
     if(legacy) {
         shape(j.at("cloud"),{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics"});
         j["cloud"]["noise"]=noise_json(NoiseSettings{}); // exact old shape: all noise amplitudes zero
     }
     if(legacy||version2){shape(j["cloud"]["optics"],{"extinction_scale","albedo"});j["cloud"]["optics"]["g"]=0;}
-    Scene s;auto& c=s.cloud;const auto& cj=j.at("cloud");
+    Scene s;
+    if(j.at("schema_version")==4){const auto& a=j.at("preview_approx");shape(a,{"enabled","strength"});if(!a.at("enabled").is_boolean())throw std::invalid_argument("Approximation enabled must be boolean");s.preview_approx={a.at("enabled").get<bool>(),number(a.at("strength"))};}
+    auto& c=s.cloud;const auto& cj=j.at("cloud");
     shape(cj,{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics","noise"});
     const auto& noise=cj.at("noise");shape(noise,{"origin","medium_frequency","medium_strength","micro_frequency","micro_erosion","warp_frequency","warp_amplitude"});
     c.noise={vec(noise.at("origin")),number(noise.at("medium_frequency")),number(noise.at("medium_strength")),number(noise.at("micro_frequency")),number(noise.at("micro_erosion")),number(noise.at("warp_frequency")),number(noise.at("warp_amplitude"))};

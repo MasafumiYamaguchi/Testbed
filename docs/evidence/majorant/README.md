@@ -1,0 +1,1 @@
+CI 35423447988: all jobs passed. Ten actual Windows images reviewed. Empty-space skipping OFF/ON was exactly equal in every linear RGB and T pixel for all five fixtures. All 4096 leaf maxima matched CPU exactly. Empty bricks: empty4096, homogeneous0, cut3366, low-sun/thick3306. Hierarchy five levels. WARP timing logs retained, not physical GPU performance.

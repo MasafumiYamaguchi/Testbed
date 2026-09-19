@@ -20,10 +20,11 @@ private:
     float smoke_x_=0,smoke_y_=0;
     Id selected_=2;
     bool select_cuts_=false,scale_=false,gizmo_drag_=false,inspector_drag_=false,orbit_drag_=false;
+    bool inspector_transport_=true;
     char filename_[512]="cloud.white.json";
     std::string status_="Select a cell; drag the gizmo. Right-drag to orbit.";
     void apply(Scene);
-    void inspector_item(bool changed,Scene);
+    void inspector_item(bool changed,Scene,bool affects_transport=true);
     void camera_preset(int direction);
 };
 }

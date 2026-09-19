@@ -1,0 +1,60 @@
+{
+  "generated_utc": "2026-09-19T05:47:43.711453+00:00",
+  "environment": "Linux CPU, GCC 13.3, CMake Release -O3 -DNDEBUG; not a GPU timing",
+  "command": "white_preview_reference_tests 65536",
+  "seeds": [
+    17,
+    42,
+    4294967313,
+    99991
+  ],
+  "per_seed_samples": 65536,
+  "samples_per_case": 262144,
+  "cases": 24,
+  "total_paths": 6291456,
+  "strength": 0.5,
+  "extra_octaves": 2,
+  "extinction_scale": 0.5,
+  "anisotropy_scale": 0.5,
+  "fit_performed": false,
+  "uncertainty_diagnostic": "MC mean minus midpoint of ON/OFF; more than +/-6 estimated MC standard errors resolves ordering. Descriptive, not a confidence guarantee.",
+  "source_sha256": {
+    "tests/preview_reference_tests.cpp": "1bff0716b0e4975485222353613972a83171000a47caabe760d503ec5d5a3fa3",
+    "src/core/preview_approx.cpp": "0fcf67f8f0d0df6ca1beb17ab68cadb6f7238ccc4851f3a146e61d0823918bce",
+    "include/white/preview_approx.hpp": "c6c379922c1621eb1204079f164854aa61f2709e99b389e77830c806c9c7b773",
+    "src/reference/integrator.cpp": "eded74ceba4c70ae9f401462f0c36d616d28d56b59315151fcb45dedd35be548",
+    "include/white/reference.hpp": "032fe2f577044efc5f2d6428c1e735373a3f4acbaedfaec8f22301fd50620b7a",
+    "src/core/delta_tracking.cpp": "0f96bcb1dc60c0e612d5af65fc1574f0f89e67d6858515ab319b9239c0c72dd6",
+    "src/core/ratio_tracking.cpp": "7feda41937d4ab71f582fcefb9eb5429989e2d217028888cf7975558a7239e79",
+    "src/core/majorant.cpp": "6f9ae94416d30b17f937d9d1390064067265c034f2168da655ced82095c4db47",
+    "src/core/dense_cache.cpp": "813a35d7e592ef92c8747c9acba1da5156578f9e2774bd81fc78c1bfb636634a",
+    "src/core/phase.cpp": "017974bda1f0233960b8099016fdfd1199cf36141f215f83ab8183e536c4e2c7",
+    "src/core/optics.cpp": "133f486b2153e1d30a1490c9d36770ee707e8159b990d648e31a82cdeb49ce79",
+    "src/core/document.cpp": "ab726588fd33baaf194c4c676dc81cf5d6f395dc68057bf468278e78b3b6779c"
+  },
+  "binary_sha256": "89951d2024e2a4f98cd3f4296153bae06cf8b6798f63f5565b77211e8c501b54",
+  "git_base_commit": "84a85bfe1d402047aed30bfb096ab49448ecddf9",
+  "reference_settings": {
+    "mode": "multiple_scattering",
+    "roulette_start": 3,
+    "bounce_limit": 256,
+    "tracking_event_limit_per_call": 1000000,
+    "pixel_jitter": false,
+    "central_ray_only": true
+  },
+  "grid": {
+    "extent": [
+      8,
+      8,
+      8
+    ],
+    "density": 1,
+    "interpolation": "trilinear clamp within bounds, hard mask after interpolation"
+  },
+  "outputs_sha256": {
+    "comparison.csv": "9ef39bb3a7cb6413bc981b5ef9bc1c526448a408cbbafa103de66e7708c11efd",
+    "comparison.log": "3f346d4b7a6b4e79481b9518a7c3d2644d047df0352950d11d7ebce7d568888d",
+    "contract.csv": "dc721a176c279d859aef3376cf47110ceb660cac3287616e4aea4d6c8eb5d739",
+    "contract.log": "21b855108b03456fe84ac0a3480bd49d6415c61e092d2914cb7ea9b50217685d"
+  }
+}

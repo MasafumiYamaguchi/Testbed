@@ -226,7 +226,7 @@ int main(int argc,char** argv) {
                     baseline_hdr=gpu.read_hdr();if(empty_skip)gpu.validate_majorant();if(sun_cache)gpu.validate_sun_cache();
                     if(!hdr_output.empty()){
                         if(gpu.rendered_revision!=editor.session.document().revision())throw std::runtime_error("Export frame revision mismatch");
-                        white::export_hdr({gpu.hdr_width,gpu.hdr_height,baseline_hdr},{editor.session.document().scene(),std::uint64_t(frame),gpu.rendered_revision,unsigned(gpu.view_steps),unsigned(gpu.shadow_steps),gpu.rendered_from_cache(),unsigned(gpu.sun_cache_resolution),gpu.empty_skip,gpu.progressive?gpu.preview_state.samples():1,gpu.diagnostic_mode},std::filesystem::u8path(hdr_output));
+                        white::export_hdr({gpu.hdr_width,gpu.hdr_height,baseline_hdr},{editor.session.document().scene(),std::uint64_t(frame),gpu.rendered_revision,unsigned(gpu.rendered_view_steps()),unsigned(gpu.rendered_shadow_steps()),gpu.rendered_from_cache(),gpu.rendered_sun_resolution(),gpu.rendered_empty_skip(),gpu.progressive&&gpu.preview_state.samples()?gpu.preview_state.samples():1,gpu.diagnostic_mode,{},gpu.rendered_density_extent()},std::filesystem::u8path(hdr_output));
                         hdr_exported=true;std::cout<<"HDR exported="<<hdr_output<<'\n';
                     }
                     if(!recipe.empty())std::cout<<"fixed_capture width="<<gpu.hdr_width<<" height="<<gpu.hdr_height<<" revision="<<gpu.rendered_revision<<" pending="<<gpu.bake_pending()<<'\n';

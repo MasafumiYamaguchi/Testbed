@@ -61,6 +61,9 @@ jobs:
       - name: Diagnostic view comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-diagnostics.ps1 -Executable ./build/windows/Release/white_app.exe -Check ./build/windows/Release/white_diagnostic_check.exe
+      - name: Preview approximation comparison
+        if: matrix.config == 'Release'
+        run: ./scripts/capture-approx.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
       - name: Bounded edit benchmark
         if: matrix.config == 'Release'
         run: ./scripts/benchmark-editor.ps1 -Executable ./build/windows/Release/white_app.exe -InternalWidth 160 -Updates 60

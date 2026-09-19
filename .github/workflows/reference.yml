@@ -1,0 +1,34 @@
+name: CPU reference evidence
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reference-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  reference:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset cpu-release
+      - run: cmake --build --preset cpu-release --parallel 2
+      - run: ctest --preset cpu-release
+      - name: Independent reference snapshots
+        shell: pwsh
+        run: ./scripts/capture-reference.ps1 -Executable ./build/cpu-release/white_reference
+      - name: Frozen approximation comparison with independent seeds
+        run: ./build/cpu-release/white_preview_reference_tests 65536 > evidence/reference/approximation.csv 2> evidence/reference/approximation.log
+      - name: Provenance and notices
+        run: |
+          git rev-parse HEAD > evidence/reference/commit.txt
+          cp LICENSE THIRD_PARTY.md evidence/reference/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cpu-reference-evidence
+          path: |
+            evidence/reference/
+            build/cpu-release/Testing/Temporary/

@@ -62,7 +62,7 @@ Dirty classify_change(const Scene& a,const Scene& b) {
     Dirty result=Dirty::none;
     auto ca=a.cloud,cb=b.cloud;ca.optics=cb.optics;
     if(ca!=cb || a.algorithm_version!=b.algorithm_version) result=result|Dirty::density;
-    if(a.cloud.optics!=b.cloud.optics) result=result|Dirty::optics;
+    if(a.cloud.optics!=b.cloud.optics||a.preview_approx!=b.preview_approx) result=result|Dirty::optics;
     if(a.sun!=b.sun) result=result|Dirty::sun;
     if(a.camera!=b.camera) result=result|Dirty::camera;
     if(a.exposure_ev!=b.exposure_ev) result=result|Dirty::display;
@@ -71,7 +71,8 @@ Dirty classify_change(const Scene& a,const Scene& b) {
 std::vector<std::string> validate(const Scene& s) {
     std::vector<std::string> errors;
     auto check=[&](bool ok,const std::string& text){if(!ok)errors.push_back(text);};
-    check(s.schema_version==3,"Unsupported scene schema_version");
+    check(s.schema_version==4,"Unsupported scene schema_version");
+    check(std::isfinite(s.preview_approx.strength)&&s.preview_approx.strength>=0&&s.preview_approx.strength<=1,"Preview approximation strength outside 0..1");
     check(s.algorithm_version==2,"Unsupported scene algorithm_version");
     const auto& c=s.cloud;
     check(c.id!=0,"Cloud ID must be nonzero");
