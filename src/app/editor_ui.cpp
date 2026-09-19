@@ -157,7 +157,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(select_cuts_){for(const auto& cut:scene.cloud.cuts){auto label="Cut "+std::to_string(cut.id);if(ImGui::Selectable(label.c_str(),(!scene.cumulonimbus||!prefab_group_)&&selected_==cut.id)){selected_=cut.id;prefab_group_=false;}}}
     else {for(const auto& cell:scene.cloud.cells){auto label="Cell "+std::to_string(cell.id);if(ImGui::Selectable(label.c_str(),(!scene.cumulonimbus||!prefab_group_)&&selected_==cell.id)){selected_=cell.id;prefab_group_=false;}}}
     if(ImGui::RadioButton("Move",!scale_))scale_=false;
-    ImGui::SameLine();if(ImGui::RadioButton("Scale",scale_))scale_=true;
+    ImGui::SameLine();if(ImGui::RadioButton(session.document().scene().cumulonimbus&&prefab_group_?"Size":"Scale",scale_))scale_=true;
     ImGui::Separator();
     auto s=session.document().scene();Vec3* center=nullptr;Vec3* radii=nullptr;
     if(select_cuts_){for(auto& cut:s.cloud.cuts)if(cut.id==selected_){center=&cut.center;radii=&cut.radii;}}
@@ -279,7 +279,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(select_cuts_){for(auto& c:current.cloud.cuts)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
     else {for(auto& c:current.cloud.cells)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
     const bool whole=current.cumulonimbus&&prefab_group_;
-    if(whole){const auto& p=current.cumulonimbus->parameters;selected_center={0,p.cloud_base+p.height*0.5,0};selected_radii={p.width*0.5,p.height*0.5,p.width*0.5};selected=true;}
+    if(whole){const auto& p=current.cumulonimbus->parameters;selected_center=scale_?Vec3{p.width*.5,p.cloud_base+p.height,0}:Vec3{0,p.cloud_base,0};selected_radii={1,1,1};selected=true;}
     if(gpu.show_volume){
         for(const auto& c:current.cloud.cells)draw_primitive(current,c.center,c.radii,!select_cuts_&&selected_==c.id,false,vx,vy,vw,vh);
         for(const auto& c:current.cloud.cuts)draw_primitive(current,c.center,c.radii,select_cuts_&&selected_==c.id,true,vx,vy,vw,vh);
@@ -289,7 +289,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(gizmo_active) {
         auto view=camera_view(current.camera),projection=camera_projection(current.camera,vw/vh),model=primitive_matrix(current.cloud.transform,selected_center,selected_radii);
         ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());ImGuizmo::SetRect(vx,vy,vw,vh);ImGuizmo::SetOrthographic(false);
-        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),whole?(scale_?ImGuizmo::OPERATION(ImGuizmo::SCALE_X|ImGuizmo::SCALE_Y):ImGuizmo::TRANSLATE_Y):(scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE),ImGuizmo::LOCAL,model.data());
+        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),whole?(scale_?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Y):ImGuizmo::TRANSLATE_Y):(scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE),ImGuizmo::LOCAL,model.data());
         const bool using_now=ImGuizmo::IsUsing();
         if(using_now&&!gizmo_drag_){session.begin_drag();gizmo_drag_=true;}
         if(manipulated) {
@@ -297,13 +297,13 @@ void EditorUi::draw(GpuSpike& gpu) {
             if(whole) {
                 try {
                     if(scale_) {
-                        if(std::abs(selected_radii.x*2-current.cumulonimbus->parameters.width)>1e-4)
-                            current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::width,selected_radii.x*2});
-                        if(std::abs(selected_radii.y*2-current.cumulonimbus->parameters.height)>1e-4)
-                            current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::height,selected_radii.y*2});
+                        const double width=selected_center.x*2,height=selected_center.y-current.cumulonimbus->parameters.cloud_base;
+                        if(std::abs(width-current.cumulonimbus->parameters.width)>1e-4)
+                            current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::width,width});
+                        if(std::abs(height-current.cumulonimbus->parameters.height)>1e-4)
+                            current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::height,height});
                     }else {
-                        const double base=selected_center.y-current.cumulonimbus->parameters.height*0.5;
-                        current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::cloud_base,base});
+                        current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::cloud_base,selected_center.y});
                     }
                     apply(std::move(current));
                 }catch(const std::exception& e){status_=e.what();}
@@ -317,7 +317,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     }
     const bool over=io.MousePos.x>=vx&&io.MousePos.x<vx+vw&&io.MousePos.y>=vy&&io.MousePos.y<vy+vh;
     if(over&&!modal&&!(gizmo_active&&ImGuizmo::IsOver())&&!gizmo_drag_&&!inspector_drag_) {
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume) {
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole) {
             const auto& sc=session.document().scene();auto ray=camera_ray(sc.camera,(io.MousePos.x-vx)/vw,(io.MousePos.y-vy)/vh,vw/vh);
             if(auto pick=pick_primitive(sc.cloud,ray,select_cuts_)){selected_=*pick;prefab_group_=false;}
         }
@@ -426,7 +426,7 @@ void EditorUi::prefab_test_input(int frame) {
     if(frame==90||frame==135||frame==175) {
         smoke_before_=session.document().scene();prefab_group_=true;scale_=frame!=175;
         const auto& p=smoke_before_.cumulonimbus->parameters;
-        const auto center=local_to_world(smoke_before_.cloud.transform,{0,p.cloud_base+p.height*.5,0});
+        const auto center=local_to_world(smoke_before_.cloud.transform,scale_?Vec3{p.width*.5,p.cloud_base+p.height,0}:Vec3{0,p.cloud_base,0});
         const auto& c=smoke_before_.camera;
         const double pixels=(io.DisplaySize.y-90)/(2*(c.position.z-center.z)*std::tan(c.vertical_fov_degrees*3.141592653589793/360));
         smoke_x_=290+(io.DisplaySize.x-310)*.5f+float((center.x-c.target.x)*pixels);
