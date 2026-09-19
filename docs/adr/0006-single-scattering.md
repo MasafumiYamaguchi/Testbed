@@ -40,3 +40,13 @@ is evidence, not proof of convergence or correctness of shadow quadrature.
 GPU timestamp duration and physical RTX performance remain unmeasured. Hosted
 CI screenshot/validation success is not a performance acceptance result. No
 hardware ray tracing, path tracing, atmosphere, terrain or denoising.
+
+Visual verification caught an all-background regression despite finite HDR and
+isolated compute tests passing. GPU probes showed correct camera and density
+uniforms, but the dynamic-vector-index slab loop returned a miss for the central
+ray on hosted WARP. The slab implementation now uses explicit scalar axes. Six
+GPU ray/box regressions cover signed, diagonal, inside, parallel and boundary
+rays. Every captured HDR pixel's transmittance is additionally compared with an
+independent double-precision CPU field/ray integration (absolute tolerance
+0.001). This validates the camera-to-density-to-transmittance path; it does not
+establish correctness of single-scattered radiance on physical hardware.

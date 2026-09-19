@@ -6,14 +6,16 @@ void integrateSegment(inout float3 L,inout float T,float sigma,float distance,fl
     float opacity=segmentOpacity(sigma*distance);
     L+=T*source*opacity;T*=1-opacity;
 }
+bool intersectSlab(float origin,float direction,float lo,float hi,inout float entry,inout float exit) {
+    if(direction==0)return origin>=lo&&origin<=hi;
+    float a=(lo-origin)/direction,b=(hi-origin)/direction;
+    entry=max(entry,min(a,b));exit=min(exit,max(a,b));
+    return exit>entry;
+}
 bool intersectBox(float3 origin,float3 direction,float3 lo,float3 hi,inout float entry,inout float exit) {
-    for(uint axis=0;axis<3;++axis) {
-        if(direction[axis]==0) {if(origin[axis]<lo[axis]||origin[axis]>hi[axis])return false;}
-        else {
-            float a=(lo[axis]-origin[axis])/direction[axis],b=(hi[axis]-origin[axis])/direction[axis];
-            entry=max(entry,min(a,b));exit=min(exit,max(a,b));
-            if(exit<=entry)return false;
-        }
-    }
+    // Explicit scalar slabs avoid dynamic vector indexing/local arrays in DXIL.
+    if(!intersectSlab(origin.x,direction.x,lo.x,hi.x,entry,exit))return false;
+    if(!intersectSlab(origin.y,direction.y,lo.y,hi.y,entry,exit))return false;
+    if(!intersectSlab(origin.z,direction.z,lo.z,hi.z,entry,exit))return false;
     return exit>entry;
 }

@@ -19,22 +19,6 @@ float4 main(float4 position:SV_Position,float2 uv:TEXCOORD0):SV_Target0 {
     float3 direction=normalize(forwardExtinction.xyz+rightTan.xyz*(p.x*quality.z*rightTan.w)+upUnused.xyz*(p.y*rightTan.w));
     float3 localOrigin=localPoint(eyeNear.xyz),localDirection=localVector(direction);
     float entry=eyeNear.w,exit=irradianceFar.w;float3 L=0;float T=1;
-    if(position.y<1) {
-        uint probe=(uint)position.x;
-        if(probe==0)return eyeNear;
-        if(probe==1)return forwardExtinction;
-        if(probe==2)return quality;
-        if(probe==3)return config;
-        if(probe==4)return settings;
-        if(probe==5)return inverse0;
-        if(probe==6)return inverse1;
-        if(probe==7)return inverse2;
-        if(probe==8)return float4(localPoint(eyeNear.xyz),densityAt(float3(0,35,0)));
-        if(probe==9)return float4(localVector(forwardExtinction.xyz),1);
-        if(probe==10){float a=eyeNear.w,b=irradianceFar.w;bool hit=intersectBox(localOrigin,localVector(forwardExtinction.xyz),envelopeMin.xyz,envelopeMax.xyz,a,b);return float4(a,b,hit,1);}
-        if(probe==11)return envelopeMin;
-        if(probe==12)return envelopeMax;
-    }
     if(intersectBox(localOrigin,localDirection,envelopeMin.xyz,envelopeMax.xyz,entry,exit)) {
         float dt=(exit-entry)/quality.x;
         for(uint i=0;i<(uint)quality.x;++i) {

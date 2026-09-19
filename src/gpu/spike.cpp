@@ -315,20 +315,25 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     SDL_DrawGPUPrimitives(pass,3,1,0,0);SDL_EndGPURenderPass(pass);volume_dirty=false;
 }
 void GpuSpike::validate_optics() {
-    SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,8*4*sizeof(float),0};
+    SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,14*4*sizeof(float),0};
     auto* output=SDL_CreateGPUBuffer(device,&bi);gpu_check(output!=nullptr,"Create optical result buffer");
     try {
         Transfer transfer(device,bi.size);auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire optical test commands");
         SDL_GPUStorageBufferReadWriteBinding binding{};binding.buffer=output;
         auto* pass=SDL_BeginGPUComputePass(cmd,nullptr,0,&binding,1);SDL_BindGPUComputePipeline(pass,optical_test);
-        SDL_DispatchGPUCompute(pass,8,1,1);SDL_EndGPUComputePass(pass);
+        SDL_DispatchGPUCompute(pass,14,1,1);SDL_EndGPUComputePass(pass);
         auto* copy=SDL_BeginGPUCopyPass(cmd);SDL_GPUBufferRegion source{output,0,bi.size};SDL_GPUTransferBufferLocation destination{transfer.buffer,0};
         SDL_DownloadFromGPUBuffer(copy,&source,&destination);SDL_EndGPUCopyPass(copy);submit_wait(device,cmd);
         auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map optical test");
         const double sigma[]={0,0.01,0.1,1,10,0.0000001,0.25,2},distance[]={100,20,15,2,10,100,8,0};
         double error=0;bool finite=true;
         for(int i=0;i<8;++i){double T=std::exp(-sigma[i]*distance[i]);for(int j=0;j<4;++j){finite=finite&&std::isfinite(values[i*4+j]);error=std::max(error,std::abs(double(values[i*4+j])-(j==0?T:0.5*(1-T))));}}
+        const std::array<Float4,6> bounds_expected{Float4{1,2,4,1},Float4{1,0,1,1},Float4{0,0,0,1},Float4{1,2,4,1},Float4{1,2,4,1},Float4{1,float(2*std::sqrt(3)),float(4*std::sqrt(3)),1}};
+        double bounds_error=0;
+        for(int i=0;i<6;++i){const float expected[]{bounds_expected[i].x,bounds_expected[i].y,bounds_expected[i].z,bounds_expected[i].w};for(int j=0;j<4;++j){finite=finite&&std::isfinite(values[(i+8)*4+j]);bounds_error=std::max(bounds_error,std::abs(double(values[(i+8)*4+j])-expected[j]));}}
         SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
+        std::cout<<"GPU ray/box six cases max_abs_error="<<bounds_error<<'\n';
+        if(!finite||bounds_error>1e-4)throw std::runtime_error("GPU ray/box regression failed");
         std::cout<<"GPU homogeneous optics max_abs_error="<<error<<" tolerance=0.001\n";
         if(!finite||error>1e-3)throw std::runtime_error("GPU optical integration failed analytic comparison");
     }catch(...){SDL_ReleaseGPUBuffer(device,output);throw;}
@@ -344,10 +349,31 @@ std::vector<float> GpuSpike::read_hdr() {
     const auto* values=static_cast<const float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map HDR readback");
     for(Uint32 y=0;y<hdr_height;++y)for(Uint32 x=0;x<hdr_width;++x)for(Uint32 c=0;c<4;++c){float value=values[(y*pitch+x)*4+c];result[(y*hdr_width+x)*4+c]=value;valid=valid&&std::isfinite(value)&&value>=0&&(c!=3||value<=1);maximum=std::max(maximum,value);}
     SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
-    for(int probe=0;probe<13;++probe)std::cout<<"probe="<<probe<<" value="<<result[probe*4]<<','<<result[probe*4+1]<<','<<result[probe*4+2]<<','<<result[probe*4+3]<<'\n';
-    valid=true; // Temporary diagnostic row deliberately contains unbounded parameters.
     if(!valid)throw std::runtime_error("HDR contains NaN/Inf/negative radiance or invalid transmittance");
-    std::cout<<"HDR verified "<<hdr_width<<'x'<<hdr_height<<" view_steps="<<view_steps<<" shadow_steps="<<shadow_steps<<" max_channel="<<maximum<<'\n';
+    // Independently integrate the CPU field along every pixel ray. This catches
+    // blank images, wrong camera uniforms and mismatched volume coordinates,
+    // which finite-value and isolated shader tests cannot detect.
+    const DensityField cpu(density_fixture(cloud_preset));const auto& recipe=cpu.recipe();
+    const Vec3 eye{120,70,120},target_point{0,35,0};
+    auto normalize=[](Vec3 v){return v*(1/std::sqrt(dot(v,v)));};
+    auto cross=[](Vec3 a,Vec3 b){return Vec3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
+    const auto forward=normalize(target_point-eye),right=normalize(cross(forward,{0,1,0})),up=cross(right,forward);
+    const auto origin=world_to_local(recipe.transform,eye);
+    double error=0,min_t=1;
+    for(Uint32 y=0;y<hdr_height;++y)for(Uint32 x=0;x<hdr_width;++x) {
+        const double px=(2*(x+0.5)/hdr_width-1)*double(hdr_width)/hdr_height,py=1-2*(y+0.5)/hdr_height;
+        const auto direction=normalize(forward+(right*px+up*py)*std::tan(45.0*3.141592653589793/360));
+        const auto local_direction=world_to_local(recipe.transform,eye+direction)-origin;
+        double tau=0;
+        if(const auto interval=intersect_bounds(origin,local_direction,recipe.envelope,0.1,10000)) {
+            const double dt=(interval->exit-interval->entry)/view_steps;
+            for(int i=0;i<view_steps;++i)tau+=cpu.at(origin+local_direction*(interval->entry+(i+0.5)*dt))*recipe.optics.extinction_scale*dt;
+        }
+        const double expected=std::exp(-tau),actual=result[(y*hdr_width+x)*4+3];
+        error=std::max(error,std::abs(actual-expected));min_t=std::min(min_t,actual);
+    }
+    std::cout<<"HDR verified "<<hdr_width<<'x'<<hdr_height<<" view_steps="<<view_steps<<" shadow_steps="<<shadow_steps<<" max_channel="<<maximum<<" min_T="<<min_t<<" CPU_T_max_error="<<error<<'\n';
+    if(error>0.001)throw std::runtime_error("Rendered transmittance disagrees with CPU field/camera reference");
     return result;
 }
 }
