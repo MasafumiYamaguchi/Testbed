@@ -1,4 +1,5 @@
 #include "white/reference.hpp"
+#include "white/developed_scene.hpp"
 #include "white/phase.hpp"
 #include <algorithm>
 #include <array>
@@ -47,6 +48,20 @@ void boundaries(){
     const auto ordinary=slab(1,.9);
     const white::TrackingSnapshot unresolvable(ordinary.scene(),ordinary.grid(),std::vector<float>(512,std::numeric_limits<float>::max()));
     require(white::reference_sample(unresolvable,ray,settings,{17,0,0,0,0}).status==white::ReferenceStatus::numerical_failure);
+}
+void grouped_snapshot_rejection(){
+    white::Scene scene;scene.developed=white::develop_cumulonimbus(white::CumulonimbusGroup{});
+    white::refresh_developed_scene(scene);
+    // A one-group source retains the supported exact legacy frozen-grid path.
+    const auto single=white::bake_reference_snapshot(scene,4);require(single.density().size()==64);
+    const auto next=white::make_developed_cell(*scene.developed);
+    scene=white::scene_with_developed_command(scene,white::DevelopedAdd{next});
+    const white::GridLayout grid{scene.cloud.envelope,{4,4,4}};
+    auto rejects=[](auto operation){bool rejected=false;try{operation();}catch(const std::invalid_argument& e){rejected=std::string(e.what()).find("independent hard-mask frozen-grid contract")!=std::string::npos;}require(rejected);};
+    rejects([&]{(void)white::bake_reference_snapshot(scene,4);});
+    rejects([&]{(void)white::TrackingSnapshot(scene,grid,std::vector<float>(64,1));});
+    const auto density=std::vector<float>(64,1);const auto majorant=white::build_majorant(grid,density);
+    rejects([&]{(void)white::TrackingSnapshot(scene,grid,density,majorant);});
 }
 void progressive(){
     white::ReferenceSettings settings;settings.width=4;settings.height=3;settings.samples=64;settings.seed=17;
@@ -123,4 +138,4 @@ void roulette_weighting(){
     }
 }
 }
-int main(){try{std::cout<<std::setprecision(17);analytic_single();boundaries();secondary_extent();progressive();multiple_seeds();roulette_weighting();std::cout<<"Reference contracts passed: multi-seed analytic single scatter, empty/absorption/unit albedo/internal camera, unclipped secondary transport, progressive reproducibility, typed safety/numerical limits, multiple-seed variance and roulette weighting\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(){try{std::cout<<std::setprecision(17);analytic_single();boundaries();grouped_snapshot_rejection();secondary_extent();progressive();multiple_seeds();roulette_weighting();std::cout<<"Reference contracts passed: multi-seed analytic single scatter, empty/absorption/unit albedo/internal camera, unclipped secondary transport, progressive reproducibility, typed safety/numerical limits, multiple-seed variance and roulette weighting\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

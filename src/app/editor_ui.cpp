@@ -42,7 +42,13 @@ void draw_primitive(const Scene& scene,Vec3 center,Vec3 radii,bool selected,bool
 void EditorUi::apply(Scene scene) {
     try {
         const auto& before=session.document().scene();
-        if(scene.centerline) {
+        if(scene.developed) {
+            if(before.developed&&scene.developed==before.developed&&scene.cloud!=before.cloud){
+                if(scene.cloud.optics!=before.cloud.optics)scene.developed->optics=scene.cloud.optics;
+                else throw std::invalid_argument("Edit each development through its source controls");
+            }
+            refresh_developed_scene(scene);
+        }else if(scene.centerline) {
             if(before.centerline&&scene.centerline==before.centerline&&scene.cloud!=before.cloud)
                 scene.centerline=edit_centerline_recipe(*before.centerline,scene.cloud);
             scene.cloud=lower_centerline_to_recipe(*scene.centerline);
@@ -116,7 +122,11 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(prefab_source(session.document().scene())&&!session.document().scene().centerline) {
         if(ImGui::Button("Enable centerline")){apply(new_centerline_scene(session.document().scene()));curve_point_=2;prefab_group_=false;scale_=false;}
     }
+    if(!session.document().scene().developed&&prefab_source(session.document().scene())&&ImGui::Button("Enable independent cells")){
+        apply(new_developed_scene(session.document().scene()));development_=session.document().scene().developed->cells.front().id;curve_point_=0;
+    }
     ImGui::EndDisabled();
+    draw_developed_ui();
     if(session.document().scene().centerline) {
         if(ImGui::CollapsingHeader("Centerline and profiles",ImGuiTreeNodeFlags_DefaultOpen)) {
             const auto shape=*session.document().scene().centerline;
@@ -141,7 +151,7 @@ void EditorUi::draw(GpuSpike& gpu) {
             }
             ImGui::TextUnformatted("Profile by height");
             for(const auto& knot:shape.profile) {
-                ImGui::PushID(int(knot.id));ImGui::Text("Height %.0f%%",knot.t*100);ImGui::PushItemWidth(100);
+                ImGui::PushID(std::to_string(knot.id).c_str());ImGui::Text("Height %.0f%%",knot.t*100);ImGui::PushItemWidth(100);
                 auto current_knot=*std::find_if(session.document().scene().centerline->profile.begin(),session.document().scene().centerline->profile.end(),[&](const auto& p){return p.id==knot.id;});
                 bool changed=ImGui::InputDouble("Radius scale",&current_knot.radius_scale,0,0,"%.3f");centerline_item(changed,CenterlineSetProfile{knot.id,current_knot.radius_scale,current_knot.density_scale});
                 current_knot=*std::find_if(session.document().scene().centerline->profile.begin(),session.document().scene().centerline->profile.end(),[&](const auto& p){return p.id==knot.id;});
@@ -187,6 +197,7 @@ void EditorUi::draw(GpuSpike& gpu) {
             ImGui::PopItemWidth();
         }
     }
+    if(!session.document().scene().developed) {
     ImGui::BeginDisabled(dragging);
     ImGui::Separator();ImGui::Checkbox("Select cuts",&select_cuts_);
     if(ImGui::Button("Add cell"))try{selected_=session.add_cell();select_cuts_=false;prefab_group_=false;curve_point_=0;}catch(const std::exception& e){status_=e.what();}
@@ -219,11 +230,13 @@ void EditorUi::draw(GpuSpike& gpu) {
     s=session.document().scene();if(ImGui::Checkbox("Flat base",&s.cloud.base.enabled))apply(s);
     s=session.document().scene();ImGui::SetNextItemWidth(130);
     const bool base_changed=ImGui::InputDouble("Base height",&s.cloud.base.height,0,0,"%.2f");inspector_item(base_changed,s);
+    }
+    auto s=session.document().scene();
     ImGui::Separator();
     ImGui::TextUnformatted("Camera");if(ImGui::Button("Front"))camera_preset(0);ImGui::SameLine();if(ImGui::Button("Side"))camera_preset(1);ImGui::SameLine();if(ImGui::Button("Top"))camera_preset(2);
     ImGui::Checkbox("Lit volume",&gpu.show_volume);
     if(focus_noise_)ImGui::SetNextItemOpen(true);
-    if(ImGui::CollapsingHeader("Shape details")) {
+    if(!session.document().scene().developed&&ImGui::CollapsingHeader("Shape details")) {
         ImGui::PushItemWidth(110);
         s=session.document().scene();float medium=float(s.cloud.noise.medium_strength);
         bool changed=ImGui::SliderFloat("Medium",&medium,0,1);s.cloud.noise.medium_strength=medium;inspector_item(changed,s);
@@ -267,8 +280,9 @@ void EditorUi::draw(GpuSpike& gpu) {
     }
     if(ImGui::CollapsingHeader("Optical properties")) {
         ImGui::PushItemWidth(120);
-        s=session.document().scene();float density=float(s.cloud.density);
-        bool changed=ImGui::SliderFloat("Density",&density,0,5);s.cloud.density=density;inspector_item(changed,s);
+        bool changed=false;
+        if(!session.document().scene().developed){s=session.document().scene();float density=float(s.cloud.density);
+        changed=ImGui::SliderFloat("Density",&density,0,5);s.cloud.density=density;inspector_item(changed,s);}
         s=session.document().scene();float extinction=float(s.cloud.optics.extinction_scale);
         changed=ImGui::SliderFloat("Extinction / m",&extinction,0,.2f,"%.4f");s.cloud.optics.extinction_scale=extinction;inspector_item(changed,s);
         s=session.document().scene();float albedo=float(s.cloud.optics.albedo);
@@ -326,13 +340,17 @@ void EditorUi::draw(GpuSpike& gpu) {
     auto current=session.document().scene();Vec3 selected_center{},selected_radii{};bool selected=false;
     if(select_cuts_){for(auto& c:current.cloud.cuts)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
     else {for(auto& c:current.cloud.cells)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
-    bool curve=current.centerline&&curve_point_&&!prefab_group_;
+    const DevelopedCell* development=nullptr;
+    if(current.developed){for(const auto& cell:current.developed->cells)if(cell.id==development_)development=&cell;selected=false;}
+    const CenterlineShape* active_curve=development?&development->shape:(current.centerline?&*current.centerline:nullptr);
+    bool curve=active_curve&&curve_point_&&!prefab_group_;
     bool curve_endpoint=false;
-    if(curve){const auto point=std::find_if(current.centerline->points.begin(),current.centerline->points.end(),[&](const auto& p){return p.id==curve_point_;});
-        if(point!=current.centerline->points.end()){selected_center=sample_centerline(*current.centerline,point->t).position;selected_radii={1,1,1};selected=true;curve_endpoint=point->t==0||point->t==1;}else {curve_point_=0;curve=false;}}
-    const bool whole=prefab_source(current)&&prefab_group_;
-    if(whole){const auto& p=prefab_source(current)->parameters;selected_center=scale_?Vec3{p.width*.5,p.cloud_base+p.height,0}:Vec3{0,p.cloud_base,0};selected_radii={1,1,1};selected=true;}
-    if(gpu.show_volume){
+    if(curve){const auto point=std::find_if(active_curve->points.begin(),active_curve->points.end(),[&](const auto& p){return p.id==curve_point_;});
+        if(point!=active_curve->points.end()){selected_center=sample_centerline(*active_curve,point->t).position+(development?development->translation:Vec3{});selected_radii={1,1,1};selected=true;curve_endpoint=point->t==0||point->t==1;}else {curve_point_=0;curve=false;}}
+    const bool whole=(development||prefab_source(current))&&prefab_group_;
+    if(whole){const auto& p=development?development->shape.source.parameters:prefab_source(current)->parameters;selected_center=(scale_?Vec3{p.width*.5,p.cloud_base+p.height,0}:Vec3{0,p.cloud_base,0})+(development?development->translation:Vec3{});selected_radii={1,1,1};selected=true;}
+    if(gpu.show_volume&&current.developed){for(const auto& cell:current.developed->cells){const auto recipe=lower_centerline_to_recipe(cell.shape);for(const auto& c:recipe.cells)if(std::find(cell.roles.begin(),cell.roles.end(),unsigned(&c-recipe.cells.data()))!=cell.roles.end())draw_primitive(current,c.center+cell.translation,c.radii,cell.id==development_,false,vx,vy,vw,vh);}}
+    if(gpu.show_volume&&!current.developed){
         for(const auto& c:current.cloud.cells)draw_primitive(current,c.center,c.radii,!select_cuts_&&selected_==c.id,false,vx,vy,vw,vh);
         for(const auto& c:current.cloud.cuts)draw_primitive(current,c.center,c.radii,select_cuts_&&selected_==c.id,true,vx,vy,vw,vh);
     }
@@ -342,18 +360,24 @@ void EditorUi::draw(GpuSpike& gpu) {
         auto view=camera_view(current.camera),projection=camera_projection(current.camera,vw/vh),model=primitive_matrix(current.cloud.transform,selected_center,selected_radii);
         ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());ImGuizmo::SetRect(vx,vy,vw,vh);ImGuizmo::SetOrthographic(false);
         Matrix4 handle_delta{};
-        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),curve?(curve_endpoint?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Z):ImGuizmo::TRANSLATE):whole?(scale_?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Y):ImGuizmo::TRANSLATE_Y):(scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE),ImGuizmo::LOCAL,model.data(),handle_delta.data());
+        const bool manipulated=ImGuizmo::Manipulate(view.data(),projection.data(),curve?(curve_endpoint?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Z):ImGuizmo::TRANSLATE):whole?(scale_?ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Y):(development?ImGuizmo::TRANSLATE:ImGuizmo::TRANSLATE_Y)):(scale_?ImGuizmo::SCALE:ImGuizmo::TRANSLATE),ImGuizmo::LOCAL,model.data(),handle_delta.data());
         const bool using_now=ImGuizmo::IsUsing();
         if(using_now&&!gizmo_drag_){session.begin_drag();gizmo_drag_=true;}
         if(manipulated) {
             primitive_from_matrix(current.cloud.transform,model,selected_center,selected_radii);
             if(curve) {
-                if(curve_endpoint){const auto point=std::find_if(current.centerline->points.begin(),current.centerline->points.end(),[&](const auto& p){return p.id==curve_point_;});selected_center.y=sample_centerline(*current.centerline,point->t).position.y;}
-                try{apply(scene_with_centerline_command(std::move(current),CenterlineMovePoint{curve_point_,selected_center}));}catch(const std::exception& e){status_=e.what();}
+                if(development)selected_center=selected_center-development->translation;
+                if(curve_endpoint){const auto point=std::find_if(active_curve->points.begin(),active_curve->points.end(),[&](const auto& p){return p.id==curve_point_;});selected_center.y=sample_centerline(*active_curve,point->t).position.y;}
+                try{apply(development?scene_with_developed_command(current,DevelopedEdit{development_,CenterlineMovePoint{curve_point_,selected_center}}):scene_with_centerline_command(current,CenterlineMovePoint{curve_point_,selected_center}));}catch(const std::exception& e){status_=e.what();}
             }else if(whole) {
                 try {
                     const auto local_delta=world_to_local(current.cloud.transform,{handle_delta[12],handle_delta[13],handle_delta[14]})-world_to_local(current.cloud.transform,{0,0,0});
-                    if(scale_) {
+                    if(development){
+                        if(scale_){const auto p=development->shape.source.parameters;
+                            if(std::abs(local_delta.x)>1e-4)current=scene_with_developed_command(current,DevelopedEdit{development_,CumulonimbusCommand{CumulonimbusParameter::width,p.width+2*local_delta.x}});
+                            if(std::abs(local_delta.y)>1e-4)current=scene_with_developed_command(current,DevelopedEdit{development_,CumulonimbusCommand{CumulonimbusParameter::height,p.height+local_delta.y}});
+                        }else current=scene_with_developed_command(current,DevelopedMove{development_,development->translation+local_delta});
+                    }else if(scale_) {
                         const double width=prefab_source(current)->parameters.width+2*local_delta.x,height=prefab_source(current)->parameters.height+local_delta.y;
                         if(std::abs(width-prefab_source(current)->parameters.width)>1e-4)
                             current=scene_with_cumulonimbus_command(std::move(current),{CumulonimbusParameter::width,width});
@@ -375,7 +399,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     }
     const bool over=io.MousePos.x>=vx&&io.MousePos.x<vx+vw&&io.MousePos.y>=vy&&io.MousePos.y<vy+vh;
     if(over&&!modal&&!(gizmo_active&&ImGuizmo::IsOver())&&!gizmo_drag_&&!inspector_drag_) {
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole&&!curve) {
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole&&!curve&&!current.developed) {
             const auto& sc=session.document().scene();auto ray=camera_ray(sc.camera,(io.MousePos.x-vx)/vw,(io.MousePos.y-vy)/vh,vw/vh);
             if(auto pick=pick_primitive(sc.cloud,ray,select_cuts_)){selected_=*pick;prefab_group_=false;curve_point_=0;}
         }

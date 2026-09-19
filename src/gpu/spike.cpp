@@ -1,4 +1,4 @@
-#include "white/field_graph.hpp"
+#include "white/developed_scene.hpp"
 #include "white/gpu_spike.hpp"
 #include "white/benchmark.hpp"
 #include "white/phase.hpp"
@@ -23,6 +23,26 @@ void gpu_check(bool success, const char* operation) {
     if (!success) throw std::runtime_error(std::string(operation) + ": " + SDL_GetError());
 }
 namespace {
+struct DensityAllowance {bool detailed=false;double profile_bound=0,profile_tolerance=0;};
+DensityAllowance density_allowance(const Scene& scene){
+    bool detailed=false;double profile_bound=0,profile_tolerance=0;
+    auto include_profile=[&](const CloudRecipe& recipe,double translation_y){
+        const auto& noise=recipe.noise;
+        detailed=detailed||noise.medium_strength>0||noise.micro_erosion>0||noise.warp_amplitude>0;
+        double bound=altitude_density_error_bound(recipe.altitude_density);
+        if(translation_y!=0){auto shifted=recipe.altitude_density;shifted.base+=translation_y;
+            bound=2*(bound+altitude_density_error_bound(shifted));}
+        const double unmodulated_max=recipe.cells.empty()?0:recipe.density*(1+recipe.overlap*double(recipe.cells.size()-1));
+        profile_bound=std::max(profile_bound,bound);profile_tolerance+=bound*unmodulated_max;
+    };
+    if(scene_density_requires_direct(scene)){
+        const DevelopedEvaluationPlan plan(*scene.developed);
+        for(size_t i=0;i<plan.fields().size();++i)include_profile(plan.fields()[i].recipe(),plan.cloud().cells[i].translation.y);
+        // Each nonnegative profile coefficient has piecewise derivative at
+        // most one (coverage + bridge <= 1, overlap <= 1): sum its allowance.
+    }else include_profile(scene.cloud,0);
+    return {detailed,profile_bound,profile_tolerance};
+}
 struct Transfer {
     SDL_GPUDevice* device;
     SDL_GPUTransferBuffer* buffer;
@@ -155,7 +175,7 @@ void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
     auto* replacement=texture(device,SDL_GPU_TEXTURETYPE_3D,SDL_GPU_TEXTUREFORMAT_R32_FLOAT,
         SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE|SDL_GPU_TEXTUREUSAGE_SAMPLER,dims[0],dims[1],dims[2]);
     try {
-        const auto cloud=FieldEvaluationPlan(field_graph_from_recipe(scene_snapshot_.cloud)).gpu_params();bake_wait_ms=0;
+        const auto cloud=gpu_scene_density_params(scene_snapshot_);bake_wait_ms=0;
         // Bound each software-GPU dispatch; full volume still publishes atomically.
         for(Uint32 z=0;z<dims[2];z+=16) {
             auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire bake commands");
@@ -177,7 +197,7 @@ void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
 }
 void GpuSpike::set_cache_resolution(int resolution) {
     if(resolution!=128&&resolution!=256)throw std::invalid_argument("Dense cache resolution must be 128 or 256");
-    cache_resolution=resolution;queue_bake({Uint32(resolution),Uint32(resolution),Uint32(resolution)});
+    cache_resolution=resolution;queue_bake(scene_density_requires_direct(scene_snapshot_)?std::array<Uint32,3>{65,67,69}:std::array<Uint32,3>{Uint32(resolution),Uint32(resolution),Uint32(resolution)});
 }
 void GpuSpike::create_cloud(int preset) {
     scene_snapshot_=fixture_scene(preset);cloud_preset=preset;
@@ -187,8 +207,9 @@ void GpuSpike::set_scene(const Scene& scene,std::uint64_t revision,std::chrono::
     require_valid(scene);const auto dirty=classify_change(scene_snapshot_,scene);
     const bool density_changed=has(dirty,Dirty::density)||fixture!=2;
     scene_snapshot_=scene;scene_revision=revision;exposure_ev=float(scene.exposure_ev);accepted_=accepted;
+    if(scene_density_requires_direct(scene_snapshot_))std::cout<<"density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints\n";
     const auto invalidate=invalidation(dirty);if(invalidate.hdr)volume_dirty=true;
-    if(density_changed)try{const auto n=Uint32(cache_resolution);queue_bake(use_cache?std::array<Uint32,3>{n,n,n}:std::array<Uint32,3>{65,67,69});}
+    if(density_changed)try{const auto n=Uint32(cache_resolution);queue_bake(use_cache&&!scene_density_requires_direct(scene_snapshot_)?std::array<Uint32,3>{n,n,n}:std::array<Uint32,3>{65,67,69});}
     catch(const std::exception& e){report=std::string("Bake failed; direct preview active: ")+e.what();}
 
 }
@@ -207,7 +228,7 @@ void GpuSpike::poll_bakes() {
             field=ready->texture;extent=ready->source.extent;fixture=2;
             field_density_hash_=density_input_hash(ready->source.scene);cache_reference_.clear();++bake_count;density_producer_revision=ready->source.revision;
             bake_record_ms=ready->record_ms;bake_wait_ms=ready->wait_ms;estimated_gpu_bytes=ready->estimated_gpu_bytes;
-            volume_dirty=true;report="Latest density ready";
+            volume_dirty=true;report=scene_density_requires_direct(scene_snapshot_)?"Grouped density ready; Direct preview (combined cache masks unsupported)":"Latest density ready";
             std::cout<<"density_publish producer_revision="<<ready->source.revision<<" consumer_revision="<<scene_revision<<" matching_density_hash="<<field_density_hash_<<" peak_requested_gpu_bytes="<<estimated_gpu_bytes<<'\n';
         }else SDL_ReleaseGPUTexture(device,ready->texture);
     }
@@ -215,7 +236,7 @@ void GpuSpike::poll_bakes() {
     if(auto error=bake_worker_->take_error();!error.empty())report="Bake failed; direct preview active: "+error;
 }
 void GpuSpike::set_test_delay(unsigned milliseconds){bake_worker_->set_test_delay(milliseconds);}
-bool GpuSpike::cache_current()const{return field&&field_density_hash_==density_input_hash(scene_snapshot_);}
+bool GpuSpike::cache_current()const{return !scene_density_requires_direct(scene_snapshot_)&&field&&field_density_hash_==density_input_hash(scene_snapshot_);}
 bool GpuSpike::bake_pending()const{return bake_worker_&&bake_worker_->busy();}
 void GpuSpike::wait_bakes() {
     if(!bake_worker_)return;
@@ -233,7 +254,7 @@ void GpuSpike::note_present(std::uint64_t revision,std::chrono::steady_clock::ti
 }
 void GpuSpike::validate() {
     wait_bakes();
-    if(validated_bake_==bake_count&&(!use_cache||!cache_reference_.empty())){std::cout<<"density_validation_reused bake="<<bake_count<<'\n';return;}
+    if(validated_bake_==bake_count&&(!use_cache||scene_density_requires_direct(scene_snapshot_)||!cache_reference_.empty())){std::cout<<"density_validation_reused bake="<<bake_count<<'\n';return;}
     // D3D12 texture row pitch is 256 bytes; explicitly pad the 17-wide fixture.
     const Uint32 pitch=(extent[0]+63)/64*64;
     const auto count=checked_volume_bytes(pitch,extent[1],extent[2],4);
@@ -247,23 +268,19 @@ void GpuSpike::validate() {
     auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));
     gpu_check(values != nullptr,"Map density readback");
     max_error=0; interpolation_error=0; bool finite=true;
-    if(fixture==2&&use_cache)cache_reference_.resize(size_t(extent[0])*extent[1]*extent[2]);
-    const DensityField reference_field(scene_snapshot_.cloud);
+    if(fixture==2&&use_cache&&!scene_density_requires_direct(scene_snapshot_))cache_reference_.resize(size_t(extent[0])*extent[1]*extent[2]);
+    const SceneDensityEvaluator reference_field(scene_snapshot_);
     const GridLayout layout{reference_field.local_support(),extent};
     for(Uint32 z=0;z<extent[2];++z) for(Uint32 y=0;y<extent[1];++y) for(Uint32 x=0;x<extent[0];++x) {
         const float value=values[(z*extent[1]+y)*pitch+x];
         finite=finite && std::isfinite(value);
-        if(fixture==2&&use_cache)cache_reference_[(size_t(z)*extent[1]+y)*extent[0]+x]=value;
+        if(fixture==2&&use_cache&&!scene_density_requires_direct(scene_snapshot_))cache_reference_[(size_t(z)*extent[1]+y)*extent[0]+x]=value;
         const float expected=fixture==2?float(reference_field.at(index_to_local(layout,{double(x),double(y),double(z)}))):reference(x,y,z,extent,fixture);
         max_error=std::max(max_error,std::abs(value-expected));
     }
     SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
-    const auto& noise=scene_snapshot_.cloud.noise;
-    const bool detailed=noise.medium_strength>0||noise.micro_erosion>0||noise.warp_amplitude>0;
-    const auto& recipe=scene_snapshot_.cloud;
-    const double unmodulated_max=recipe.cells.empty()?0:recipe.density*(1+recipe.overlap*double(recipe.cells.size()-1));
-    const double profile_bound=altitude_density_error_bound(recipe.altitude_density);
-    const double profile_tolerance=profile_bound*unmodulated_max;
+    const auto allowance=density_allowance(scene_snapshot_);
+    const auto detailed=allowance.detailed;const auto profile_bound=allowance.profile_bound,profile_tolerance=allowance.profile_tolerance;
     const float tolerance=fixture==2?float((detailed?1e-4:2e-5)*std::max(1.0,reference_field.maximum())+profile_tolerance):1e-6f;
     std::cout<<"density_reference max_abs_error="<<max_error<<" tolerance="<<tolerance<<" detailed="<<detailed
         <<" profile_scale_error_bound="<<profile_bound<<" profile_density_tolerance="<<profile_tolerance<<'\n';
@@ -398,7 +415,7 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
         throw std::invalid_argument("Invalid rendering quality budget");
     const bool editing=progressive?preview_state.editing():interacting_;
     rendered_steps_=editing?std::min(view_steps,32):view_steps;
-    rendered_cache_=use_cache&&field_density_hash_==density_input_hash(scene_snapshot_);
+    rendered_cache_=use_cache&&cache_current();
     const int render_width=editing?std::min(internal_width,96):internal_width;
     const int render_shadows=editing?std::min(shadow_steps,4):shadow_steps;rendered_shadows_=render_shadows;
     const Uint32 w=Uint32(render_width),h=Uint32(std::max(1.0f,float(w)*std::max(1.0f,float(height)-90)/std::max(1.0f,float(width)-310)));
@@ -412,7 +429,7 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     }
     auto normalize=[](Vec3 p){return p*(1/std::sqrt(dot(p,p)));};
     auto cross=[](Vec3 a,Vec3 b){return Vec3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
-    const auto& recipe=scene_snapshot_.cloud;const auto field_params=FieldEvaluationPlan(field_graph_from_recipe(recipe)).gpu_params();
+    const auto& recipe=scene_snapshot_.cloud;const auto field_params=gpu_scene_density_params(scene_snapshot_);
     const auto& camera=scene_snapshot_.camera;const auto eye=camera.position,target_point=camera.target;
     const auto forward=normalize(target_point-eye),right=normalize(cross(forward,camera.up)),up=cross(right,forward);
     const auto origin=world_to_local(recipe.transform,{0,0,0});
@@ -518,7 +535,7 @@ void GpuSpike::validate_cache_samples() {
     auto* output=SDL_CreateGPUBuffer(device,&bi);gpu_check(output!=nullptr,"Create cache sample buffer");
     try{
         Transfer transfer(device,bi.size);auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire cache sample commands");
-        const auto cloud=FieldEvaluationPlan(field_graph_from_recipe(scene_snapshot_.cloud)).gpu_params();SDL_PushGPUComputeUniformData(cmd,1,&cloud,sizeof(cloud));
+        const auto cloud=gpu_scene_density_params(scene_snapshot_);SDL_PushGPUComputeUniformData(cmd,1,&cloud,sizeof(cloud));
         const Float4 unused{};SDL_PushGPUComputeUniformData(cmd,0,&unused,sizeof(unused));
         SDL_GPUStorageBufferReadWriteBinding binding{};binding.buffer=output;
         auto* pass=SDL_BeginGPUComputePass(cmd,nullptr,0,&binding,1);SDL_BindGPUComputePipeline(pass,cache_sample_test);
@@ -527,12 +544,24 @@ void GpuSpike::validate_cache_samples() {
         auto* copy=SDL_BeginGPUCopyPass(cmd);const SDL_GPUBufferRegion source{output,0,bi.size};const SDL_GPUTransferBufferLocation dest{transfer.buffer,0};
         SDL_DownloadFromGPUBuffer(copy,&source,&dest);SDL_EndGPUCopyPass(copy);submit_wait(device,cmd);
         const auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map cache samples");
+        if(scene_density_requires_direct(scene_snapshot_)){
+            const SceneDensityEvaluator cpu(scene_snapshot_);const auto allowance=density_allowance(scene_snapshot_);
+            const double tolerance=(allowance.detailed?1e-4:2e-5)*std::max(1.,cpu.maximum())+allowance.profile_tolerance;
+            bool finite=true;double maximum=0,sum=0;
+            for(int i=0;i<256;++i){const Vec3 p{values[4*i+1],values[4*i+2],values[4*i+3]};
+                for(int c=0;c<4;++c)finite=finite&&std::isfinite(values[4*i+c]);
+                const double error=std::abs(values[4*i]-cpu.at(p));maximum=std::max(maximum,error);sum+=error;}
+            SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
+            std::cout<<"grouped_direct_points samples=256 max_abs="<<maximum<<" mean_abs="<<sum/256<<" tolerance="<<tolerance<<" coordinates=GPU_evaluated combined_cache=false\n";
+            if(!finite||maximum>tolerance)throw std::runtime_error("Grouped direct GPU points differ from CPU field");
+        }else{
         double maximum=0,sum=0;bool finite=true;for(int i=0;i<256;++i){for(int c=0;c<4;++c)finite=finite&&std::isfinite(values[i*4+c]);double delta=std::abs(double(values[i*4+2])-values[i*4]);maximum=std::max(maximum,delta);sum+=delta;}
         const bool protected_base=!scene_snapshot_.cloud.base.enabled||values[2]==0;
         const bool protected_cut=scene_snapshot_.cloud.cuts.empty()||values[6]==0;
         std::cout<<"dense_sample_comparison samples=256 max_abs="<<maximum<<" mean_abs="<<sum/256<<" raw_base_leak="<<values[1]<<" raw_cut_leak="<<values[5]<<" hard_constraints_preserved="<<(protected_base&&protected_cut)<<'\n';
         SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
         if(!finite||!protected_base||!protected_cut)throw std::runtime_error("Cache interpolation violated hard constraints");
+        }
     }catch(...){SDL_ReleaseGPUBuffer(device,output);throw;}SDL_ReleaseGPUBuffer(device,output);
 }
 void GpuSpike::validate_optics() {
@@ -600,7 +629,7 @@ std::vector<float> GpuSpike::read_hdr() {
         validate();
     }
     const GridLayout grid{scene_snapshot_.cloud.envelope,extent};
-    const DensityField cpu(scene_snapshot_.cloud);const auto& recipe=cpu.recipe();
+    const SceneDensityEvaluator cpu(scene_snapshot_);const auto& recipe=scene_snapshot_.cloud;
     const auto& camera=scene_snapshot_.camera;const auto eye=camera.position,target_point=camera.target;
     auto normalize=[](Vec3 v){return v*(1/std::sqrt(dot(v,v)));};
     auto cross=[](Vec3 a,Vec3 b){return Vec3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
@@ -610,9 +639,10 @@ std::vector<float> GpuSpike::read_hdr() {
     for(Uint32 y=0;y<hdr_height;++y)for(Uint32 x=0;x<hdr_width;++x) {
         const double px=(2*(x+0.5)/hdr_width-1)*double(hdr_width)/hdr_height,py=1-2*(y+0.5)/hdr_height;
         const auto direction=normalize(forward+(right*px+up*py)*std::tan(camera.vertical_fov_degrees*3.141592653589793/360));
-        const auto local_direction=world_to_local(recipe.transform,eye+direction)-origin;
+        auto linear=recipe.transform;linear.translation={0,0,0};
+        const auto local_direction=world_to_local(linear,direction);
         double tau=0,direct_tau=0;
-        if(const auto interval=intersect_bounds(origin,local_direction,recipe.envelope,camera.near_plane,camera.far_plane)) {
+        if(const auto interval=intersect_bounds(origin,local_direction,cpu.local_support(),camera.near_plane,camera.far_plane)) {
             const double dt=(interval->exit-interval->entry)/rendered_steps_;
             for(int i=0;i<rendered_steps_;++i){const auto p=origin+local_direction*(interval->entry+(i+0.5)*dt);const double direct=cpu.at(p);
                 const double cached=rendered_cache_?(hard_density_region(recipe,p)?sample_dense(grid,cache_reference_,p):0):direct;

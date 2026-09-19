@@ -7,10 +7,11 @@ RWStructuredBuffer<float4> results : register(u0,space1);
 void main(uint3 id:SV_DispatchThreadID){
     uint h=noiseHash(id.x+12345);float3 uv=float3(h&1023,(h>>10)&1023,(h>>20)&1023)/1023.0;
     float3 p=lerp(envelopeMin.xyz,envelopeMax.xyz,uv);
-    if(id.x==0)p=float3(0,settings.x-0.1,0);
-    if(id.x==1&&config.w>0)p=cutCenters[0].xyz-float3(cutRadii[0].x-0.1,0,0);
+    if(id.x==0)p=float3(0,densityPacket.groups[0].settings.x+densityPacket.translations[0].y-0.1,0);
+    if(id.x==1&&densityPacket.groups[0].config.w>0)p=densityPacket.groups[0].cutCenters[0].xyz+densityPacket.translations[0].xyz-float3(densityPacket.groups[0].cutRadii[0].x-0.1,0,0);
     if(id.x==2)p=envelopeMin.xyz+0.1;
     if(id.x==3)p=envelopeMax.xyz-0.1;
+    if(densityPacket.settings.x==2){results[id.x]=float4(densityAt(p),p);return;}
     float raw=field.SampleLevel(linearClamp,(p-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz),0);
     results[id.x]=float4(densityAt(p),raw,constrainCache(p,raw),1);
 }

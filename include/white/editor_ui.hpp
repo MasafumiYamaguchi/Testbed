@@ -3,6 +3,7 @@
 #include "white/persistence.hpp"
 #include "white/cumulonimbus.hpp"
 #include "white/centerline_scene.hpp"
+#include "white/developed_scene.hpp"
 namespace white {
 class EditorUi {
 public:
@@ -17,11 +18,18 @@ public:
     void start_prefab_test();
     void prefab_test_input(int frame);
     void verify_prefab_test(int frame);
+    void start_developed_test();
+    void developed_test_input(int frame);
+    void verify_developed_test(int frame);
     void start_centerline_test();
     void centerline_test_input(int frame);
     void verify_centerline_test(int frame);
     const std::string& status() const{return status_;}
 private:
+    Id development_=0;
+    bool duplicate_regenerate_=false;
+    void draw_developed_ui();
+    void developed_item(bool,const DevelopedCommand&);
     Id curve_point_=0;
     bool prefab_group_=true;
     bool focus_noise_=false;

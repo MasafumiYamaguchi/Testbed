@@ -28,7 +28,7 @@ int main(){try {
     shape.source.modifiers.noise.origin={2,3,4};shape.source.modifiers.manual_cells.push_back({100,{45,50,0},{5,6,7},9007199254740993ULL});
     shape.source.modifiers.cuts.push_back({101,{10,40,0},{4,5,6},1});
     scene.cloud=lower_centerline_to_recipe(shape);require_valid(scene);
-    check(scene.schema_version==6&&scene.algorithm_version==3&&scene.cloud.altitude_density.enabled,"New centerline lacks schema6 algorithm3 full density profile");
+    check(scene.schema_version==7&&scene.algorithm_version==3&&scene.cloud.altitude_density.enabled,"New centerline lacks schema7 algorithm3 full density profile");
     const auto bytes=scene_json(scene);const auto encoded=Json::parse(bytes);const auto& cloud=encoded.at("cloud");
     check(cloud.size()==2&&cloud.at("kind")=="centerline"&&!cloud.contains("recipe")&&!cloud.contains("altitude_density"),"Centerline serialized competing generated authority");
     check(cloud.at("source").at("points")[0].at("id").is_string()&&cloud.at("source").at("profile")[2].at("id")=="18446744073709551615","Curve/profile IDs lost uint64 precision");
@@ -99,6 +99,6 @@ int main(){try {
     reject([&]{editor.load(invalid_path,true);},"Invalid curve load succeeded");
     check(editor.document().scene()==before_failure&&editor.document().revision()==before_failure_revision,"Invalid load clobbered source/revision");
     editor.load(path,true);check(editor.document().scene()==curved&&!editor.modified()&&!editor.can_undo(),"Saved curve load failed to restore exact source and clear session history");
-    std::cout<<"Centerline schema6 / density algorithm3: source-only curves and custom profiles round-trip; "<<migrated_samples<<" legacy density samples unchanged; schemas1..5 migration; uint64 IDs; profile/curve Undo and atomic rollback passed\n";
+    std::cout<<"Centerline schema7 / density algorithm3: source-only curves and custom profiles round-trip; "<<migrated_samples<<" legacy density samples unchanged; schemas1..5 migration; uint64 IDs; profile/curve Undo and atomic rollback passed\n";
     return 0;
 }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}

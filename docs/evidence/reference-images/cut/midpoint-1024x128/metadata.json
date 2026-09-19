@@ -1,0 +1,191 @@
+{
+  "A": "transmittance T; NOT opacity; do not alpha composite RGB",
+  "RGB": "L_scatter + T * background; already composited",
+  "actual_density_extent": [
+    32,
+    32,
+    32
+  ],
+  "background_linear": [
+    0.015,
+    0.022,
+    0.035
+  ],
+  "cached_density": true,
+  "commit": "ee28ee870cca9f3d7af6dd16e308d8e3c838f43f",
+  "diagnostic_display_scale": 1.0,
+  "diagnostic_mode": 0,
+  "diagnostic_name": "radiance",
+  "display_transform": "exposure 2^EV -> Reinhard x/(1+x) -> sRGB",
+  "empty_space_skipping": false,
+  "format_version": 1,
+  "frame": "0",
+  "height": 9,
+  "jitter": "fixed pixel centers",
+  "jitter_seed": "0",
+  "reference": {
+    "comparison_scope": "same saved R32F grid and pixel-center camera rays; no sun cache or preview multiple-scattering approximation",
+    "complete": true,
+    "integrator": "deterministic midpoint quadrature",
+    "mode": "single scattering",
+    "pixel_jitter": false,
+    "seed": "0"
+  },
+  "revision": "0",
+  "row_order": "top to bottom",
+  "samples_per_pixel": 1,
+  "scene": {
+    "algorithm_version": 3,
+    "camera": {
+      "far_plane": 10000.0,
+      "near_plane": 0.1,
+      "position": [
+        120.0,
+        70.0,
+        120.0
+      ],
+      "target": [
+        0.0,
+        35.0,
+        0.0
+      ],
+      "up": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "vertical_fov_degrees": 45.0
+    },
+    "cloud": {
+      "altitude_density": {
+        "base": 0.0,
+        "enabled": false,
+        "height": 1.0,
+        "knots": [
+          {
+            "scale": 1.0,
+            "t": 0.0
+          },
+          {
+            "scale": 1.0,
+            "t": 1.0
+          }
+        ]
+      },
+      "base": {
+        "enabled": true,
+        "height": 0.0,
+        "transition": 2.0
+      },
+      "blend_width": 2.0,
+      "cells": [
+        {
+          "center": [
+            0.0,
+            35.0,
+            0.0
+          ],
+          "id": "2",
+          "radii": [
+            18.0,
+            48.0,
+            18.0
+          ],
+          "structure_seed": "0"
+        }
+      ],
+      "cuts": [
+        {
+          "center": [
+            12.0,
+            40.0,
+            0.0
+          ],
+          "id": "3",
+          "radii": [
+            17.0,
+            20.0,
+            26.0
+          ],
+          "transition": 3.0
+        }
+      ],
+      "density": 1.0,
+      "detail_seed": "17",
+      "envelope": {
+        "max": [
+          50.0,
+          100.0,
+          50.0
+        ],
+        "min": [
+          -50.0,
+          -20.0,
+          -50.0
+        ]
+      },
+      "id": "1",
+      "noise": {
+        "medium_frequency": 0.12,
+        "medium_strength": 0.0,
+        "micro_erosion": 0.0,
+        "micro_frequency": 0.15,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "warp_amplitude": 0.0,
+        "warp_frequency": 0.035
+      },
+      "optics": {
+        "albedo": 0.9,
+        "extinction_scale": 0.02,
+        "g": 0.0
+      },
+      "overlap": 0.0,
+      "structure_seed": "42",
+      "transform": {
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "exposure_ev": 1.0,
+    "preview_approx": {
+      "enabled": false,
+      "strength": 0.5
+    },
+    "schema_version": 6,
+    "sun": {
+      "direction_to_light": [
+        -0.5019327955006592,
+        0.6246950475544243,
+        0.5981802122787655
+      ],
+      "irradiance": [
+        15.0,
+        15.0,
+        15.0
+      ]
+    }
+  },
+  "shadow_steps": 128,
+  "sun_tau_cache_resolution": 0,
+  "view_steps": 1024,
+  "width": 16,
+  "working_space": "linear Rec.709 / D65"
+}

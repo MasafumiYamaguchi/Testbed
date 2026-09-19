@@ -14,7 +14,7 @@ $log=Get-Content "$out/input.stdout.log" -Raw
 if($log -notmatch "centerline_gizmo=control_x command_equal=true single_undo=true redo=true stable_source=true PASS"){throw "Missing actual point gizmo/command verification"}
 if($log -notmatch "centerline_profile_source=true flat_base_preserved=true noise_origin_preserved=true save_reload=true PASS"){throw "Missing profile source/Save/Open verification"}
 $scene=Get-Content "$out/centerline-smoke.white.json" -Raw | ConvertFrom-Json
-if($scene.schema_version -ne 6 -or $scene.algorithm_version -ne 3 -or $scene.cloud.kind -ne "centerline"){throw "Centerline source version mismatch"}
+if($scene.schema_version -ne 7 -or $scene.algorithm_version -ne 3 -or $scene.cloud.kind -ne "centerline"){throw "Centerline source version mismatch"}
 foreach($view in @("front","side")) {
     $recipe=if($view -eq "front"){"centerline-smoke.white.json"}else{"centerline-side.white.json"}
     foreach($cache in @(0,128,256)) {

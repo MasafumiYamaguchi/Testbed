@@ -1,4 +1,5 @@
 #include "white/cumulonimbus.hpp"
+#include "white/developed_cells.hpp"
 #include "white/centerline_scene.hpp"
 #include <algorithm>
 #include <cmath>
@@ -186,13 +187,15 @@ Scene scene_with_cumulonimbus_command(Scene scene,const CumulonimbusCommand& com
     scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);require_valid(scene);return scene;
 }
 Scene new_cumulonimbus_scene(Scene scene) {
-    scene.centerline.reset();scene.cumulonimbus=CumulonimbusGroup{};scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);
+    scene.developed.reset();scene.centerline.reset();scene.cumulonimbus=CumulonimbusGroup{};scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);
     scene.camera.target={0,60,0};scene.camera.position={200,110,220};scene.camera.up={0,1,0};
     scene.sun.direction_to_light={0,0.8,0.6};scene.sun.irradiance={15,15,15};scene.exposure_ev=1;
     require_valid(scene);return scene;
 }
 Scene custom_cloud_scene(Scene scene) {
-    require_valid(scene);scene.cumulonimbus.reset();scene.centerline.reset();return scene;
+    require_valid(scene);
+    if(scene.developed){scene.cloud=lower_single_developed_recipe(*scene.developed);scene.developed.reset();}
+    scene.cumulonimbus.reset();scene.centerline.reset();return scene;
 }
 CumulonimbusDocument::CumulonimbusDocument(CumulonimbusGroup group):group_(std::move(group)){require(validate_cumulonimbus(group_));}
 void CumulonimbusDocument::advance() {

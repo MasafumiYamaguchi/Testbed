@@ -120,7 +120,10 @@ ReferenceSample reference_raymarch(const TrackingSnapshot& s,const TrackingRay& 
 }
 TrackingSnapshot bake_reference_snapshot(const Scene& scene,unsigned resolution){
     if(resolution<2||resolution>128)throw std::invalid_argument("Reference grid resolution must be 2..128");
-    require_valid(scene);const GridLayout grid{scene.cloud.envelope,{resolution,resolution,resolution}};const DensityField field(scene.cloud);std::vector<float> density(size_t(resolution)*resolution*resolution);
+    require_valid(scene);
+    if(scene.developed&&scene.developed->cells.size()>1)
+        throw std::invalid_argument("Reference bake does not support two developed groups: independent hard-mask frozen-grid contract required");
+    const GridLayout grid{scene.cloud.envelope,{resolution,resolution,resolution}};const DensityField field(scene.cloud);std::vector<float> density(size_t(resolution)*resolution*resolution);
     for(unsigned z=0;z<resolution;++z)for(unsigned y=0;y<resolution;++y)for(unsigned x=0;x<resolution;++x)density[(size_t(z)*resolution+y)*resolution+x]=float(field.at(index_to_local(grid,{double(x),double(y),double(z)})));
     return TrackingSnapshot(scene,grid,std::move(density));
 }
