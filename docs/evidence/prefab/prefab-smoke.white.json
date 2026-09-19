@@ -1,0 +1,157 @@
+{
+  "algorithm_version": 2,
+  "camera": {
+    "far_plane": 10000.0,
+    "near_plane": 0.1,
+    "position": [
+      0.0,
+      60.0,
+      250.0
+    ],
+    "target": [
+      0.0,
+      60.0,
+      0.0
+    ],
+    "up": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "vertical_fov_degrees": 45.0
+  },
+  "cloud": {
+    "kind": "cumulonimbus",
+    "source": {
+      "cell_adjustments": [
+        {
+          "cell_id": "6",
+          "center_offset": [
+            2.0,
+            1.0,
+            -3.0
+          ],
+          "radius_scale": [
+            1.1,
+            0.9,
+            1.0
+          ],
+          "structure_seed": "91"
+        },
+        {
+          "cell_id": "2",
+          "center_offset": [
+            3.0,
+            0.0,
+            0.0
+          ],
+          "radius_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "structure_seed": null
+        }
+      ],
+      "cell_ids": [
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
+      "cloud_id": "1",
+      "contract_version": 1,
+      "modifiers": {
+        "base_enabled": true,
+        "base_transition": 2.0,
+        "blend_width": 4.0,
+        "cuts": [
+          {
+            "center": [
+              15.0,
+              45.0,
+              10.0
+            ],
+            "id": "100",
+            "radii": [
+              7.0,
+              12.0,
+              9.0
+            ],
+            "transition": 2.0
+          }
+        ],
+        "manual_cells": [],
+        "noise": {
+          "medium_frequency": 0.12,
+          "medium_strength": 0.2,
+          "micro_erosion": 0.5,
+          "micro_frequency": 0.6,
+          "origin": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "warp_amplitude": 1.0,
+          "warp_frequency": 0.035
+        },
+        "optics": {
+          "albedo": 0.9,
+          "extinction_scale": 0.02,
+          "g": 0.0
+        },
+        "overlap": 0.15,
+        "transform": {
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "parameters": {
+        "cloud_base": 11.366371154785156,
+        "density": 1.0,
+        "detail_seed": "17",
+        "growth_direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "height": 151.37548828125,
+        "structure_seed": "42",
+        "width": 102.73635864257813
+      }
+    }
+  },
+  "exposure_ev": 1.0,
+  "preview_approx": {
+    "enabled": false,
+    "strength": 0.5
+  },
+  "schema_version": 5,
+  "sun": {
+    "direction_to_light": [
+      0.0,
+      0.8,
+      0.6
+    ],
+    "irradiance": [
+      15.0,
+      15.0,
+      15.0
+    ]
+  }
+}
