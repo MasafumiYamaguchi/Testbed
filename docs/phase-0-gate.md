@@ -44,6 +44,15 @@ SDL instrumentation only supplies CPU recording and submit-to-fence wall time.
 Do not relabel these as GPU time. Repeat a longer resource-lifetime run and
 inspect validation messages before considering Go.
 
+## Queue review correction
+
+Gate review found an A → B → A race: the worker's completed hash could outlive
+its texture when main-thread publication rejected that result. The queue no
+longer assumes a finished result remains resident. A same-hash request remains pending until active success clears it, because an
+active job may already have decided to cancel. Camera-only updates still never
+request a density bake. Regression tests cover completed and already-cancelling
+results followed by B and return to A.
+
 ## Existing evidence and remaining limitations
 
 - [Editor CI](https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35417894669)
