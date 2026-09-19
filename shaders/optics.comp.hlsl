@@ -1,7 +1,13 @@
 #include "optics.hlsli"
+#include "phase.hlsli"
 RWStructuredBuffer<float4> results : register(u0,space1);
 [numthreads(1,1,1)]
 void main(uint3 id : SV_DispatchThreadID) {
+    if(id.x>=24){
+        uint k=(id.x-24)%5;float g=k==0?-.95:k==1?-.5:k==2?0:k==3?.5:.95;
+        float2 u=float2(phaseRandom(id.x,3,0,uint2(42,0)),phaseRandom(id.x,3,1,uint2(42,0)));
+        float3 sampled=sampleHG(float3(0,0,1),g,u);results[id.x]=float4(sampled.z,phaseHG(sampled.z,g),u);return;
+    }
     if(id.x>=14){
         float3 L=0;float T=1;
         if(id.x==14)integrateConstantSource(L,T,0,3,float3(2,2,2));

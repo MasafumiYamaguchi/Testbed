@@ -3,12 +3,13 @@ param(
     [string]$OutputDirectory="evidence/gate",
     [ValidateSet(160,640)][int]$InternalWidth=160,
     [int]$ViewSteps=64,
-    [int]$ShadowSteps=8
+    [int]$ShadowSteps=8,
+    [string]$RecipeDirectory="$PSScriptRoot/../tests/fixtures/gate"
 )
 $ErrorActionPreference="Stop"
 Add-Type -AssemblyName System.Drawing
 $exe=(Resolve-Path $Executable).Path
-$recipes=(Resolve-Path "$PSScriptRoot/../tests/fixtures/gate").Path
+$recipes=(Resolve-Path $RecipeDirectory).Path
 New-Item -ItemType Directory -Force $OutputDirectory | Out-Null
 $out=(Resolve-Path $OutputDirectory).Path
 $primary=@("tall","wide","fusion","flat-base","cut","detail-17","detail-18")
