@@ -21,7 +21,7 @@ front/side/top/inside views and opposite lighting.
 seven cases in direct/128³/256³ modes and ten additional direct views. It copies
 and SHA-256 hashes every recipe, retains the logs and GPU framebuffer PNGs, and
 asserts the requested render dimensions and zero pending jobs at capture.
-The viewport is 640×360 screen pixels; hosted runs render internally at 160×90,
+The viewport is 800×450 screen pixels; hosted runs render internally at 160×90,
 64 view steps and 8 shadow steps. Each independent process runs 90 frames and
 captures after 60 warm-up frames. The scene is static: these are correctness
 comparisons, not a sustained frame-rate benchmark. CPU transmittance is checked

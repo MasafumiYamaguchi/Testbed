@@ -98,7 +98,7 @@ int main(int argc,char** argv) {
         if(!recipe.empty())editor.session.load(std::filesystem::u8path(recipe),true);
         gpu.internal_width=render_width;gpu.view_steps=view_steps;gpu.shadow_steps=shadow_steps;
         gpu.set_scene(editor.session.document().scene(),editor.session.document().revision());
-        if(!recipe.empty())white::gpu_check(SDL_SetWindowSize(gpu.window,950,450),"Set fixed 16:9 viewport");
+        if(!recipe.empty())white::gpu_check(SDL_SetWindowSize(gpu.window,1110,540),"Set fixed 16:9 viewport");
         if(cache){gpu.set_cache_resolution(cache);gpu.use_cache=true;}
         if(!recipe.empty()){
             gpu.wait_bakes();
