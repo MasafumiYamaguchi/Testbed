@@ -1,10 +1,12 @@
 #include "white/sun_cache.hpp"
 #include "white/optics.hpp"
+#include "white/persistence.hpp"
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
 void check(bool v){if(!v)throw std::runtime_error("Sun cache contract");}
-int main(){try{
+int main(int argc,char** argv){try{
+    if(argc>1)for(const auto& file:std::filesystem::directory_iterator(argv[1]))if(file.path().extension()==".json")(void)white::read_scene(file.path());
     white::Scene s;s.cloud.envelope={{-10,-20,-30},{10,20,30}};s.cloud.base.enabled=false;s.cloud.cuts.clear();s.cloud.optics.extinction_scale=.02;
     white::GridLayout grid{s.cloud.envelope,{9,11,13}};std::vector<float> values(9*11*13,1);
     for(auto sun:{white::Vec3{1,0,0},white::Vec3{0,1,0},white::Vec3{0,0,-1},white::Vec3{.9999500037496876,.009999500037496877,0}}){
