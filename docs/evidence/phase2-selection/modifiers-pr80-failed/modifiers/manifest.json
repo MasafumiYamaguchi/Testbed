@@ -1,0 +1,38 @@
+[
+  {
+    "content_hash": "3508681867193294985",
+    "density_hash": "14169964034033060049",
+    "name": "base",
+    "recipe": "base.white.json"
+  },
+  {
+    "content_hash": "3508681867193294985",
+    "density_hash": "10195154702172169349",
+    "name": "cut",
+    "recipe": "cut.white.json"
+  },
+  {
+    "content_hash": "3508681867193294985",
+    "density_hash": "9082612458248723416",
+    "name": "density",
+    "recipe": "density.white.json"
+  },
+  {
+    "content_hash": "3508681867193294985",
+    "density_hash": "7037316952593578500",
+    "name": "protected",
+    "recipe": "protected.white.json"
+  },
+  {
+    "content_hash": "3508681867193294985",
+    "density_hash": "13783523661425415346",
+    "name": "protected-seed",
+    "recipe": "protected-seed.white.json"
+  },
+  {
+    "content_hash": "3508681867193294985",
+    "density_hash": "2686072989623035645",
+    "name": "solo",
+    "recipe": "solo.white.json"
+  }
+]

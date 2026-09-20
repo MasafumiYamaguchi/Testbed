@@ -1,0 +1,6 @@
+SDL_GPU Driver: D3D12
+D3D12 Adapter: Microsoft Basic Render Driver
+D3D12 Driver: 10.0.20348.5386
+Validation layers enabled, expect debug level performance!
+ERROR: Scene validation failed:
+- Finishing masks/detail exceed the 0.5% GPU density precision budget

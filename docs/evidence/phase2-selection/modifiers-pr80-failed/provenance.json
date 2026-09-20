@@ -1,0 +1,275 @@
+{
+  "repository": "MasafumiYamaguchi/Testbed",
+  "pull_request": 80,
+  "run_url": "https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35536694061",
+  "job_url": "https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35536694061/job/106146891429",
+  "artifact_api_snapshot": {
+    "id": 10613770136,
+    "name": "windows-Release-selected-state-evidence",
+    "size_in_bytes": 2305858,
+    "url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10613770136",
+    "archive_download_url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10613770136/zip",
+    "expired": false,
+    "created_at": "2026-09-20T21:13:59Z",
+    "expires_at": "2026-12-19T20:48:06Z",
+    "updated_at": "2026-09-20T21:13:59Z",
+    "digest": "sha256:4902ed57e9c1b80d1b4fd1514f538458d4fbdd10807c1336fbd94b8d7f71762c",
+    "workflow_run": {
+      "id": 35536694061,
+      "repository_id": 1363007241,
+      "head_repository_id": 1363007241,
+      "head_branch": "codex/phase2-finishing-integration",
+      "head_sha": "57af3d530c4cdfe71f65ffac82fccec27597b6e7"
+    }
+  },
+  "jobs_summary": [
+    {
+      "id": 106146891135,
+      "name": "cpu (release)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 106146891315,
+      "name": "cpu (debug)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 106146891351,
+      "name": "windows (Debug)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 106146891429,
+      "name": "windows (Release)",
+      "status": "completed",
+      "conclusion": "failure"
+    }
+  ],
+  "release_job_snapshot": {
+    "id": 106146891429,
+    "name": "windows (Release)",
+    "status": "completed",
+    "conclusion": "failure",
+    "run_id": 35536694061,
+    "logs_url": null,
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1
+      },
+      {
+        "name": "Run actions/checkout@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2
+      },
+      {
+        "name": "Configure",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3
+      },
+      {
+        "name": "Configure CMake",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4
+      },
+      {
+        "name": "Build",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5
+      },
+      {
+        "name": "CPU and command-line tests",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6
+      },
+      {
+        "name": "Capture actual Windows app",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      },
+      {
+        "name": "Selected growth stage and altitude wind comparisons",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8
+      },
+      {
+        "name": "Frozen selected field and lifecycle comparisons",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9
+      },
+      {
+        "name": "Frozen finishing layers and native lifecycle comparisons",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 10
+      },
+      {
+        "name": "Publish selected-state evidence checkpoint",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11
+      },
+      {
+        "name": "Anvil growth wind and handle comparisons",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 12
+      },
+      {
+        "name": "Top lobe hierarchy comparisons",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 13
+      },
+      {
+        "name": "Independent developed cells and direct fallback",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 14
+      },
+      {
+        "name": "Cumulonimbus creation and parameter gizmos",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 15
+      },
+      {
+        "name": "Centerline point gizmo and profile captures",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 16
+      },
+      {
+        "name": "Fixed Phase-0 recipe comparisons",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 17
+      },
+      {
+        "name": "HG phase comparison captures",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 18
+      },
+      {
+        "name": "Sun cache comparisons",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 19
+      },
+      {
+        "name": "Conservative empty-space comparisons",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 20
+      },
+      {
+        "name": "Settled progressive comparisons",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 21
+      },
+      {
+        "name": "Diagnostic view comparisons",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 22
+      },
+      {
+        "name": "Preview approximation comparison",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 23
+      },
+      {
+        "name": "Bounded edit benchmark",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 24
+      },
+      {
+        "name": "Dependency notices",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 25
+      },
+      {
+        "name": "Run actions/upload-artifact@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 26
+      },
+      {
+        "name": "Post Run actions/checkout@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 52
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 53
+      }
+    ]
+  },
+  "tested_commit": {
+    "sha": "d485e2fbd795e1e96d28718b26c64966f8b5290e",
+    "tree": "426599fbfb34d4ce48f236695c05ace4516a87f9",
+    "parents": [
+      "99b585adb1bf84b8f6f27b818895570e5a54f1e0",
+      "57af3d530c4cdfe71f65ffac82fccec27597b6e7"
+    ],
+    "message": "Merge 57af3d530c4cdfe71f65ffac82fccec27597b6e7 into 99b585adb1bf84b8f6f27b818895570e5a54f1e0",
+    "url": "https://github.com/MasafumiYamaguchi/Testbed/commit/d485e2fbd795e1e96d28718b26c64966f8b5290e"
+  },
+  "download_verification": {
+    "size_bytes": 2305858,
+    "sha256": "4902ed57e9c1b80d1b4fd1514f538458d4fbdd10807c1336fbd94b8d7f71762c",
+    "matches_github_artifact_digest": true
+  },
+  "scope": "Original failed Windows modifier lifecycle at head 57af3d5. Freeze v2 checkpoint succeeded; later suites skipped. Local CPU reproduction logs are separate and do not validate GPU rendering.",
+  "source_channels": [
+    "GitHub fetch_workflow_run_artifacts",
+    "GitHub fetch_workflow_run_jobs",
+    "GitHub git/commits API",
+    "downloaded ZIP bytes and extracted original files"
+  ],
+  "prior_evidence_commit": "db115b8cfe4f9586d890bd1e4aa46a8f6fdda07e",
+  "job_log_excerpt": {
+    "source": "GitHub fetch_workflow_job_logs API response saved as pr80-release-job.log",
+    "source_log_sha256": "7a5cc3a288a35b7956ee0e1396e368091080ce3ea3857855412b34c1a808f8ec",
+    "source_line_start_1based": 949,
+    "source_line_end_1based": 958,
+    "retained_path": "release-modifier-step.log",
+    "bytes_preserved": true
+  },
+  "local_diagnosis": {
+    "not_github_artifact": true,
+    "backend": "headless actual ImGui/app lifecycle; GPU calls stubbed",
+    "before_source_commit": "9e77c4d53c122efd34e33bb53238dc50c1307ea4",
+    "modifier_editor_source_blob": "47a2a95917b42005e73250531f4197fa13353a5a",
+    "modifier_editor_source_identical_to_windows_pr_head": true,
+    "after_local_fix_commit": "f3693c8c0dbb53abb6fbdabcdb7c89f4e0121ac1",
+    "sha256": {
+      "before.log": "9b42e690db2d2fde1368921a18ae370d3a087ab6a77ed258ff32bb7fe89ed74f",
+      "bounds.log": "3d43688fb3fcf82f9a36a8715adc7d6bc8361dabf68044c437bb999ff3b06314",
+      "bounds.cpp": "95b86a960aa4a7490935dfc9d410b2b5822f4357c4247c0a73bc6453fe499daf",
+      "after.log": "05b5b45c3b6a29ea97cb7b6eab9975a774cee78a1efa815f697dcfd533a8a1be"
+    },
+    "windows_fix_validation": "Requires exact-head native rerun; these local logs do not establish it."
+  }
+}

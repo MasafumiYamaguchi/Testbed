@@ -1,0 +1,10 @@
+2026-09-20T21:13:09.5243324Z ##[group]Run ./scripts/capture-modifiers.ps1 -Executable ./build/windows/Release/white_app.exe -Generator ./build/windows/Release/white_modifier_tests.exe -Compare ./build/windows/Release/white_hdr_compare.exe
+2026-09-20T21:13:09.5244985Z [36;1m./scripts/capture-modifiers.ps1 -Executable ./build/windows/Release/white_app.exe -Generator ./build/windows/Release/white_modifier_tests.exe -Compare ./build/windows/Release/white_hdr_compare.exe[0m
+2026-09-20T21:13:09.5285181Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-20T21:13:09.5285598Z ##[endgroup]
+2026-09-20T21:13:57.0311041Z [31;1mException: [0mD:\a\Testbed\Testbed\scripts\capture-modifiers.ps1:12[0m
+2026-09-20T21:13:57.0312079Z [31;1m[0m[36;1mLine |[0m
+2026-09-20T21:13:57.0313654Z [31;1m[0m[36;1m[36;1m  12 | [0m … "};if($p.ExitCode -ne 0){[36;1mthrow "$Name failed: $($p.ExitCode)"[0m}}finall …[0m
+2026-09-20T21:13:57.0315313Z [31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+2026-09-20T21:13:57.0316509Z [31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1minput failed: 1[0m
+2026-09-20T21:13:57.0492594Z ##[error]Process completed with exit code 1.

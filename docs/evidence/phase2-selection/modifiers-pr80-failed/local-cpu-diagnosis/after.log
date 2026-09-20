@@ -1,0 +1,5 @@
+modifier_native=add hard_cut=true single_undo=true redo=true PASS
+modifier_native=detail_and_density hard_cut_final=true layers_retained=true PASS
+modifier_native=precision_rejection current_retained=true revision_unchanged=true undo_redo_retained=true PASS
+modifier_native=reorder_duplicate_delete missing_reference_rejected=true content_hash_stable=true generation_jobs=0 save_reload=true PASS
+Headless actual ImGui/app lifecycle PASS; GPU calls were stubbed, no rendering validation

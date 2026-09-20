@@ -1,0 +1,5 @@
+base bound=0.0149243 limit=0.0230016 errors=0
+reordered bound=0.0149243 limit=0.0230016 errors=0
+duplicate 1  bound=0.0165893 limit=0.0230016 errors=0
+duplicate 2  bound=0.0481348 limit=0.0690048 errors=0
+duplicate 3  bound=0.0270609 limit=0.0230016 errors=1

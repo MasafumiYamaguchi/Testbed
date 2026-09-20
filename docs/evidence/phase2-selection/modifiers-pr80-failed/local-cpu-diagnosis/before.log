@@ -1,0 +1,4 @@
+modifier_native=add hard_cut=true single_undo=true redo=true PASS
+modifier_native=detail_and_density hard_cut_final=true layers_retained=true PASS
+frame=105 Scene validation failed:
+- Finishing masks/detail exceed the 0.5% GPU density precision budget
