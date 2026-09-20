@@ -24,7 +24,7 @@ function Assert-Direct([string]$Name){
 }
 Run-Editor "input" @("--modifier-test","--frames","125","--capture","input.bmp")
 $log=Get-Content "$out/input.stdout.log" -Raw
-foreach($marker in @("modifier_native=add hard_cut=true single_undo=true redo=true","modifier_native=detail_and_density hard_cut_final=true layers_retained=true","modifier_native=reorder_duplicate_delete missing_reference_rejected=true content_hash_stable=true generation_jobs=0 save_reload=true")){if(!$log.Contains($marker)){throw "Missing $marker"}}
+foreach($marker in @("modifier_native=add hard_cut=true single_undo=true redo=true","modifier_native=detail_and_density hard_cut_final=true layers_retained=true","modifier_native=precision_rejection current_retained=true revision_unchanged=true undo_redo_retained=true","modifier_native=reorder_duplicate_delete missing_reference_rejected=true content_hash_stable=true generation_jobs=0 save_reload=true")){if(!$log.Contains($marker)){throw "Missing $marker"}}
 foreach($frame in @(55,85,110)){if(!(Test-Path "$out/modifier-$frame.bmp" -PathType Leaf)){throw "Missing native modifier lifecycle capture at frame $frame"}}
 $saved=Get-Content "$out/modifier-smoke.white.json" -Raw | ConvertFrom-Json
 if($saved.schema_version -ne 11 -or $saved.cloud.kind -ne "frozen" -or $saved.cloud.finishing.layers.Count -ne 3){throw "Finishing source schema mismatch"}

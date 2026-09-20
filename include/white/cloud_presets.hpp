@@ -42,6 +42,9 @@ Scene regenerate_fixed_detail(Scene,std::uint64_t seed,Id target=0);
 // Normal stage/seed candidates keep mutable fixed-field detail/layers/optics.
 // New-preset reset and complete clone operations intentionally use other paths.
 Scene preserve_candidate_finish(const Scene& current,Scene candidate);
+// Preparation guard: immutable evaluated structure and source history must
+// match; finishing, view and object-instance metadata may change before launch.
+bool generation_draft_matches_current(const Scene& prepared_current,const Scene& current);
 // Common comparison view, with no geometry or material-copy side effects.
 Scene candidate_comparison_scene(const Scene& current,const Scene& candidate);
 bool candidate_scene_unchanged(const Scene& current,const Scene& job_guard);

@@ -33,7 +33,7 @@ void EditorUi::draw_frozen_ui(){
 void EditorUi::start_freeze_test(){
     auto scene=new_anvil_scene(new_cumulonimbus_scene({}));scene.anvil->cloud.settings.mode=TopLobeMode::children;scene.anvil->settings.enabled=true;refresh_anvil_scene(scene);
     scene.camera.position={45,80,380};scene.camera.target={45,65,0};session.apply(scene);
-    generation_initial_=scene;generation_settings_=default_generation_settings(scene);generation_settings_.stage=.8;generation_settings_.wind.back().displacement={55,0,18};
+    auto settings=default_generation_settings(scene);settings.stage=.8;settings.wind.back().displacement={55,0,18};prepare_generation_draft({scene,std::move(settings),{},0},false);
     freeze_test_jobs_=generation_job_count();launch_generation();
 }
 void EditorUi::freeze_test_step(int frame){

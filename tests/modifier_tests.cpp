@@ -70,6 +70,24 @@ void precision(){
 Scene freeze_static(Scene source){GenerationSettings settings;settings.enabled=false;const auto outcome=generate_cloud_state(source,settings);check(outcome.status==GenerationStatus::completed,outcome.message.c_str());return freeze_candidate(outcome);}
 Scene fixed_fixture(){auto source=new_anvil_scene(new_cumulonimbus_scene());source.anvil->cloud.settings.mode=TopLobeMode::children;source.anvil->settings.enabled=true;refresh_anvil_scene(source);auto settings=default_generation_settings(source);settings.stage=.8;settings.wind.back().displacement={40,0,12};const auto outcome=generate_cloud_state(source,settings);check(outcome.status==GenerationStatus::completed,outcome.message.c_str());auto fixed=freeze_candidate(outcome);fixed.camera.target={35,65,0};fixed.camera.position={35,80,350};return fixed;}
 FinishModifier scene_layer(const Scene& scene,Id id,FinishModifierKind kind){auto value=layer(id,kind);value.target_id=scene.frozen->id;return value;}
+void precision_rejection_keeps_history(){
+    // Match the native lifecycle's detailed two-field/anvil state. Each
+    // individual layer is supported, but a second protection layer is not.
+    auto fixed=fixed_fixture();auto cut=scene_layer(fixed,1,FinishModifierKind::cut);cut.mask.center={20,55,0};cut.mask.radii={17,25,24};fixed=scene_with_finish_command(fixed,{FinishCommandKind::add,0,cut});
+    auto multiply=cut;multiply.id=2;multiply.kind=FinishModifierKind::density;multiply.density_multiplier=3;fixed=scene_with_finish_command(fixed,{FinishCommandKind::add,0,multiply});
+    auto protection=cut;protection.id=3;protection.kind=FinishModifierKind::protect_detail;protection.mask.center={15,70,0};protection.mask.radii={25,40,30};fixed=scene_with_finish_command(fixed,{FinishCommandKind::add,0,protection});
+    const auto field=fixed.frozen->fields.front();auto noise=field.recipe.noise;noise.medium_strength=.8;noise.micro_erosion=2;fixed=scene_with_frozen_detail(fixed,field.development_id,noise,field.recipe.detail_seed+123,field.layers);
+    const auto jobs=generation_job_count();const auto original_frozen=fixed.frozen;EditorSession session(fixed);
+    const auto reordered=scene_with_finish_command(fixed,{FinishCommandKind::move_up,2,{}});session.apply(reordered);check(session.undo(),"Precision fixture reorder was not undoable");
+    const auto revision=session.document().revision();bool rejected=false;
+    try{session.apply(scene_with_finish_command(fixed,{FinishCommandKind::duplicate,3,{}}));}catch(const std::invalid_argument& error){rejected=std::string(error.what()).find("0.5% GPU density precision budget")!=std::string::npos;}
+    check(rejected&&session.document().scene()==fixed&&session.document().revision()==revision&&!session.can_undo()&&session.can_redo(),"Over-budget protection duplicate mutated the document or history");
+    check(session.redo()&&session.document().scene()==reordered&&session.undo()&&session.document().scene()==fixed,"Precision rejection lost the original Undo/Redo transaction");
+    const auto duplicated=scene_with_finish_command(fixed,{FinishCommandKind::duplicate,1,{}});check(duplicated.finish_stack.layers.size()==4&&duplicated.finish_stack.layers[1].id==4,"Legal cut duplicate lost stable identity");
+    session.apply(duplicated);check(session.undo()&&session.document().scene()==fixed&&session.redo()&&session.document().scene()==duplicated,"Legal duplicate did not form one Undo command");
+    session.apply(scene_with_finish_command(session.document().scene(),{FinishCommandKind::erase,4,{}}));check(session.document().scene()==fixed&&session.document().scene().frozen==original_frozen&&generation_job_count()==jobs,"Duplicate/delete changed frozen content or reran generation");
+    std::cout<<"modifier_precision_rejection current_revision_history_retained=true legal_duplicate_delete=true generation_jobs=0 PASS\n";
+}
 void scene_lifecycle(){
     auto plain=fixture_scene(0);plain.cloud.noise.medium_strength=.7;plain.cloud.noise.micro_erosion=2;plain.cloud.noise.warp_amplitude=2;const auto original=freeze_static(plain);
     auto cut=scene_layer(original,1,FinishModifierKind::cut);cut.mask.center={0,35,0};auto fixed=scene_with_finish_command(original,{FinishCommandKind::add,0,cut});
@@ -118,4 +136,4 @@ void fixtures(const std::filesystem::path& directory){
     std::ofstream(directory/"manifest.json")<<manifest.dump(2)<<'\n';
 }
 }
-int main(int argc,char** argv){try{masks_and_order();graph_and_errors();protected_field();precision();scene_lifecycle();protection_and_targets();if(argc==2)fixtures(argv[1]);std::cout<<"Modifier masks, ordered commands, immutable frozen identity, zero generation jobs, target diagnostics, schema11, hard cuts and protected detail PASS\n";return 0;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{masks_and_order();graph_and_errors();protected_field();precision();precision_rejection_keeps_history();scene_lifecycle();protection_and_targets();if(argc==2)fixtures(argv[1]);std::cout<<"Modifier masks, ordered commands, immutable frozen identity, zero generation jobs, target diagnostics, schema11, hard cuts and protected detail PASS\n";return 0;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}

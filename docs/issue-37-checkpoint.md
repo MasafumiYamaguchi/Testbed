@@ -88,6 +88,20 @@ candidate. Adopting an older completed candidate preserves a newer prepared
 preset's pending reset intent, including when the inputs are identical. Stage
 and wind edits within the existing draft keep its token; successful adoption
 consumes only matching intent. Discard/Undo retains the token.
+Ordinary drafts also retain their prepared Current structure and provenance.
+Before starting a job, a changed source, evaluated geometry, identity or history
+rejects the stale draft while retaining Current and the last candidate; Undo
+and same-ID replacements cannot silently reuse an unrelated starting shape.
+Only a matching successful adoption advances this baseline. Detail, layer,
+optics, view, finishing and instance edits remain compatible. Frames 128 and
+136 check Undo, cut and provenance rejection with zero new jobs.
+Ordinary adoption keeps the current instance rotation and scale, adding the
+new-minus-old local reference-motion displacement in that current frame. This
+preserves manual placement and the algorithm's existing stage-dependent bulk
+motion; disabled growth contributes zero displacement. Unsupported or missing
+generation history rejects preservation instead of inferring an old motion.
+CPU coverage includes nonzero old/new motion, rotated nonuniform scaling,
+disabled growth, expanded detail sampling bounds and unknown/history-free data.
 Capture the renderer's active scene; do not resynchronize it to the
 Document while Candidate is visible.
 At frame 240 the test creates a fresh-ID clone without growth; frame 245 tests

@@ -13,6 +13,7 @@ void EditorUi::prepare_generation_draft(GenerationDraft draft,bool resets_manual
     if(scene_json(draft.initial).size()>max_scene_bytes)throw std::invalid_argument("Candidate draft exceeds the scene resource budget");
     if(generation_draft_token_==std::numeric_limits<std::uint64_t>::max())throw std::overflow_error("Candidate draft identity namespace exhausted");
     ++generation_draft_token_;
+    generation_draft_current_=session.document().scene();
     generation_initial_=std::move(draft.initial);generation_settings_=std::move(draft.settings);generation_draft_resets_edits_=resets_manual_edits;
     generation_preset_label_=draft.preset_key.empty()?"Seed variation":draft.preset_key+" / v"+std::to_string(draft.preset_version);
     generation_preview_candidate_=false;generation_message_="Draft prepared. Generate a candidate to compare; the current cloud is unchanged.";
@@ -133,6 +134,12 @@ void EditorUi::preset_test_step(int frame,GpuSpike& gpu){
     }
     if(frame==115)generation_preview_candidate_=false;
     if(frame==125){check(gpu.scene_revision==session.document().revision()&&session.document().scene()==smoke_original_,"Current return did not restore current render");std::cout<<"preset_native=current_return document_unchanged=true revision_restored=true PASS\n";}
+    if(frame==128){
+        const auto before=session.document().scene();const auto candidate=generation_candidate_fixed_;const auto jobs=generation_job_count();bool rejected=false;
+        try{launch_generation();}catch(const std::logic_error&){rejected=true;}
+        check(rejected&&!generation_job_.valid()&&generation_job_count()==jobs&&session.document().scene()==before&&generation_candidate_fixed_==candidate,"Undo to another source launched a stale ordinary draft or lost Current/candidate");
+        std::cout<<"preset_native=draft_undo_guard current_retained=true candidate_retained=true generation_jobs=0 PASS\n";
+    }
     if(frame==130){
         check(session.redo(),"Confirmed preset adoption could not be restored for the stage regression");
         const auto before=session.document().scene();const auto jobs=generation_job_count();auto edited=before;
@@ -158,6 +165,18 @@ void EditorUi::preset_test_step(int frame,GpuSpike& gpu){
         smoke_before_=session.document().scene();save_scene_atomic(smoke_before_,"preset-detail.white.json");
         std::cout<<"preset_native=detail_only generation_jobs=0 content_hash_stable=true PASS\n";
         std::cout<<"preset_native=finishing_detail_retained exact_stack=true generation_jobs=0 PASS\n";
+    }
+    if(frame==136){
+        const auto before=session.document().scene();const auto candidate=generation_candidate_fixed_;const auto jobs=generation_job_count();
+        auto reject_stale=[&](Scene changed){
+            refresh_frozen_scene(changed);session.apply(changed);bool rejected=false;
+            try{launch_generation();}catch(const std::logic_error&){rejected=true;}
+            check(rejected&&!generation_job_.valid()&&generation_job_count()==jobs&&session.document().scene()==changed&&generation_candidate_fixed_==candidate,"Structural/source edit launched a stale draft or changed Current/candidate");
+            check(session.undo()&&session.document().scene()==before,"Stale draft rejection damaged the current document history");
+        };
+        auto changed=before;changed.frozen->fields.front().recipe.cuts.push_back({700,{0,40,0},{8,8,8},1});reject_stale(changed);
+        changed=before;changed.frozen->provenance->settings.reference_translation.x+=1;reject_stale(changed);
+        std::cout<<"preset_native=draft_structure_guard cut_rejected=true provenance_rejected=true current_retained=true candidate_retained=true generation_jobs=0 PASS\n";
     }
     if(frame==140){
         check(!generation_draft_resets_edits_,"Confirmed preset adoption leaked reset intent into a later stage edit");

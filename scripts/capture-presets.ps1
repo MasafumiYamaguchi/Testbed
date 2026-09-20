@@ -60,6 +60,8 @@ foreach($marker in @(
     "preset_native=discard_undo current_preserved=true candidate_restored=true",
     "preset_native=confirmed_reset single_undo=true current_restored=true",
     "preset_native=current_return document_unchanged=true revision_restored=true",
+    "preset_native=draft_undo_guard current_retained=true candidate_retained=true generation_jobs=0",
+    "preset_native=draft_structure_guard cut_rejected=true provenance_rejected=true current_retained=true candidate_retained=true generation_jobs=0",
     "preset_native=detail_only generation_jobs=0 content_hash_stable=true",
     "preset_native=cancel previous_current_and_candidate_retained=true",
     "preset_native=stage_after_reset new_reset_intent=false detail_preserved=true layers_preserved=true optics_preserved=true unconfirmed_adoption=true",
