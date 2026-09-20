@@ -141,7 +141,7 @@ void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
     auto* cmd=SDL_AcquireGPUCommandBuffer(device); gpu_check(cmd != nullptr,"Acquire generation command buffer");
     const std::array<Uint32,4> params{dims[0],dims[1],dims[2],kind};
     SDL_PushGPUComputeUniformData(cmd,0,params.data(),sizeof(params));
-    const auto cloud=gpu_density_params(DensityField(density_fixture(cloud_preset)));
+    const auto cloud=gpu_density_params(DensityField(scene_snapshot_.cloud));
     SDL_PushGPUComputeUniformData(cmd,1,&cloud,sizeof(cloud));
     SDL_GPUStorageTextureReadWriteBinding binding{}; binding.texture=field;
     auto* pass=SDL_BeginGPUComputePass(cmd,&binding,1,nullptr,0);
@@ -150,8 +150,15 @@ void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
     SDL_EndGPUComputePass(pass); submit_wait(device,cmd);
 }
 void GpuSpike::create_cloud(int preset) {
-    (void)density_fixture(preset);cloud_preset=preset;
+    scene_snapshot_=fixture_scene(preset);cloud_preset=preset;
     create_field({65,67,69},2);validate();
+}
+void GpuSpike::set_scene(const Scene& scene,std::uint64_t revision) {
+    require_valid(scene);const auto dirty=classify_change(scene_snapshot_,scene);
+    const bool density_changed=has(dirty,Dirty::density)||fixture!=2;
+    scene_snapshot_=scene;scene_revision=revision;exposure_ev=float(scene.exposure_ev);
+    if(density_changed){create_field({65,67,69},2);report="Edited density; reference check on demand";}
+    if(has(dirty,Dirty::camera)||has(dirty,Dirty::sun)||has(dirty,Dirty::optics)||density_changed)volume_dirty=true;
 }
 void GpuSpike::validate() {
     // D3D12 texture row pitch is 256 bytes; explicitly pad the 17-wide fixture.
@@ -167,7 +174,7 @@ void GpuSpike::validate() {
     auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));
     gpu_check(values != nullptr,"Map density readback");
     max_error=0; interpolation_error=0; bool finite=true;
-    const DensityField reference_field(density_fixture(cloud_preset));
+    const DensityField reference_field(scene_snapshot_.cloud);
     const GridLayout layout{reference_field.local_support(),extent};
     for(Uint32 z=0;z<extent[2];++z) for(Uint32 y=0;y<extent[1];++y) for(Uint32 x=0;x<extent[0];++x) {
         const float value=values[(z*extent[1]+y)*pitch+x];
@@ -295,17 +302,16 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     }
     auto normalize=[](Vec3 p){return p*(1/std::sqrt(dot(p,p)));};
     auto cross=[](Vec3 a,Vec3 b){return Vec3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
-    const auto recipe=density_fixture(cloud_preset);const auto field_params=gpu_density_params(DensityField(recipe));
-    const Vec3 eye{120,70,120},target_point{0,35,0};
-    const auto forward=normalize(target_point-eye),right=normalize(cross(forward,{0,1,0})),up=cross(right,forward);
+    const auto& recipe=scene_snapshot_.cloud;const auto field_params=gpu_density_params(DensityField(recipe));
+    const auto& camera=scene_snapshot_.camera;const auto eye=camera.position,target_point=camera.target;
+    const auto forward=normalize(target_point-eye),right=normalize(cross(forward,camera.up)),up=cross(right,forward);
     const auto origin=world_to_local(recipe.transform,{0,0,0});
     const auto x=world_to_local(recipe.transform,{1,0,0})-origin,y=world_to_local(recipe.transform,{0,1,0})-origin,z=world_to_local(recipe.transform,{0,0,1})-origin;
-    const double angle=sun_angle*3.141592653589793/180;
-    const auto sun=normalize(Vec3{std::sin(angle),0.8,std::cos(angle)});
+    const auto sun=scene_snapshot_.sun.direction_to_light;
     auto pack=[](Vec3 v,float w=0){return Float4{float(v.x),float(v.y),float(v.z),w};};
     const std::array<Float4,10> view{
-        pack(eye,0.1f),pack(right,float(std::tan(45.0*3.141592653589793/360))),pack(up),pack(forward,float(recipe.optics.extinction_scale)),
-        pack(sun,float(recipe.optics.albedo)),Float4{15,15,15,10000},
+        pack(eye,float(camera.near_plane)),pack(right,float(std::tan(camera.vertical_fov_degrees*3.141592653589793/360))),pack(up),pack(forward,float(recipe.optics.extinction_scale)),
+        pack(sun,float(recipe.optics.albedo)),pack(scene_snapshot_.sun.irradiance,float(camera.far_plane)),
         Float4{float(x.x),float(y.x),float(z.x),float(origin.x)},Float4{float(x.y),float(y.y),float(z.y),float(origin.y)},Float4{float(x.z),float(y.z),float(z.z),float(origin.z)},
         Float4{float(view_steps),float(shadow_steps),float(w)/float(h),0}};
     SDL_PushGPUFragmentUniformData(cmd,0,view.data(),sizeof(view));
@@ -353,19 +359,19 @@ std::vector<float> GpuSpike::read_hdr() {
     // Independently integrate the CPU field along every pixel ray. This catches
     // blank images, wrong camera uniforms and mismatched volume coordinates,
     // which finite-value and isolated shader tests cannot detect.
-    const DensityField cpu(density_fixture(cloud_preset));const auto& recipe=cpu.recipe();
-    const Vec3 eye{120,70,120},target_point{0,35,0};
+    const DensityField cpu(scene_snapshot_.cloud);const auto& recipe=cpu.recipe();
+    const auto& camera=scene_snapshot_.camera;const auto eye=camera.position,target_point=camera.target;
     auto normalize=[](Vec3 v){return v*(1/std::sqrt(dot(v,v)));};
     auto cross=[](Vec3 a,Vec3 b){return Vec3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
-    const auto forward=normalize(target_point-eye),right=normalize(cross(forward,{0,1,0})),up=cross(right,forward);
+    const auto forward=normalize(target_point-eye),right=normalize(cross(forward,camera.up)),up=cross(right,forward);
     const auto origin=world_to_local(recipe.transform,eye);
     double error=0,min_t=1;
     for(Uint32 y=0;y<hdr_height;++y)for(Uint32 x=0;x<hdr_width;++x) {
         const double px=(2*(x+0.5)/hdr_width-1)*double(hdr_width)/hdr_height,py=1-2*(y+0.5)/hdr_height;
-        const auto direction=normalize(forward+(right*px+up*py)*std::tan(45.0*3.141592653589793/360));
+        const auto direction=normalize(forward+(right*px+up*py)*std::tan(camera.vertical_fov_degrees*3.141592653589793/360));
         const auto local_direction=world_to_local(recipe.transform,eye+direction)-origin;
         double tau=0;
-        if(const auto interval=intersect_bounds(origin,local_direction,recipe.envelope,0.1,10000)) {
+        if(const auto interval=intersect_bounds(origin,local_direction,recipe.envelope,camera.near_plane,camera.far_plane)) {
             const double dt=(interval->exit-interval->entry)/view_steps;
             for(int i=0;i<view_steps;++i)tau+=cpu.at(origin+local_direction*(interval->entry+(i+0.5)*dt))*recipe.optics.extinction_scale*dt;
         }

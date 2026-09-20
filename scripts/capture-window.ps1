@@ -37,7 +37,7 @@ public class WindowCapture {
     $client = [System.Drawing.Image]::FromFile("$out/client.bmp")
     try { $client.Save("$out/framebuffer.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $client.Dispose() }
     $memory = @()
-    $deadline = [DateTime]::UtcNow.AddSeconds(30)
+    $deadline = [DateTime]::UtcNow.AddSeconds(60)
     while (!$process.HasExited -and [DateTime]::UtcNow -lt $deadline) {
         $process.Refresh()
         if (!$process.HasExited) {
@@ -46,11 +46,19 @@ public class WindowCapture {
         Start-Sleep -Milliseconds 250
     }
     $memory | Export-Csv "$out/process-memory.csv" -NoTypeInformation
-    if (!$process.HasExited) { throw "App did not exit within thirty seconds" }
+    if (!$process.HasExited) { throw "App did not exit within sixty seconds" }
     if ($process.ExitCode -ne 0) { throw "App failed with exit code $($process.ExitCode)" }
     if (Test-Path "$out/step-half.bmp") {
         $img = [System.Drawing.Image]::FromFile("$out/step-half.bmp")
         try { $img.Save("$out/step-half.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $img.Dispose() }
+    }
+    foreach ($name in @("gizmo-move", "gizmo-scale")) {
+        $img = [System.Drawing.Image]::FromFile("$out/$name.bmp")
+        try { $img.Save("$out/$name.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $img.Dispose() }
+    }
+    foreach ($step in 0..10) {
+        $img = [System.Drawing.Image]::FromFile("$out/editor-step-$step.bmp")
+        try { $img.Save("$out/editor-step-$step.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $img.Dispose() }
     }
     # Independent launches cover shutdown/reinitialization and preserve all five
     # shape cases; each PNG comes from the GPU target, not a generated mockup.

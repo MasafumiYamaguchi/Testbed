@@ -1,4 +1,5 @@
 #include "white/gpu_spike.hpp"
+#include "white/editor_ui.hpp"
 #include <SDL3/SDL_main.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
@@ -61,6 +62,7 @@ int main(int argc,char** argv) {
         }
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
+    if(self_test&&frames>0&&frames<400){std::cerr<<"--self-test requires --frames >= 400 to finish UI checks\n";return 2;}
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
     int exit_code=0;
     try {
@@ -78,7 +80,7 @@ int main(int argc,char** argv) {
         if(self_test)for(int test=0;test<5;++test)gpu.create_cloud(test);
         gpu.create_cloud(preset);
         Ui ui;ui.init(gpu);
-        float slice=0.5f;int axis=2,kind=preset+2;
+        white::EditorUi editor(preset);gpu.set_scene(editor.session.document().scene(),editor.session.document().revision());
         bool running=true,captured=false;
         std::vector<float> baseline_hdr;
         int convergence_frame=-1;
@@ -95,59 +97,20 @@ int main(int argc,char** argv) {
                 if(e.type==SDL_EVENT_QUIT || e.type==SDL_EVENT_WINDOW_CLOSE_REQUESTED) running=false;
             }
             if(SDL_GetWindowFlags(gpu.window)&SDL_WINDOW_MINIMIZED) {SDL_Delay(16);continue;}
-            ImGui_ImplSDLGPU3_NewFrame(); ImGui_ImplSDL3_NewFrame(); ImGui::NewFrame();
-            ImGui::SetNextWindowPos({15,15},ImGuiCond_Always);
-            ImGui::SetNextWindowSize({260,560},ImGuiCond_Always);
-            ImGui::Begin("Field laboratory",nullptr,ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoCollapse);
-            ImGui::Text("PROJECT WHITE / PHASE 0");
-            ImGui::Separator(); ImGui::TextWrapped("GPU-generated 3D scalar field");
-            ImGui::Text("%u x %u x %u / R32 float",gpu.extent[0],gpu.extent[1],gpu.extent[2]);
-            ImGui::Text("Backend: %s",SDL_GetGPUDeviceDriver(gpu.device));
-            ImGui::Spacing();
-            ImGui::PushItemWidth(135);
-            if(ImGui::Combo("Fixture",&kind,"XYZ ramp\0Center impulse\0Tall cell\0Wide cell\0Fused cells\0Flat base\0Ellipsoid cut\0")) {
-                if(kind<2){gpu.create_field({17,19,23},Uint32(kind));gpu.validate();}
-                else gpu.create_cloud(kind-2);
-            }
-            ImGui::Combo("Slice axis",&axis,"X (YZ)\0Y (XZ)\0Z (XY)\0");
-            ImGui::SliderFloat("Position",&slice,0,1,"%.3f");
-            ImGui::PopItemWidth();
-            ImGui::Checkbox("Lit volume",&gpu.show_volume);
-            if(gpu.show_volume) {
-                ImGui::PushItemWidth(135);
-                if(ImGui::SliderInt("View steps",&gpu.view_steps,8,256))gpu.volume_dirty=true;
-                if(ImGui::SliderInt("Shadow steps",&gpu.shadow_steps,1,32))gpu.volume_dirty=true;
-                if(ImGui::SliderInt("Internal width",&gpu.internal_width,64,320))gpu.volume_dirty=true;
-                if(ImGui::SliderFloat("Sun azimuth",&gpu.sun_angle,-180,180,"%.0f"))gpu.volume_dirty=true;
-                ImGui::SliderFloat("Exposure EV",&gpu.exposure_ev,-4,4,"%.1f");
-                ImGui::PopItemWidth();
-            }
-            if(ImGui::Button("Regenerate and verify")) {gpu.create_field(gpu.extent,gpu.fixture);gpu.validate();}
-            ImGui::Spacing();ImGui::Separator();
-            ImGui::TextColored({0.4f,0.95f,0.7f,1},"Readback verified");
-            ImGui::TextWrapped("%s",gpu.report.c_str());
-            ImGui::Text("Max error: %.8f",gpu.max_error);
-            if(kind==0) ImGui::Text("Filter error: %.8f",gpu.interpolation_error);
-            ImGui::Text("Row pitch: %u bytes",((gpu.extent[0]+63)/64)*256);
-            ImGui::TextWrapped("Coordinate: voxel centers\nSampling: linear / clamp");
-            ImGui::Spacing();ImGui::Separator();
-            ImGui::TextWrapped("Isotropic single scattering. Linear HDR, separate display exposure. No multiple scattering or atmosphere.");
-            ImGui::TextWrapped("Hosted CI results do not establish RTX performance.");
-            ImGui::End();
-            ImGui::SetNextWindowPos({290,15},ImGuiCond_Always);
-            ImGui::SetNextWindowSize({580,40},ImGuiCond_Always);
-            ImGui::Begin("Slice label",nullptr,ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoBackground|ImGuiWindowFlags_NoInputs);
-            const char* names[]={"XYZ RAMP","IMPULSE","TALL CELL","WIDE CELL","FUSED CELLS","FLAT BASE","ELLIPSOID CUT"};
-            if(gpu.show_volume&&kind>=2)ImGui::Text("%s / SINGLE SCATTERING / %d steps",names[kind],gpu.view_steps);
-            else ImGui::Text("%s / %s plane / %.3f",names[kind],axis==0?"YZ":axis==1?"XZ":"XY",slice);
-            ImGui::End(); ImGui::Render();
+            if(self_test&&frame>=180&&frame<=380&&(frame-180)%20==0)editor.scripted_edit((frame-180)/20);
+            ImGui_ImplSDLGPU3_NewFrame(); ImGui_ImplSDL3_NewFrame();
+            if(self_test)editor.scripted_input(frame);
+            ImGui::NewFrame();
+            editor.draw(gpu);
+            if(self_test)editor.verify_scripted_input(frame);
+            ImGui::Render();
             auto* cmd=SDL_AcquireGPUCommandBuffer(gpu.device);white::gpu_check(cmd != nullptr,"Acquire frame commands");
             SDL_GPUTexture* swap=nullptr;Uint32 w=0,h=0;
             if(!SDL_WaitAndAcquireGPUSwapchainTexture(cmd,gpu.window,&swap,&w,&h)) {
                 SDL_CancelGPUCommandBuffer(cmd);white::gpu_check(false,"Acquire swapchain");
             }
             if(swap) {
-                gpu.resize(w,h);gpu.draw(cmd,slice,Uint32(axis));
+                gpu.resize(w,h);gpu.draw(cmd,editor.slice,Uint32(editor.axis));
                 ImGui_ImplSDLGPU3_PrepareDrawData(ImGui::GetDrawData(),cmd);
                 SDL_GPUColorTargetInfo color{};color.texture=gpu.target;color.load_op=SDL_GPU_LOADOP_LOAD;color.store_op=SDL_GPU_STOREOP_STORE;
                 auto* pass=SDL_BeginGPURenderPass(cmd,&color,1,nullptr);
@@ -171,6 +134,10 @@ int main(int argc,char** argv) {
                 std::cout<<"Step convergence 64->128 HDR+T max_abs_difference="<<maximum<<" mean_abs_difference="<<sum/finer.size()<<" (measured, not a proof of convergence)\n";
                 gpu.save_capture(std::filesystem::path(capture).parent_path()/"step-half.bmp");
                 gpu.view_steps/=2;gpu.volume_dirty=true;convergence_frame=-1;baseline_hdr.clear();
+            }
+            if(self_test&&swap&&(frame==116||frame==156))gpu.save_capture(std::filesystem::path(capture).parent_path()/(frame==116?"gizmo-move.bmp":"gizmo-scale.bmp"));
+            if(self_test&&swap&&frame>=190&&frame<=390&&(frame-190)%20==0) {
+                gpu.validate();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("editor-step-"+std::to_string((frame-190)/20)+".bmp"));
             }
             SDL_Delay(16);
         }

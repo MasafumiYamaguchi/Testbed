@@ -1,0 +1,36 @@
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+GPU ray/box six cases max_abs_error=4.76837e-07
+GPU homogeneous optics max_abs_error=5.25884e-06 tolerance=0.001
+fixture=0 extent=1x1x1 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=1 extent=1x1x1 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=32x32x32 row_bytes=256 max_abs_error=0 interpolation_error=7.92742e-06 PASS
+fixture=1 extent=32x32x32 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.29153e-06 interpolation_error=0 PASS
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.32134e-06 interpolation_error=0 PASS
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.29153e-06 interpolation_error=0 PASS
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.29153e-06 interpolation_error=0 PASS
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+capture=client.bmp frame=60
+HDR verified 160x138 view_steps=64 shadow_steps=8 max_channel=1 min_T=0.347536 CPU_T_max_error=2.09349e-06
+HDR verified 160x138 view_steps=128 shadow_steps=8 max_channel=1 min_T=0.348808 CPU_T_max_error=2.15792e-06
+Step convergence 64->128 HDR+T max_abs_difference=0.00244516 mean_abs_difference=7.32638e-05 (measured, not a proof of convergence)
+shutdown=clean lifecycle_test=1

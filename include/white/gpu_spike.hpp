@@ -39,6 +39,8 @@ public:
     void initialize();
     void create_field(std::array<Uint32,3> dims, Uint32 kind);
     void create_cloud(int preset);
+    void set_scene(const Scene&,std::uint64_t revision);
+    std::uint64_t scene_revision=0;
     void validate();
     void resize(Uint32 w, Uint32 h);
     void draw(SDL_GPUCommandBuffer* cmd, float slice, Uint32 axis);
@@ -46,6 +48,7 @@ public:
     void validate_optics();
     std::vector<float> read_hdr();
 private:
+    Scene scene_snapshot_{};
     std::vector<Uint8> shader(const char* name);
     void initialize_volume();
     void render_volume(SDL_GPUCommandBuffer* cmd);

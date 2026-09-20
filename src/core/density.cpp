@@ -83,4 +83,10 @@ GpuDensityParams gpu_density_params(const DensityField& field) {
     out.config={float(r.overlap),r.base.enabled?1.0f:0.0f,float(r.cells.size()),float(r.cuts.size())};
     return out;
 }
+Scene fixture_scene(int preset) {
+    Scene scene;scene.cloud=density_fixture(preset);scene.camera.position={120,70,120};scene.camera.target={0,35,0};
+    const double angle=-40*3.141592653589793/180;
+    Vec3 sun{std::sin(angle),0.8,std::cos(angle)};scene.sun.direction_to_light=sun*(1/std::sqrt(dot(sun,sun)));
+    scene.sun.irradiance={15,15,15};scene.exposure_ev=1;return scene;
+}
 }
