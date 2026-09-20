@@ -49,7 +49,7 @@ void detail_and_lifecycle(){
     check(generation_job_count()==calls,"Finish or cache changes started growth");
     for(int layer=0;layer<4;++layer){auto layers=top.layers;if(layer==0)layers.base=false;if(layer==1)layers.macro=false;if(layer==2)layers.medium=false;if(layer==3)layers.micro=false;
         const auto changed=scene_with_frozen_detail(original,top.development_id,top.recipe.noise,top.recipe.detail_seed,layers);const auto effective=frozen_effective_recipe(changed.frozen->fields[1]);
-        check(scene_density_requires_direct(changed)&&gpu_scene_density_params(changed).cloud.fields.settings.x==2,"Top layer toggle broke the direct cache-sample packet contract");
+        check(scene_density_requires_direct(changed)&&gpu_scene_density_params(changed).field.cloud.fields.settings.x==2,"Top layer toggle broke the direct cache-sample packet contract");
         check(changed.frozen->content_hash==content,"Layer toggle changed frozen content identity");check((layer!=0||effective.density==0)&&(layer!=1||effective.noise.warp_amplitude==0)&&(layer!=2||effective.noise.medium_strength==0)&&(layer!=3||effective.noise.micro_erosion==0),"Layer toggle failed");
     }
     noise.origin.x+=1;rejects([&]{scene_with_frozen_detail(scene,top.development_id,noise,17,{});},"Detail silently changed frozen reference coordinates");

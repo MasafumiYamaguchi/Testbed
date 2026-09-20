@@ -54,6 +54,15 @@ Scene freeze_static(Scene source) {
     check(result.status==GenerationStatus::completed&&result.candidate.has_value(),"Static candidate failed");
     return freeze_candidate(result);
 }
+Json frozen_v1_json(const Scene& scene) {
+    auto encoded=Json::parse(scene_json(scene));auto legacy=*scene.frozen;
+    legacy.contract_version=1;
+    for(auto& field:legacy.fields)field.clipping_envelope.reset();
+    auto& source=encoded["cloud"]["source"];source["contract_version"]=1;
+    for(auto& field:source["fields"])field.erase("clipping_envelope");
+    copy_recomputed_hashes(encoded,legacy);
+    return encoded;
+}
 Scene detailed_frozen() {
     auto source=new_anvil_scene(new_developed_scene(new_centerline_scene(new_cumulonimbus_scene())));
     auto& cloud=source.anvil->cloud;cloud.settings.mode=TopLobeMode::children;
@@ -71,7 +80,7 @@ Scene detailed_frozen() {
 void roundtrip_and_compatibility() {
     const auto scene=detailed_frozen();const auto jobs=generation_job_count();
     const auto text=scene_json(scene);const auto json=Json::parse(text);const auto& source=json.at("cloud").at("source");
-    check(json.at("schema_version")==10&&json.at("cloud").size()==2&&json.at("cloud").at("kind")=="frozen","Frozen state lacks one schema10 authority");
+    check(json.at("schema_version")==11&&json.at("cloud").size()==3&&json.at("cloud").at("kind")=="frozen","Frozen state lacks one schema11 frozen authority plus finishing");
     check(!source.contains("assets")&&!source.contains("path")&&source.at("fields").size()==2&&source.at("hierarchy").size()==3&&!source.at("anvil").is_null(),"Frozen file omitted evaluated structure or added external storage");
     check(source.at("hierarchy").back().at("id")=="18446744073709551615","Frozen uint64 hierarchy identity lost precision");
     const auto loaded=parse_scene_json(text);
@@ -119,7 +128,7 @@ void roundtrip_and_compatibility() {
 }
 void tampering_and_bounds() {
     const auto scene=detailed_frozen();const auto encoded=Json::parse(scene_json(scene));
-    auto bad=encoded;bad["cloud"]["source"]["contract_version"]=2;
+    auto bad=encoded;bad["cloud"]["source"]["contract_version"]=frozen_cloud_contract_version+1;
     reject([&]{parse_scene_json(bad.dump());},"Unknown frozen contract accepted");
     bad=encoded;bad["schema_version"]=9;reject([&]{parse_scene_json(bad.dump());},"Schema9 accepted a frozen source");
     bad=encoded;bad["cloud"]["source"]["fields"][0]["recipe"]["density"]=.125;
@@ -166,6 +175,108 @@ void tampering_and_bounds() {
     bad=encoded;bad["cloud"]["source"]["fields"][1]["development_id"]=std::to_string(invalid.fields[1].development_id);copy_recomputed_hashes(bad,invalid);
     reject([&]{parse_scene_json(bad.dump());},"Rehashed duplicate/mismatched frozen field identity accepted");
 }
+void envelope_authority_and_migration() {
+    Scene source;source.cloud.cells={{2,{0,0,0},{20,20,20},0}};
+    source.cloud.base.enabled=false;source.cloud.envelope={{-5,-5,-5},{5,5,5}};
+    const auto scene=freeze_static(source);const auto field=scene.frozen->fields.front();
+    check(field.clipping_envelope==source.cloud.envelope,"Custom envelope lost its immutable clipping authority");
+    auto roomy_source=source;roomy_source.cloud.envelope={{-25,-25,-25},{25,25,25}};
+    const auto roomy=freeze_static(roomy_source);
+    check(roomy.frozen->content_hash!=scene.frozen->content_hash&&roomy.frozen->fields.front().clipping_envelope==roomy_source.cloud.envelope,"Oversized authored envelope lost its distinct immutable geometry identity");
+    const auto jobs=generation_job_count();auto noise=field.recipe.noise;noise.warp_amplitude=.001;
+    const auto edited=scene_with_frozen_detail(scene,field.development_id,noise,field.recipe.detail_seed,field.layers);
+    check(edited.frozen->content_hash==scene.frozen->content_hash&&edited.frozen->support==scene.frozen->support&&edited.frozen->fields.front().recipe.envelope==source.cloud.envelope,"Detail edit moved a frozen hard envelope or changed geometry identity");
+    const SceneDensityEvaluator evaluator(edited);const auto packet=evaluator.gpu_params();
+    check(evaluator.at({4,0,0})>0&&evaluator.at({5,0,0})==0&&evaluator.at({10,0,0})==0,"Tiny macro edit revealed density outside the saved custom clipping mask");
+    check(packet.field.cloud.fields.groups[0].envelope_min.x==-5&&packet.field.cloud.fields.groups[0].envelope_max.x==5&&packet.field.envelope_max.x==5,"Frozen clipping mask differs from the existing GPU final envelope");
+    check(parse_scene_json(scene_json(edited))==edited,"Frozen clipping authority did not roundtrip");
+    const auto restored=scene_with_frozen_detail(edited,field.development_id,field.recipe.noise,field.recipe.detail_seed,field.layers);
+    check(restored==scene,"Restoring detail did not preserve the fixed crop exactly");
+    noise.warp_amplitude=20;
+    const auto roomy_edit=scene_with_frozen_detail(roomy,field.development_id,noise,field.recipe.detail_seed,field.layers);
+    check(roomy_edit.frozen->support==roomy.frozen->support&&roomy_edit.frozen->content_hash==roomy.frozen->content_hash,"An initially oversized custom mask became expandable after a stronger warp");
+    noise.warp_amplitude=.001;
+
+    const auto generated=freeze_static(new_cumulonimbus_scene());const auto generated_field=generated.frozen->fields.front();
+    check(!generated_field.clipping_envelope,"Generated sampling envelope became an authored crop");
+    auto stronger=generated_field.recipe.noise;stronger.warp_amplitude+=5;
+    const auto expanded=scene_with_frozen_detail(generated,generated_field.development_id,stronger,generated_field.recipe.detail_seed,generated_field.layers);
+    check(expanded.frozen->content_hash==generated.frozen->content_hash&&expanded.frozen->support.min.x<generated.frozen->support.min.x&&expanded.frozen->support.max.x>generated.frozen->support.max.x,"Generated sampling bounds did not expand for stronger macro warp");
+    // Increasing by a non-exact decimal must use the new amplitude directly;
+    // subtraction/addition of the previous amplitude can undershoot by one ULP.
+    auto decimal=generated_field.recipe.noise;decimal.warp_amplitude=1.1;
+    const auto fractional=scene_with_frozen_detail(generated,generated_field.development_id,decimal,generated_field.recipe.detail_seed,generated_field.layers);
+    decimal.warp_amplitude=1.2;
+    check(validate_frozen_cloud(*scene_with_frozen_detail(fractional,generated_field.development_id,decimal,generated_field.recipe.detail_seed,generated_field.layers).frozen).empty(),"Decimal warp increase produced nonconservative rounded bounds");
+
+    auto invalid=*scene.frozen;invalid.fields.front().recipe.envelope.max.x=6;
+    reject([&]{refresh_frozen_cloud(invalid);},"Mismatched immutable clip and evaluated envelope accepted");
+    invalid=*scene.frozen;invalid.fields.front().clipping_envelope.reset();
+    reject([&]{refresh_frozen_cloud(invalid);},"Tight crop was accepted as unbounded sampling metadata");
+    const auto encoded=Json::parse(scene_json(scene));auto bad=encoded;
+    bad["cloud"]["source"]["fields"][0].erase("clipping_envelope");
+    reject([&]{parse_scene_json(bad.dump());},"Frozen v2 omitted clipping authority metadata");
+    bad=encoded;bad["cloud"]["source"]["fields"][0]["clipping_envelope"]["max"][0]=6.;reseal_payload(bad);
+    reject([&]{parse_scene_json(bad.dump());},"Resealed explicit crop bypassed immutable content identity");
+
+    const auto legacy=frozen_v1_json(scene);const auto migrated=parse_scene_json(legacy.dump());
+    check(migrated==scene&&migrated.frozen->contract_version==2,"Frozen v1 tight crop did not migrate to immutable clipping data");
+    same_field(scene,migrated);
+    const auto migrated_edit=scene_with_frozen_detail(migrated,field.development_id,noise,field.recipe.detail_seed,field.layers);
+    check(migrated_edit==edited,"Migrated crop changed finishing behavior");
+    const auto migrated_generated=parse_scene_json(frozen_v1_json(generated).dump());
+    check(migrated_generated==generated&&!migrated_generated.frozen->fields.front().clipping_envelope,"Frozen v1 conservative sampling bounds lost expandable authority");
+    same_field(generated,migrated_generated);
+    // The v1 delta-based warp update could save a bound one double ULP
+    // inside the directly recomputed bound. Preserve those exact saved bytes
+    // and keep this generated field expandable rather than inventing a crop.
+    auto rounded=frozen_v1_json(generated);auto rounded_state=*generated.frozen;
+    rounded_state.contract_version=1;
+    const double upper=std::nextafter(rounded_state.fields[0].recipe.envelope.max.x,-INFINITY);
+    rounded_state.fields[0].recipe.envelope.max.x=upper;rounded_state.support.max.x=upper;
+    rounded["cloud"]["source"]["fields"][0]["recipe"]["envelope"]["max"][0]=upper;
+    rounded["cloud"]["source"]["support"]["max"][0]=upper;copy_recomputed_hashes(rounded,rounded_state);
+    const auto rounded_migration=parse_scene_json(rounded.dump());
+    check(!rounded_migration.frozen->fields[0].clipping_envelope&&rounded_migration.frozen->fields[0].recipe.envelope.max.x==upper&&rounded_migration.frozen->support.max.x==upper,"Legacy double rounding was rejected, moved, or mistaken for an explicit clip");
+    const auto rounded_edit=scene_with_frozen_detail(rounded_migration,generated_field.development_id,stronger,generated_field.recipe.detail_seed,generated_field.layers);
+    check(rounded_edit.frozen->support==expanded.frozen->support,"Legacy rounded sampling bounds stopped expanding after migration");
+    bad=legacy;bad["cloud"]["source"]["payload_hash"]="1";
+    reject([&]{parse_scene_json(bad.dump());},"Migration accepted a corrupt v1 payload checksum");
+    bad=legacy;bad["cloud"]["source"]["content_hash"]="1";reseal_payload(bad);
+    reject([&]{parse_scene_json(bad.dump());},"Migration replaced an invalid v1 content hash before checking it");
+    bad=legacy;bad["cloud"]["source"]["fields"][0]["recipe"]["optics"]["g"]=.5;reseal_payload(bad);
+    reject([&]{parse_scene_json(bad.dump());},"Migration silently repaired inconsistent legacy field authority");
+    for(bool keep_provenance:{false,true}) {
+        auto unknown=scene;unknown.frozen->generation_version=999;
+        if(keep_provenance)unknown.frozen->provenance->settings.algorithm_version=999;
+        else unknown.frozen->provenance.reset();
+        refresh_frozen_scene(unknown);
+        const auto loaded=parse_scene_json(frozen_v1_json(unknown).dump());
+        check(loaded==unknown&&!frozen_can_regenerate(*loaded.frozen),"Frozen v1 migration depends on available history or generation implementation");
+        same_field(scene,loaded);
+    }
+    check(generation_job_count()==jobs+1,"Envelope migration, detail editing or evaluation invoked generation");
+}
+void saved_v1_fixture() {
+    const auto path=std::filesystem::path(__FILE__).parent_path()/"fixtures"/"frozen-v1"/"calm-front.white.json";
+    const auto saved=Json::parse(bytes(path));const auto jobs=generation_job_count();
+    check(saved.at("schema_version")==10&&saved.at("cloud").at("source").at("contract_version")==1,"Historical fixture no longer contains original schema10/frozen-v1 bytes");
+    const auto migrated=read_scene(path);auto old=saved.at("cloud").at("source");
+    auto current=Json::parse(scene_json(migrated)).at("cloud").at("source");
+    for(const auto* key:{"contract_version","content_hash","payload_hash"}){old.erase(key);current.erase(key);}
+    for(auto& field:current["fields"]){check(field.at("clipping_envelope").is_null(),"Historical generated field became a clipping mask");field.erase("clipping_envelope");}
+    check(current==old,"Migration changed evaluated structure, support, detail or provenance in the historical frozen payload");
+    check(parse_scene_json(scene_json(migrated))==migrated,"Migrated historical fixture did not roundtrip as frozen v2");
+    for(bool keep_provenance:{false,true}) {
+        auto legacy=saved;auto& source=legacy["cloud"]["source"];source["generation_version"]=999;
+        if(keep_provenance)source["provenance"]["settings"]["algorithm_version"]=999;
+        else source["provenance"]=nullptr;
+        reseal_payload(legacy);const auto loaded=parse_scene_json(legacy.dump());
+        check(!frozen_can_regenerate(*loaded.frozen)&&loaded.frozen->contract_version==2,"Historical fixed data required an available generator during migration");
+        same_field(migrated,loaded);
+    }
+    check(generation_job_count()==jobs,"Historical frozen fixture loading/evaluation invoked generation");
+}
 void atomic_save_and_legacy() {
     Temp temp;const auto scene=detailed_frozen();EditorSession editor(scene);const auto path=temp.path/"fixed.white.json";
     editor.save(path);const auto stable_bytes=bytes(path);const auto jobs=generation_job_count();
@@ -191,12 +302,12 @@ void atomic_save_and_legacy() {
     }
     const auto v1=std::filesystem::path(__FILE__).parent_path()/"fixtures"/"scene-v1.white.json";
     const auto legacy=read_scene(v1);
-    check(legacy.schema_version==10&&!legacy.frozen&&!legacy.cumulonimbus&&!legacy.centerline&&!legacy.developed&&!legacy.top_lobes&&!legacy.anvil,"Legacy fixture inferred a source or frozen state");
+    check(legacy.schema_version==11&&!legacy.frozen&&!legacy.cumulonimbus&&!legacy.centerline&&!legacy.developed&&!legacy.top_lobes&&!legacy.anvil,"Legacy fixture inferred a source or frozen state");
     check(parse_scene_json(scene_json(legacy))==legacy&&generation_job_count()==jobs,"Legacy fixture migration changed state or started generation");
 }
 }
 int main(){try {
-    roundtrip_and_compatibility();tampering_and_bounds();atomic_save_and_legacy();
+    roundtrip_and_compatibility();tampering_and_bounds();envelope_authority_and_migration();saved_v1_fixture();atomic_save_and_legacy();
     std::cout<<"Frozen schema10: exact evaluated fields/provenance; unknown generation compatibility; payload and structural hashes; bounds; atomic rollback; legacy migration; zero regeneration on load PASS\n";
     return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

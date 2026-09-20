@@ -1,5 +1,6 @@
 #pragma once
 #include "white/anvil.hpp"
+#include "white/modifiers.hpp"
 
 
 namespace white {
@@ -20,13 +21,16 @@ bool frozen_can_regenerate(const FrozenCloudState&);
 CloudRecipe frozen_effective_recipe(const FrozenField&);
 // Evaluated-data precision allowance; never consults generation provenance.
 double frozen_anvil_edge_error_bound(const FrozenCloudState&);
+// Called only after v1 payload/content hashes have been verified. Uses saved
+// evaluated data and never requires a generation implementation or provenance.
+void migrate_frozen_v1(FrozenCloudState&);
 // Recompute finite support/rho_max and content hash after an authorized edit.
 void refresh_frozen_cloud(FrozenCloudState&);
 Scene scene_with_frozen_detail(Scene,Id field_id,NoiseSettings,std::uint64_t detail_seed,FrozenDetailLayers);
 class FrozenEvaluationPlan {
 public:
     explicit FrozenEvaluationPlan(FrozenCloudState);
-    double at(Vec3 object_local)const;
+    double at(Vec3 object_local,const ModifierFieldScales& scales={})const;
     double maximum()const{return state_.rho_max;}
     Bounds local_support()const{return state_.support;}
     Bounds world_support()const;

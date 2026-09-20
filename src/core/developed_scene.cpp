@@ -15,6 +15,7 @@ bool scene_has_multiple_developments(const Scene& scene){const auto source=edita
 bool scene_has_active_top_lobes(const Scene& scene){const auto* top=editable_top_lobe_source(scene);return top&&TopLobeEvaluationPlan(*top).gpu_params().mask.x!=0;}
 bool scene_has_active_anvil(const Scene& scene){return scene.anvil&&AnvilEvaluationPlan(*scene.anvil).gpu_params().settings.x!=0;}
 bool scene_density_requires_direct(const Scene& scene){
+    if(!scene.finish_stack.layers.empty())return true;
     if(scene.frozen)return scene.frozen->fields.size()>1||scene.frozen->anvil.has_value();
     return scene_has_multiple_developments(scene)||scene_has_active_top_lobes(scene)||scene_has_active_anvil(scene);
 }
@@ -48,16 +49,18 @@ Scene scene_with_developed_command(Scene scene,const DevelopedCommand& command) 
 }
 SceneDensityEvaluator::SceneDensityEvaluator(const Scene& scene):recipe_(scene.cloud) {
     require_valid(scene);
+    finish_=scene.finish_stack;object_id_=scene.cloud.id;
+    if(scene.frozen)for(const auto& field:scene.frozen->fields)field_ids_.push_back(field.development_id);
     if(scene.frozen)frozen_.emplace(*scene.frozen);
     else if(scene_has_active_anvil(scene))anvil_.emplace(*scene.anvil);
     else if(scene_has_active_top_lobes(scene))top_.emplace(*editable_top_lobe_source(scene));
     else if(scene_has_multiple_developments(scene))developed_.emplace(*editable_developed_source(scene));else single_.emplace(recipe_);
 }
-double SceneDensityEvaluator::at(Vec3 local)const{return frozen_?frozen_->at(local):anvil_?anvil_->at(local):top_?top_->at(local):developed_?developed_->at(local):single_->at(local);}
-double SceneDensityEvaluator::maximum()const{return frozen_?frozen_->maximum():anvil_?anvil_->maximum():top_?top_->maximum():developed_?developed_->maximum():single_->maximum();}
+double SceneDensityEvaluator::at(Vec3 local)const{return frozen_?frozen_->at(local,evaluate_finish_stack(finish_,local,object_id_,field_ids_)):anvil_?anvil_->at(local):top_?top_->at(local):developed_?developed_->at(local):single_->at(local);}
+double SceneDensityEvaluator::maximum()const{return finish_density_bound(finish_)*(frozen_?frozen_->maximum():anvil_?anvil_->maximum():top_?top_->maximum():developed_?developed_->maximum():single_->maximum());}
 Bounds SceneDensityEvaluator::local_support()const{return frozen_?frozen_->local_support():anvil_?anvil_->local_support():top_?top_->local_support():developed_?developed_->local_support():single_->local_support();}
 Bounds SceneDensityEvaluator::world_support()const{return frozen_?frozen_->world_support():anvil_?anvil_->world_support():top_?top_->world_support():developed_?developed_->world_support():single_->world_support();}
-GpuAnvilParams SceneDensityEvaluator::gpu_params()const {
+GpuAnvilParams SceneDensityEvaluator::base_gpu_params()const {
     if(frozen_)return frozen_->gpu_params();
     if(anvil_)return anvil_->gpu_params();
     GpuAnvilParams result;
@@ -70,5 +73,6 @@ GpuAnvilParams SceneDensityEvaluator::gpu_params()const {
     }
     result.envelope_min=result.cloud.fields.envelope_min;result.envelope_max=result.cloud.fields.envelope_max;return result;
 }
-GpuAnvilParams gpu_scene_density_params(const Scene& scene){return SceneDensityEvaluator(scene).gpu_params();}
+GpuFinishedParams SceneDensityEvaluator::gpu_params()const{return {base_gpu_params(),gpu_finish_stack(finish_,object_id_,field_ids_)};}
+GpuFinishedParams gpu_scene_density_params(const Scene& scene){return SceneDensityEvaluator(scene).gpu_params();}
 }

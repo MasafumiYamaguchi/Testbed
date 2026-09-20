@@ -1,0 +1,1 @@
+Identical initial source/seed and camera/light per view. Dimensionless stages .35 and 1; calm vs altitude shear. Selected structures generated before density evaluation. GPU readback and full-frame CPU transmittance comparisons are in logs. Naturalness and physical RTX performance are separate review gates.

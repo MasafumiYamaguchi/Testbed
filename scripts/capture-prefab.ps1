@@ -13,7 +13,7 @@ try {
     }
     if($log -notmatch "prefab_source_preservation=true source_only_save_reload=true conversion_undo=true PASS"){throw "Missing prefab source preservation verification"}
     $scene=Get-Content "$out/prefab-smoke.white.json" -Raw | ConvertFrom-Json
-    if($scene.schema_version -ne 10 -or $scene.cloud.kind -ne "cumulonimbus"){throw "Prefab was not saved as a versioned source"}
+    if($scene.schema_version -ne 11 -or $scene.cloud.kind -ne "cumulonimbus"){throw "Prefab was not saved as a versioned source"}
     if($scene.cloud.PSObject.Properties.Name -contains "cells"){throw "Prefab save contains a duplicate generated Recipe"}
     Add-Type -AssemblyName System.Drawing
     foreach($name in @("prefab-initial","prefab-116","prefab-156","prefab-196","prefab-225")) {

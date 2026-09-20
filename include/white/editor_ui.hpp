@@ -8,6 +8,7 @@
 #include "white/generation.hpp"
 #include "white/frozen_cloud.hpp"
 #include "white/anvil_scene.hpp"
+#include "white/modifiers.hpp"
 #include <atomic>
 #include <future>
 namespace white {
@@ -37,8 +38,14 @@ public:
     void start_centerline_test();
     void centerline_test_input(int frame);
     void verify_centerline_test(int frame);
+    void start_modifier_test();
+    void modifier_test_step(int frame);
     const std::string& status() const{return status_;}
 private:
+    Id finish_selected_=0;
+    std::uint64_t modifier_test_jobs_=0,modifier_test_content_=0;
+    void draw_modifier_ui();
+    void finish_item(bool,const FinishModifier&);
     std::optional<Scene> generation_initial_,generation_guard_,generation_job_guard_;
     GenerationSettings generation_settings_;
     std::optional<GenerationCandidate> generation_candidate_;

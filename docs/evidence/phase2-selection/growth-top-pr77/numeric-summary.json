@@ -1,0 +1,212 @@
+[
+  {
+    "folder": "growth",
+    "name": "calm-mature-front",
+    "density_error": 8.22544e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 9.23377e-07,
+    "HDR_width": 256,
+    "HDR_height": 144,
+    "CPU_T_max_error": 2.85248e-06
+  },
+  {
+    "folder": "growth",
+    "name": "calm-mature-side",
+    "density_error": 8.22544e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 9.23377e-07,
+    "HDR_width": 256,
+    "HDR_height": 144,
+    "CPU_T_max_error": 2.00286e-06
+  },
+  {
+    "folder": "growth",
+    "name": "calm-young-front",
+    "density_error": 4.05312e-06,
+    "density_tolerance": 0.000118342,
+    "direct_point_error": 4.09376e-07,
+    "HDR_width": 256,
+    "HDR_height": 144,
+    "CPU_T_max_error": 1.53739e-06
+  },
+  {
+    "folder": "growth",
+    "name": "calm-young-side",
+    "density_error": 4.05312e-06,
+    "density_tolerance": 0.000118342,
+    "direct_point_error": 4.09376e-07,
+    "HDR_width": 256,
+    "HDR_height": 144,
+    "CPU_T_max_error": 2.22653e-06
+  },
+  {
+    "folder": "growth",
+    "name": "shear-mature-front",
+    "density_error": 9.53674e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 3.48423e-07,
+    "HDR_width": 256,
+    "HDR_height": 144,
+    "CPU_T_max_error": 2.36706e-06
+  },
+  {
+    "folder": "growth",
+    "name": "shear-mature-side",
+    "density_error": 9.53674e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 3.48423e-07,
+    "HDR_width": 256,
+    "HDR_height": 144,
+    "CPU_T_max_error": 2.0811e-06
+  },
+  {
+    "folder": "growth",
+    "name": "shear-young-front",
+    "density_error": 4.11272e-06,
+    "density_tolerance": 0.000118342,
+    "direct_point_error": 6.94629e-07,
+    "HDR_width": 256,
+    "HDR_height": 144,
+    "CPU_T_max_error": 1.91226e-06
+  },
+  {
+    "folder": "growth",
+    "name": "shear-young-side",
+    "density_error": 4.11272e-06,
+    "density_tolerance": 0.000118342,
+    "direct_point_error": 6.94629e-07,
+    "HDR_width": 256,
+    "HDR_height": 144,
+    "CPU_T_max_error": 2.3638e-06
+  },
+  {
+    "folder": "top-lobes",
+    "name": "children-fallback",
+    "density_error": 8.22544e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 9.23377e-07,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 2.47889e-06
+  },
+  {
+    "folder": "top-lobes",
+    "name": "children-front",
+    "density_error": 8.22544e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 9.23377e-07,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 2.47889e-06
+  },
+  {
+    "folder": "top-lobes",
+    "name": "children-side",
+    "density_error": 8.22544e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 9.23377e-07,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 2.60469e-06
+  },
+  {
+    "folder": "top-lobes",
+    "name": "children-slice",
+    "density_error": 8.22544e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 9.23377e-07,
+    "HDR_width": null,
+    "HDR_height": null,
+    "CPU_T_max_error": null
+  },
+  {
+    "folder": "top-lobes",
+    "name": "input",
+    "density_error": 8.37445e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 1.31622e-06,
+    "HDR_width": 160,
+    "HDR_height": 138,
+    "CPU_T_max_error": 1.52697e-06
+  },
+  {
+    "folder": "top-lobes",
+    "name": "off-front",
+    "density_error": 5.78165e-06,
+    "density_tolerance": 0.00016,
+    "direct_point_error": null,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 2.39191e-06
+  },
+  {
+    "folder": "top-lobes",
+    "name": "off-side",
+    "density_error": 5.78165e-06,
+    "density_tolerance": 0.00016,
+    "direct_point_error": null,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 2.77915e-06
+  },
+  {
+    "folder": "top-lobes",
+    "name": "parent-front",
+    "density_error": 5.99027e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 1.32166e-06,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 2.47889e-06
+  },
+  {
+    "folder": "top-lobes",
+    "name": "parent-side",
+    "density_error": 5.99027e-06,
+    "density_tolerance": 0.000166907,
+    "direct_point_error": 1.32166e-06,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 2.60469e-06
+  },
+  {
+    "folder": "developed",
+    "name": "overlap-0",
+    "density_error": 6.4373e-06,
+    "density_tolerance": 0.000194597,
+    "direct_point_error": 5.89883e-07,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 1.71231e-06
+  },
+  {
+    "folder": "developed",
+    "name": "overlap-35",
+    "density_error": 9.23872e-06,
+    "density_tolerance": 0.000194597,
+    "direct_point_error": 2.53745e-06,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 1.69641e-06
+  },
+  {
+    "folder": "developed",
+    "name": "two-cells-cache-request-0",
+    "density_error": 1.0848e-05,
+    "density_tolerance": 0.000181597,
+    "direct_point_error": 8.76817e-07,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 2.22933e-06
+  },
+  {
+    "folder": "developed",
+    "name": "two-cells-cache-request-128",
+    "density_error": 1.0848e-05,
+    "density_tolerance": 0.000181597,
+    "direct_point_error": 8.76817e-07,
+    "HDR_width": 160,
+    "HDR_height": 90,
+    "CPU_T_max_error": 2.22933e-06
+  }
+]

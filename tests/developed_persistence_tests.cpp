@@ -37,7 +37,7 @@ int main(){try {
     added.shape.source.parameters.structure_seed=9007199254740993ULL;added.shape.source.parameters.detail_seed=77;
     added.shape.points[1].offset={5,0,-3};added.shape.profile={{1,0,1,.8},{2,.5,1.2,.5},{3,1,.9,.7}};
     auto scene=scene_with_developed_command(single,DevelopedAdd{added});
-    check(scene.schema_version==10&&scene.algorithm_version==3&&scene_density_requires_direct(scene),"Two developments lack schema7/direct evaluation contract");
+    check(scene.schema_version==11&&scene.algorithm_version==3&&scene_density_requires_direct(scene),"Two developments lack schema7/direct evaluation contract");
     check(scene.developed->cells[0]==single.developed->cells[0],"Add replaced first development");
     const SceneDensityEvaluator full(scene);const DevelopedEvaluationPlan reference(*scene.developed);
     check(full.local_support()==reference.local_support()&&scene.cloud.envelope==full.local_support(),"Proxy does not carry full union support");
@@ -46,7 +46,7 @@ int main(){try {
     for(int y=10;y<100;y+=5)for(int x=55;x<=100;x+=5){const Vec3 p{double(x),double(y),0};check(full.at(p)==reference.at(p),"Scene wrapper lost independent density group");second_peak=std::max(second_peak,full.at(p));}
     check(second_peak>0,"Second development missing from density evaluation");
     const auto packet=gpu_scene_density_params(scene);const auto expected_packet=reference.gpu_params();
-    check(packet.cloud.fields.settings.x==2&&std::memcmp(&packet.cloud.fields,&expected_packet,sizeof(expected_packet))==0,"GPU packet did not contain both developments");
+    check(packet.field.cloud.fields.settings.x==2&&std::memcmp(&packet.field.cloud.fields,&expected_packet,sizeof(expected_packet))==0,"GPU packet did not contain both developments");
     const auto bytes=scene_json(scene);const auto encoded=Json::parse(bytes);
     check(encoded.at("cloud").size()==2&&encoded.at("cloud").at("kind")=="developed"&&!encoded.at("cloud").contains("recipe"),"Developed persistence stored a second recipe authority");
     check(parse_scene_json(bytes)==scene&&scene_json(parse_scene_json(bytes))==bytes,"Developed source round-trip is not exact/deterministic");

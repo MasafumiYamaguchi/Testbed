@@ -147,6 +147,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     ImGui::EndDisabled();
     draw_generation_ui();
     draw_frozen_ui();
+    draw_modifier_ui();
     draw_top_lobes_ui();
     draw_anvil_ui();
     draw_developed_ui();

@@ -49,6 +49,9 @@ jobs:
       - name: Frozen selected field and lifecycle comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-freeze.ps1 -Executable ./build/windows/Release/white_app.exe -Generator ./build/windows/Release/white_frozen_tests.exe -Compare ./build/windows/Release/white_hdr_compare.exe
+      - name: Frozen finishing layers and native lifecycle comparisons
+        if: matrix.config == 'Release'
+        run: ./scripts/capture-modifiers.ps1 -Executable ./build/windows/Release/white_app.exe -Generator ./build/windows/Release/white_modifier_tests.exe -Compare ./build/windows/Release/white_hdr_compare.exe
       - name: Publish selected-state evidence checkpoint
         if: always() && matrix.config == 'Release'
         uses: actions/upload-artifact@v4
@@ -57,6 +60,7 @@ jobs:
           path: |
             evidence/growth/
             evidence/freeze/
+            evidence/modifiers/
       - name: Anvil growth wind and handle comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-anvil.ps1 -Executable ./build/windows/Release/white_app.exe -Generator ./build/windows/Release/white_anvil_tests.exe -Compare ./build/windows/Release/white_hdr_compare.exe

@@ -57,7 +57,7 @@ void persistence_and_commands(){
     check(turned.anvil->settings.direction==Vec3{0,0,1}&&!turned.anvil->settings.follow_wind&&turned.anvil->cloud==scene.anvil->cloud,"Direction override changed trunk or did not disable following");
     check(density_input_hash(scene)!=density_input_hash(wide)&&has(classify_change(scene,wide),Dirty::density),"Anvil edit omitted density invalidation/hash");
     auto optics=scene;optics.anvil->cloud.trunk.optics.g=.7;refresh_anvil_scene(optics);check(classify_change(scene,optics)==Dirty::optics&&density_input_hash(scene)==density_input_hash(optics),"Optics changed anvil density identity");
-    const auto bytes=scene_json(scene);const auto json=Json::parse(bytes);check(json.at("schema_version")==10&&json.at("cloud").at("kind")=="anvil"&&json.at("cloud").size()==2&&parse_scene_json(bytes)==scene,"Anvil source roundtrip lost authority");
+    const auto bytes=scene_json(scene);const auto json=Json::parse(bytes);check(json.at("schema_version")==11&&json.at("cloud").at("kind")=="anvil"&&json.at("cloud").size()==2&&parse_scene_json(bytes)==scene,"Anvil source roundtrip lost authority");
     auto bad=json;bad["schema_version"]=8;reject([&]{parse_scene_json(bad.dump());},"Old schema accepted new anvil type");
     bad=json;bad["cloud"]["source"]["contract_version"]=99;reject([&]{parse_scene_json(bad.dump());},"Future anvil version accepted");
     bad=json;bad["cloud"]["source"]["settings"]["enabled"]=1;reject([&]{parse_scene_json(bad.dump());},"Malformed enabled value accepted");

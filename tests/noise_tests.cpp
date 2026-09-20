@@ -33,7 +33,7 @@ int main(int argc,char** argv){
     check(constraints,"bottom, envelope and full cuts remain empty after all detail stages");
     check(bounded,"multiple seeds and parameter extrema preserve finite density upper bound");check(warp_bounded,"domain displacement obeys documented magnitude bound");
     Scene scene;scene.cloud=r;check(parse_scene_json(scene_json(scene))==scene,"noise settings and seeds round-trip");
-    if(argc==2){auto legacy=read_scene(argv[1]);check(legacy.schema_version==10&&legacy.algorithm_version==3&&legacy.cloud.noise==NoiseSettings{}&&legacy.cloud.cuts.size()==1,"v1 scene migrates with all noise disabled");}
+    if(argc==2){auto legacy=read_scene(argv[1]);check(legacy.schema_version==11&&legacy.algorithm_version==3&&legacy.cloud.noise==NoiseSettings{}&&legacy.cloud.cuts.size()==1,"v1 scene migrates with all noise disabled");}
     else check(false,"legacy fixture path required");
     scene.cloud.noise.warp_amplitude=20.1;check(!validate(scene).empty(),"invalid displacement rejected");
     return failures?1:0;

@@ -38,7 +38,7 @@ Three hashes serve separate purposes:
 
 | Hash | Meaning | Changes after detail editing |
 |---|---|---|
-| `content_hash` | Immutable evaluated geometry, IDs, curves, hierarchy, selected stage, transforms and saved noise origins | No |
+| `content_hash` | Immutable evaluated geometry, explicit clipping envelopes, IDs, curves, hierarchy, selected stage, transforms and saved noise origins | No |
 | `payload_hash` | Integrity checksum of the entire serialized frozen payload, including provenance and finishing parameters | Yes |
 | `frozen_density_hash` | Effective density inputs used for cache invalidation; excludes optics and generation provenance | Yes, when density inputs change |
 
@@ -54,11 +54,22 @@ shares the trunk's detail parameters; separate anvil, side and interior masks,
 anisotropic noise and painting are follow-up work. These controls do not claim
 to recover bands absent from a coarse sampled representation.
 
-Support and `rho_max` are recomputed from the evaluated fields. Enlarging macro
-warp conservatively expands the saved sampling envelope; decreasing it need not
-shrink the previous conservative envelope. Full cuts and flat bases are applied
-as hard final constraints. Any invalid numeric state is rejected before Document
-publication. The field remains an implicit density function, not an SDF.
+Support and `rho_max` are recomputed from the evaluated fields. A generated
+field's envelope is a conservative sampling bound: enlarging macro warp expands
+it, and decreasing warp need not shrink it. Frozen contract 2 separately stores
+an optional immutable `clipping_envelope`. Freezing a Custom Recipe retains its
+authored envelope as this hard mask, including a currently oversized envelope.
+Detail edits preserve it exactly. It participates in `content_hash`, while an
+expandable sampling bound does not. A clipping envelope must equal the evaluated
+Recipe envelope, so the existing CPU/GPU final clip enforces it without another
+packet or shader branch. This mask is supported for a single field without top
+lobes or an anvil, matching the Custom Recipe path. A field without this mask
+must contain its conservative primitive support, allowing only double-arithmetic
+roundoff in the containment comparison. The two-metre support padding makes
+this tolerance conservative; it never changes saved bounds. Full cuts and flat
+bases are also applied as hard final constraints. Any invalid numeric state is rejected
+before Document publication. The field remains an implicit density function,
+not an SDF.
 
 ## Lifecycle and persistence
 
@@ -78,10 +89,19 @@ temporary-write, flush and replace behavior keeps the previous complete artifact
 on write or publication failure. Moving the file needs no companion assets.
 
 Schemas 1 through 9 migrate explicitly to schema 10 without adding growth, wind
-or a frozen state. Unknown frozen contracts are rejected. A recognized frozen
-contract with an unknown generation implementation remains loadable, keeps its
-provenance intact, and disables regeneration. Saved-data validation and GPU
-cache reconstruction do not regenerate the fixed geometry.
+or a frozen state. Frozen contract 1 is migrated explicitly after its payload
+and content hashes have been verified using the original canonical format.
+Version 1 did not record envelope intent. Migration uses only saved evaluated
+data: a single field whose envelope does not contain conservative primitive
+support retains that envelope as an immutable clip; conservative old bounds
+retain their previous expandable sampling behavior. An oversized authored crop
+cannot be distinguished from a sampling bound in version 1. Geometry, detail,
+support and provenance stay unchanged, and both hashes are updated for contract
+2. This process needs neither provenance nor an available generation version.
+Other unknown frozen contracts are rejected. A recognized frozen contract with
+an unknown generation implementation remains loadable, keeps its provenance
+intact, and disables regeneration. Saved-data validation and GPU cache
+reconstruction do not regenerate the fixed geometry.
 
 ## Evidence and scope
 
@@ -91,7 +111,8 @@ lower regions; and prove geometry identity, stable origins and job counts across
 detail, view, optics and cache-key changes. Persistence tests cover exact
 round-trip, all initial-source variants, unsigned 64-bit IDs, unavailable
 generation versions, missing provenance, invalid contracts and sizes, corrupted
-checksums, atomic failure and legacy fixtures.
+checksums, atomic failure, fixed custom clipping boundaries, expandable generated
+bounds and an unchanged schema10/frozen-v1 fixture from the previous serializer.
 
 The native application lifecycle test shares the same asynchronous launch and
 Freeze adoption functions as the buttons. It generates and adopts, edits top

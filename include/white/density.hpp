@@ -8,7 +8,7 @@ namespace white {
 class DensityField {
 public:
     explicit DensityField(CloudRecipe);
-    double at(Vec3 local) const;
+    double at(Vec3 local,double detail_scale=1,double density_scale=1) const;
     double maximum() const;
     Bounds local_support() const;
     Bounds world_support() const;

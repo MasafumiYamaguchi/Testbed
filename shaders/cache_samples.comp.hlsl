@@ -31,10 +31,18 @@ void main(uint3 id:SV_DispatchThreadID){
         if(id.x==14)p=center+direction*(cloudPacket.dimensions.x*edge);
         if(id.x==15)p=center+side*(cloudPacket.dimensions.y*edge);
     }
+    if(id.x>=16&&id.x<16+12*(uint)finishStack.settings.x){
+        uint layerIndex=(id.x-16)/12,probe=(id.x-16)%12;FinishLayer layer=finishStack.layers[layerIndex];
+        p=layer.center.xyz;
+        float minimum=min(layer.radii.x,min(layer.radii.y,layer.radii.z));
+        if(probe>=1&&probe<=9){uint axis=(probe-1)%3;float distance=probe<=3?0:probe<=6?-0.001:0.001;p[axis]+=layer.radii[axis]*(1+distance/minimum);}
+        if(probe==10)p.x+=layer.radii.x*(1+layer.center.w*0.5/minimum);
+        if(probe==11)p.x+=layer.radii.x*(1+(layer.center.w+0.001)/minimum);
+    }
     // An active sheet uses direct evaluation even when its base cloud still
     // contains one density group. The CPU expects density plus actual XYZ in
     // this branch, not the legacy density/cache/constrained-cache tuple.
-    if(densityPacket.settings.x==2||cloudPacket.settings.x!=0){results[id.x]=float4(densityAt(p),p);return;}
+    if(densityPacket.settings.x==2||cloudPacket.settings.x!=0||finishStack.settings.x>0){results[id.x]=float4(densityAt(p),p);return;}
     float raw=field.SampleLevel(linearClamp,(p-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz),0);
     results[id.x]=float4(densityAt(p),raw,constrainCache(p,raw),1);
 }

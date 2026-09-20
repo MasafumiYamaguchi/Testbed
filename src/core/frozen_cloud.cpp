@@ -26,6 +26,14 @@ Bounds primitive_support(const CloudRecipe& r,double extra){
     const double margin=(r.cells.size()-1)*r.blend_width/4+r.noise.warp_amplitude+2+extra;
     for(const auto& c:r.cells){const auto radius=c.radii*(1+margin/std::min({c.radii.x,c.radii.y,c.radii.z}));grow(b,c.center-radius,c.center+radius);}return b;
 }
+bool contains(Bounds outer,Bounds inner){
+    // The support formula includes a two-metre safety margin. Its old delta-
+    // based warp update can differ by a double ULP from direct recomputation.
+    // Compare with only arithmetic roundoff; never move the saved envelope.
+    const double scale=std::max({1.,std::abs(inner.min.x),std::abs(inner.min.y),std::abs(inner.min.z),std::abs(inner.max.x),std::abs(inner.max.y),std::abs(inner.max.z)});
+    const double roundoff=16*std::numeric_limits<double>::epsilon()*scale;
+    return outer.min.x<=inner.min.x+roundoff&&outer.min.y<=inner.min.y+roundoff&&outer.min.z<=inner.min.z+roundoff&&outer.max.x>=inner.max.x-roundoff&&outer.max.y>=inner.max.y-roundoff&&outer.max.z>=inner.max.z-roundoff;
+}
 Bounds anvil_bounds(const FrozenAnvil& a){
     const Vec3 side{-a.direction.z,0,a.direction.x};const double along=a.along_radius+std::abs(a.shear)*a.half_thickness;
     const Vec3 extent{std::abs(a.direction.x)*along+std::abs(side.x)*a.cross_radius,a.half_thickness,std::abs(a.direction.z)*along+std::abs(side.z)*a.cross_radius};
@@ -47,18 +55,18 @@ Metrics metrics(const FrozenCloudState& state){
     return out;
 }
 struct Shape {double distance=0,coefficient=0;};
-Shape shape_sample(const DensityField& field,const AltitudeDensityEvaluator& profile,Vec3 p){
+Shape shape_sample(const DensityField& field,const AltitudeDensityEvaluator& profile,Vec3 p,double detail_scale,double density_scale){
     const auto& r=field.recipe();if(r.cells.empty()||r.density==0||(r.base.enabled&&p.y<=r.base.height))return {};
     for(const auto& cut:r.cuts)if(implicit(p,cut.center,cut.radii)<=0)return {};
     double distance=0,sum=0;
     for(std::size_t i=0;i<r.cells.size();++i){const auto& c=r.cells[i];auto q=p;
-        if(r.noise.warp_amplitude>0)q=q+domain_displacement((p-r.noise.origin)*r.noise.warp_frequency,noise_seed(cell_random_key(r,c)),r.noise.warp_amplitude);
+        if(r.noise.warp_amplitude*detail_scale>0)q=q+domain_displacement((p-r.noise.origin)*r.noise.warp_frequency,noise_seed(cell_random_key(r,c)),r.noise.warp_amplitude*detail_scale);
         const double d=implicit(q,c.center,c.radii);distance=i?merge(distance,d,r.blend_width):d;sum+=coverage(d);
     }
     const auto n=p-r.noise.origin;const auto seed=noise_seed(r.detail_seed);
-    if(r.noise.micro_erosion>0)distance+=r.noise.micro_erosion*detail_noise(n*r.noise.micro_frequency,seed^0x6c8e9cf5u);
-    double factor=r.density*(1+r.overlap*std::max(0.,sum-1));
-    if(r.noise.medium_strength>0)factor*=1-r.noise.medium_strength*detail_noise(n*r.noise.medium_frequency,seed);
+    if(r.noise.micro_erosion*detail_scale>0)distance+=r.noise.micro_erosion*detail_scale*detail_noise(n*r.noise.micro_frequency,seed^0x6c8e9cf5u);
+    double factor=r.density*density_scale*(1+r.overlap*std::max(0.,sum-1));
+    if(r.noise.medium_strength*detail_scale>0)factor*=1-r.noise.medium_strength*detail_scale*detail_noise(n*r.noise.medium_frequency,seed);
     if(r.base.enabled&&r.base.transition>0)factor*=smooth((p.y-r.base.height)/r.base.transition);
     for(const auto& cut:r.cuts)if(cut.transition>0)factor*=smooth(implicit(p,cut.center,cut.radii)/cut.transition);
     factor*=profile.at(p.y);return {distance,factor};
@@ -107,6 +115,10 @@ std::vector<std::string> validate_frozen_cloud(const FrozenCloudState& s){
         check(finite(f.translation)&&std::max({std::abs(f.translation.x),std::abs(f.translation.y),std::abs(f.translation.z)})<=100000,"Frozen field translation outside supported range");
         check(f.development_id==f.recipe.id,"Frozen field ID differs from evaluated recipe ID");
         check(f.recipe.transform==Transform{}&&f.recipe.optics==s.optics,"Frozen field transform/optics must share object authority");
+        if(f.clipping_envelope){
+            check(s.fields.size()==1&&!s.top_enabled&&!s.anvil,"Explicit frozen envelope clipping requires a single legacy field");
+            check(*f.clipping_envelope==f.recipe.envelope,"Frozen hard envelope differs from its immutable clipping mask");
+        }else check(contains(f.recipe.envelope,primitive_support(f.recipe,0)),"Frozen sampling envelope does not contain the evaluated primitive support");
         Scene r;r.cloud=f.recipe;for(const auto& e:validate(r))errors.push_back("Frozen field: "+e);
         if(f.translation.y!=0&&f.recipe.altitude_density.enabled){
             auto shifted=f.recipe.altitude_density;shifted.base+=f.translation.y;
@@ -170,6 +182,19 @@ std::vector<std::string> validate_frozen_cloud(const FrozenCloudState& s){
     if(errors.empty())try{const auto expected=metrics(s);check(s.support==expected.support&&s.rho_max==expected.maximum,"Frozen support/rho_max differs from evaluated structure");check(s.content_hash==frozen_content_hash(s),"Frozen structural identity mismatch");check(s.payload_hash==frozen_payload_hash(s),"Frozen payload checksum mismatch");}catch(const std::exception& e){errors.emplace_back(e.what());}
     return errors;
 }
+void migrate_frozen_v1(FrozenCloudState& state){
+    if(state.contract_version!=1)throw std::invalid_argument("Expected a verified frozen v1 payload");
+    // Version 1 did not distinguish a custom hard mask from sampling bounds.
+    // Retain a visibly cropped single field using only its evaluated values.
+    // Conservative old bounds retain the old expandable-sampling behavior.
+    if(state.fields.size()==1&&!state.top_enabled&&!state.anvil){
+        auto& field=state.fields[0];
+        if(!contains(field.recipe.envelope,primitive_support(field.recipe,0)))field.clipping_envelope=field.recipe.envelope;
+    }
+    state.contract_version=frozen_cloud_contract_version;
+    state.content_hash=frozen_content_hash(state);state.payload_hash=frozen_payload_hash(state);
+    require(validate_frozen_cloud(state));
+}
 void refresh_frozen_cloud(FrozenCloudState& state){
     for(auto& field:state.fields){field.recipe.transform={};field.recipe.optics=state.optics;}
     const auto result=metrics(state);state.support=result.support;state.rho_max=result.maximum;state.content_hash=frozen_content_hash(state);state.payload_hash=frozen_payload_hash(state);require(validate_frozen_cloud(state));
@@ -205,7 +230,11 @@ Scene freeze_candidate(const GenerationCandidate& candidate){
             const auto& source=*selected.anvil;const auto& a=source.settings;const auto& cell=source.cloud.trunk.cells.front();
             state.anvil=FrozenAnvil{anvil_connection_point(source)+a.direction*(a.extension*.5),a.direction,(a.width+a.extension)*.5,a.width*.5,a.thickness*.5,a.shear,a.edge_fade,a.density_scale,a.start_height+cell.translation.y};
         }
-    }else {auto r=selected.cloud;r.transform={};state.fields.push_back({r.id,std::move(r),{}, {}});}
+    }else {auto r=selected.cloud;r.transform={};state.fields.push_back({r.id,std::move(r),{}, {}});
+        // A Custom Recipe's envelope is an authored final mask. Generated
+        // prefab/curve envelopes are conservative sampling bounds instead.
+        if(!selected.cumulonimbus&&!selected.centerline)state.fields.back().clipping_envelope=selected.cloud.envelope;
+    }
     refresh_frozen_cloud(state);auto result=selected;result.anvil.reset();result.top_lobes.reset();result.developed.reset();result.centerline.reset();result.cumulonimbus.reset();result.frozen=std::move(state);result.cloud=frozen_proxy_recipe(*result.frozen);require_valid(result);return result;
 }
 bool frozen_can_regenerate(const FrozenCloudState& state){return state.provenance&&state.generation_version==generation_algorithm_version&&state.provenance->settings.algorithm_version==generation_algorithm_version;}
@@ -225,7 +254,10 @@ Scene scene_with_frozen_detail(Scene scene,Id id,NoiseSettings noise,std::uint64
     auto& fields=scene.frozen->fields;const auto found=std::find_if(fields.begin(),fields.end(),[&](const auto& f){return f.development_id==id;});
     if(found==fields.end())throw std::invalid_argument("Unknown frozen field ID");
     if(noise.origin!=found->recipe.noise.origin)throw std::invalid_argument("Frozen detail keeps the saved reference origin");
-    if(noise.warp_amplitude>found->recipe.noise.warp_amplitude){const auto support=primitive_support(found->recipe,noise.warp_amplitude-found->recipe.noise.warp_amplitude);grow(found->recipe.envelope,support.min,support.max);}
+    if(!found->clipping_envelope&&noise.warp_amplitude>found->recipe.noise.warp_amplitude){
+        auto expanded=found->recipe;expanded.noise=noise;
+        const auto support=primitive_support(expanded,0);grow(found->recipe.envelope,support.min,support.max);
+    }
     const auto content=scene.frozen->content_hash;
     found->recipe.noise=noise;found->recipe.detail_seed=seed;found->layers=layers;refresh_frozen_scene(scene);
     if(scene.frozen->content_hash!=content)throw std::logic_error("Detail changed immutable frozen geometry");
@@ -234,24 +266,25 @@ Scene scene_with_frozen_detail(Scene scene,Id id,NoiseSettings noise,std::uint64
 FrozenEvaluationPlan::FrozenEvaluationPlan(FrozenCloudState state):state_(std::move(state)){
     require(validate_frozen_cloud(state_));for(const auto& field:state_.fields){fields_.emplace_back(frozen_effective_recipe(field));profiles_.emplace_back(fields_.back().recipe().altitude_density);}
 }
-double FrozenEvaluationPlan::at(Vec3 p)const{
+double FrozenEvaluationPlan::at(Vec3 p,const ModifierFieldScales& scales)const{
     if(!finite(p))throw std::invalid_argument("Nonfinite frozen density sample");
+    for(unsigned i=0;i<2;++i)if(!range(scales.detail[i],0,1)||!range(scales.density[i],0,256))throw std::invalid_argument("Invalid frozen finishing scale");
     if(fields_.empty())return 0;
     const auto& support=state_.support;if(p.x<=support.min.x||p.y<=support.min.y||p.z<=support.min.z||p.x>=support.max.x||p.y>=support.max.y||p.z>=support.max.z)return 0;
-    double original=0;
-    if(fields_.size()==1||(state_.top_enabled&&(p.y<=state_.top_boundary||fields_[1].maximum()==0)))original=fields_[0].at(p-state_.fields[0].translation);
-    else {const auto a=shape_sample(fields_[0],profiles_[0],p-state_.fields[0].translation),b=shape_sample(fields_[1],profiles_[1],p-state_.fields[1].translation);original=std::clamp(developed_density_union(a.distance,a.coefficient,b.distance,b.coefficient,state_.fusion_width,state_.overlap),0.,state_.rho_max);}
+    double original=0;const double maximum=state_.rho_max*std::max(scales.density[0],scales.density[1]);
+    if(fields_.size()==1||(state_.top_enabled&&(p.y<=state_.top_boundary||fields_[1].maximum()==0)))original=fields_[0].at(p-state_.fields[0].translation,scales.detail[0],scales.density[0]);
+    else {const auto a=shape_sample(fields_[0],profiles_[0],p-state_.fields[0].translation,scales.detail[0],scales.density[0]),b=shape_sample(fields_[1],profiles_[1],p-state_.fields[1].translation,scales.detail[1],scales.density[1]);original=std::clamp(developed_density_union(a.distance,a.coefficient,b.distance,b.coefficient,state_.fusion_width,state_.overlap),0.,maximum);}
     if(!state_.anvil||p.y<=state_.anvil->start_height)return original;
     const auto& a=*state_.anvil;const Vec3 side{-a.direction.z,0,a.direction.x};auto q=p-a.center;q=q-a.direction*(a.shear*q.y);
     const double u=dot(q,a.direction)/a.along_radius,v=dot(q,side)/a.cross_radius,w=q.y/a.half_thickness;
     double distance=(std::sqrt(u*u+v*v+w*w)-1)*a.half_thickness;
     const auto& r=fields_[0].recipe();const auto local=p-state_.fields[0].translation,n=local-r.noise.origin;const auto seed=noise_seed(r.detail_seed);
-    if(r.noise.micro_erosion>0)distance+=r.noise.micro_erosion*detail_noise(n*r.noise.micro_frequency,seed^0x6c8e9cf5u);
-    double addition=r.density*a.density_scale*(1-smooth((distance+a.edge_fade)/a.edge_fade));if(addition==0)return original;
-    if(r.noise.medium_strength>0)addition*=1-r.noise.medium_strength*detail_noise(n*r.noise.medium_frequency,seed);
+    if(r.noise.micro_erosion*scales.detail[0]>0)distance+=r.noise.micro_erosion*scales.detail[0]*detail_noise(n*r.noise.micro_frequency,seed^0x6c8e9cf5u);
+    double addition=r.density*scales.density[0]*a.density_scale*(1-smooth((distance+a.edge_fade)/a.edge_fade));if(addition==0)return original;
+    if(r.noise.medium_strength*scales.detail[0]>0)addition*=1-r.noise.medium_strength*scales.detail[0]*detail_noise(n*r.noise.medium_frequency,seed);
     if(r.base.enabled){if(local.y<=r.base.height)return original;if(r.base.transition>0)addition*=smooth((local.y-r.base.height)/r.base.transition);}
     for(const auto& cut:r.cuts){const double d=implicit(local,cut.center,cut.radii);if(d<=0)return original;if(cut.transition>0)addition*=smooth(d/cut.transition);}
-    addition*=profiles_[0].at(local.y);return std::clamp(std::max(original,addition),0.,state_.rho_max);
+    addition*=profiles_[0].at(local.y);return std::clamp(std::max(original,addition),0.,maximum);
 }
 Bounds FrozenEvaluationPlan::world_support()const{Bounds out{{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};const auto b=state_.support;for(unsigned i=0;i<8;++i){const auto p=local_to_world(state_.transform,{i&1?b.max.x:b.min.x,i&2?b.max.y:b.min.y,i&4?b.max.z:b.min.z});grow(out,p,p);}return out;}
 GpuAnvilParams FrozenEvaluationPlan::gpu_params()const{

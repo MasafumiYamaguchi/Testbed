@@ -1,5 +1,12 @@
 # Evidence handoff — 2026-09-20 19:59:54 UTC
 
+Historical pause checkpoint. Work resumed at the user's request. PR #77 later
+completed successfully and its images were reviewed; see
+[growth/top review](growth-top-pr77/REVIEW.md) and the updated
+[acceptance table](acceptance-status.md). PR #78's separately identified
+[partial anvil review](anvil-pr78-partial/REVIEW.md) records a fallback timeout.
+The pending states below describe the original pause time, not current status.
+
 Work stopped at the user's requested handoff point. No workflow was cancelled,
 no Issue was closed and no main merge was made.
 

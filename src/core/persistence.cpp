@@ -319,9 +319,11 @@ FrozenAnvil frozen_anvil_from_json(const Json& j) {
 }
 Json frozen_json(const FrozenCloudState& state,bool include_payload_hash=true) {
     Json fields=Json::array(),curves=Json::array(),hierarchy=Json::array();
-    for(const auto& field:state.fields){const auto& l=field.layers;fields.push_back({{"development_id",std::to_string(field.development_id)},
+    for(const auto& field:state.fields){const auto& l=field.layers;Json evaluated={{"development_id",std::to_string(field.development_id)},
         {"recipe",recipe_json(field.recipe)},{"translation",vec(field.translation)},
-        {"layers",{{"base",l.base},{"macro",l.macro},{"medium",l.medium},{"micro",l.micro}}}});}
+        {"layers",{{"base",l.base},{"macro",l.macro},{"medium",l.medium},{"micro",l.micro}}}};
+        if(state.contract_version>=2)evaluated["clipping_envelope"]=field.clipping_envelope?bounds_json(*field.clipping_envelope):Json(nullptr);
+        fields.push_back(std::move(evaluated));}
     for(const auto& curve:state.curves){Json points=Json::array(),profile=Json::array();
         for(const auto& p:curve.points)points.push_back({{"id",std::to_string(p.id)},{"t",p.t},{"offset",vec(p.offset)}});
         for(const auto& p:curve.profile)profile.push_back({{"id",std::to_string(p.id)},{"t",p.t},{"radius_scale",p.radius_scale},{"density_scale",p.density_scale}});
@@ -344,8 +346,9 @@ Json frozen_json(const FrozenCloudState& state,bool include_payload_hash=true) {
 FrozenCloudState frozen_from_json(const Json& j) {
     shape(j,{"contract_version","id","selection","generation_version","generation_input_hash","content_hash","payload_hash","transform","optics",
         "fields","curves","fusion_width","overlap","top_enabled","top_boundary","top_mode","hierarchy","anvil","support","rho_max","provenance"});
-    if(unsigned32(j.at("contract_version"))!=frozen_cloud_contract_version)throw std::invalid_argument("Unsupported frozen cloud contract version");
-    FrozenCloudState state;state.id=id(j.at("id"));const auto& selection=j.at("selection");shape(selection,{"kind","unit","value"});
+    const auto contract=unsigned32(j.at("contract_version"));
+    if(contract!=1&&contract!=frozen_cloud_contract_version)throw std::invalid_argument("Unsupported frozen cloud contract version");
+    FrozenCloudState state;state.contract_version=contract;state.id=id(j.at("id"));const auto& selection=j.at("selection");shape(selection,{"kind","unit","value"});
     state.selection_kind=bounded_string(selection.at("kind"),64);state.selection_unit=bounded_string(selection.at("unit"),64);state.selection_value=number(selection.at("value"));
     state.generation_version=unsigned32(j.at("generation_version"));state.generation_input_hash=id(j.at("generation_input_hash"));state.content_hash=id(j.at("content_hash"));
     state.payload_hash=id(j.at("payload_hash"));
@@ -354,13 +357,17 @@ FrozenCloudState frozen_from_json(const Json& j) {
     const auto& curves=bounded_array(j.at("curves"),0,max_developed_cells,"Frozen cloud exceeds two evaluated curves");
     const auto& hierarchy=bounded_array(j.at("hierarchy"),0,max_top_lobes,"Frozen cloud exceeds three hierarchy nodes");
     std::size_t primitive_count=0;
-    for(const auto& f:fields){shape(f,{"development_id","recipe","translation","layers"});
+    for(const auto& f:fields){
+        if(contract==1)shape(f,{"development_id","recipe","translation","layers"});
+        else shape(f,{"development_id","recipe","translation","layers","clipping_envelope"});
         const auto& recipe=f.at("recipe");
         primitive_count+=bounded_array(recipe.at("cells"),0,8,"Frozen field exceeds eight primitives").size();
         if(primitive_count>8)throw std::invalid_argument("Frozen cloud exceeds eight aggregate primitives");
         const auto& l=f.at("layers");shape(l,{"base","macro","medium","micro"});
         state.fields.push_back({id(f.at("development_id")),recipe_from_json(recipe),vec(f.at("translation")),
-            {boolean(l.at("base")),boolean(l.at("macro")),boolean(l.at("medium")),boolean(l.at("micro"))}});}
+            {boolean(l.at("base")),boolean(l.at("macro")),boolean(l.at("medium")),boolean(l.at("micro"))}});
+        if(contract>=2&&!f.at("clipping_envelope").is_null())state.fields.back().clipping_envelope=bounds_from_json(f.at("clipping_envelope"));
+    }
     for(const auto& c:curves){shape(c,{"development_id","base","height","growth_direction","points","profile"});
         const auto& points=bounded_array(c.at("points"),2,max_centerline_points,"Frozen curve requires 2..6 control points");
         const auto& profile=bounded_array(c.at("profile"),2,max_centerline_profile_points,"Frozen curve requires 2..8 profile knots");
@@ -379,7 +386,29 @@ FrozenCloudState frozen_from_json(const Json& j) {
         state.provenance=GenerationProvenance{generation_recipe_from_json(p.at("initial")),generation_settings_from_json(p.at("settings"))};}
     if(frozen_payload_hash(state)!=state.payload_hash)throw std::invalid_argument("Frozen cloud payload hash mismatch");
     if(frozen_content_hash(state)!=state.content_hash)throw std::invalid_argument("Frozen cloud content hash mismatch");
+    if(contract==1)migrate_frozen_v1(state);
     return state;
+}
+Json finishing_json(const FinishStack& stack){
+    Json layers=Json::array();for(const auto& layer:stack.layers){const auto kind=layer.kind==FinishModifierKind::cut?"cut":layer.kind==FinishModifierKind::density?"density":"protect_detail";
+        layers.push_back({{"id",std::to_string(layer.id)},{"kind",kind},{"enabled",layer.enabled},{"strength",layer.strength},
+            {"mask",{{"center",vec(layer.mask.center)},{"radii",vec(layer.mask.radii)},{"falloff",layer.mask.falloff}}},
+            {"target",{{"kind",layer.target_kind==FinishTargetKind::object?"object":"field"},{"id",std::to_string(layer.target_id)}}},
+            {"density_multiplier",layer.density_multiplier},{"hard_cut",layer.hard_cut}});}
+    return {{"contract_version",stack.contract_version},{"space","object_local"},{"layers",layers}};
+}
+FinishStack finishing_from_json(const Json& j){
+    shape(j,{"contract_version","space","layers"});FinishStack stack;stack.contract_version=unsigned32(j.at("contract_version"));
+    if(j.at("space")!="object_local")throw std::invalid_argument("Only object-local finishing masks are supported");
+    for(const auto& value:bounded_array(j.at("layers"),0,max_finish_modifiers,"Finishing exceeds four layers")){
+        shape(value,{"id","kind","enabled","strength","mask","target","density_multiplier","hard_cut"});FinishModifier layer;layer.id=id(value.at("id"));
+        if(value.at("kind")=="cut")layer.kind=FinishModifierKind::cut;else if(value.at("kind")=="density")layer.kind=FinishModifierKind::density;else if(value.at("kind")=="protect_detail")layer.kind=FinishModifierKind::protect_detail;else throw std::invalid_argument("Unknown finishing operation");
+        layer.enabled=boolean(value.at("enabled"));layer.strength=number(value.at("strength"));layer.density_multiplier=number(value.at("density_multiplier"));layer.hard_cut=boolean(value.at("hard_cut"));
+        const auto& mask=value.at("mask");shape(mask,{"center","radii","falloff"});layer.mask={vec(mask.at("center")),vec(mask.at("radii")),number(mask.at("falloff"))};
+        const auto& target=value.at("target");shape(target,{"kind","id"});layer.target_id=id(target.at("id"));
+        if(target.at("kind")=="object")layer.target_kind=FinishTargetKind::object;else if(target.at("kind")=="field")layer.target_kind=FinishTargetKind::field;else throw std::invalid_argument("Unknown finishing target type");
+        stack.layers.push_back(layer);
+    }return stack;
 }
 std::uint64_t json_hash(const Json& j) {
     std::uint64_t hash=14695981039346656037ull;
@@ -430,7 +459,7 @@ std::string scene_json(const Scene& s) {
             {"vertical_fov_degrees",s.camera.vertical_fov_degrees},{"near_plane",s.camera.near_plane},{"far_plane",s.camera.far_plane}}},
         {"sun",{{"direction_to_light",vec(s.sun.direction_to_light)},{"irradiance",vec(s.sun.irradiance)}}},
         {"exposure_ev",s.exposure_ev},{"preview_approx",{{"enabled",s.preview_approx.enabled},{"strength",s.preview_approx.strength}}}};
-    if(s.frozen)j["cloud"]={{"kind","frozen"},{"source",frozen_json(*s.frozen)}};
+    if(s.frozen)j["cloud"]={{"kind","frozen"},{"source",frozen_json(*s.frozen)},{"finishing",finishing_json(s.finish_stack)}};
     else if(s.anvil)j["cloud"]={{"kind","anvil"},{"source",anvil_json(*s.anvil)}};
     else if(s.top_lobes)j["cloud"]={{"kind","top_lobes"},{"source",top_lobe_json(*s.top_lobes)}};
     else if(s.developed)j["cloud"]={{"kind","developed"},{"source",developed_json(*s.developed)}};
@@ -444,7 +473,7 @@ Scene parse_scene_json(std::string_view text) {
         if(depth>32)throw std::invalid_argument("Scene nesting exceeds 32 levels");
         return true;
     });
-    if(j.value("schema_version",0u)>=4&&j.value("schema_version",0u)<=10)shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev","preview_approx"});
+    if(j.value("schema_version",0u)>=4&&j.value("schema_version",0u)<=11)shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev","preview_approx"});
     else shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev"});
     if(!j.at("schema_version").is_number_unsigned()||!j.at("algorithm_version").is_number_unsigned())throw std::invalid_argument("Version must be an unsigned integer");
     const bool legacy=j.at("schema_version")==1&&j.at("algorithm_version")==1;
@@ -454,8 +483,9 @@ Scene parse_scene_json(std::string_view text) {
     const bool developed_schema=j.at("schema_version")==7&&j.at("algorithm_version")==3;
     const bool top_schema=j.at("schema_version")==8&&j.at("algorithm_version")==3;
     const bool anvil_schema=j.at("schema_version")==9&&j.at("algorithm_version")==3;
-    const bool current_schema=j.at("schema_version")==10&&j.at("algorithm_version")==3;
-    if(!legacy&&!version2&&!old_schema&&!profile_schema&&!developed_schema&&!top_schema&&!anvil_schema&&!current_schema)throw std::invalid_argument("Unsupported schema/algorithm version");
+    const bool frozen_schema=j.at("schema_version")==10&&j.at("algorithm_version")==3;
+    const bool current_schema=j.at("schema_version")==11&&j.at("algorithm_version")==3;
+    if(!legacy&&!version2&&!old_schema&&!profile_schema&&!developed_schema&&!top_schema&&!anvil_schema&&!frozen_schema&&!current_schema)throw std::invalid_argument("Unsupported schema/algorithm version");
     if(legacy) {
         shape(j.at("cloud"),{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics"});
         j["cloud"]["noise"]=noise_json(NoiseSettings{}); // exact old shape: all noise amplitudes zero
@@ -463,27 +493,27 @@ Scene parse_scene_json(std::string_view text) {
     if(legacy||version2){shape(j["cloud"]["optics"],{"extinction_scale","albedo"});j["cloud"]["optics"]["g"]=0;}
     Scene s;
     if(j.at("schema_version").get<unsigned>()>=4){const auto& a=j.at("preview_approx");shape(a,{"enabled","strength"});if(!a.at("enabled").is_boolean())throw std::invalid_argument("Approximation enabled must be boolean");s.preview_approx={a.at("enabled").get<bool>(),number(a.at("strength"))};}
-    if(!current_schema&&!anvil_schema&&!top_schema&&!profile_schema&&!developed_schema&&!j.at("cloud").contains("kind")) {
+    if(!current_schema&&!frozen_schema&&!anvil_schema&&!top_schema&&!profile_schema&&!developed_schema&&!j.at("cloud").contains("kind")) {
         if(j.at("cloud").contains("altitude_density"))throw std::invalid_argument("Legacy schema cannot contain altitude density fields");
         j["cloud"]["altitude_density"]=altitude_density_json(AltitudeDensityProfile{});
     }
     auto& c=s.cloud;const auto& cj=j.at("cloud");
-    if((j.at("schema_version")==5||profile_schema||developed_schema||top_schema||anvil_schema||current_schema)&&cj.is_object()&&cj.contains("kind")) {
-        shape(cj,{"kind","source"});
+    if((j.at("schema_version")==5||profile_schema||developed_schema||top_schema||anvil_schema||frozen_schema||current_schema)&&cj.is_object()&&cj.contains("kind")) {
+        if(current_schema&&cj.at("kind")=="frozen")shape(cj,{"kind","source","finishing"});else shape(cj,{"kind","source"});
         if(cj.at("kind")=="cumulonimbus") {
             s.cumulonimbus=cumulonimbus_from_json(cj.at("source"));
             c=derive_cumulonimbus_recipe(*s.cumulonimbus);
-        } else if((profile_schema||developed_schema||top_schema||anvil_schema||current_schema)&&cj.at("kind")=="centerline") {
+        } else if((profile_schema||developed_schema||top_schema||anvil_schema||frozen_schema||current_schema)&&cj.at("kind")=="centerline") {
             s.centerline=centerline_from_json(cj.at("source"));
             c=lower_centerline_to_recipe(*s.centerline);
-        } else if((developed_schema||top_schema||anvil_schema||current_schema)&&cj.at("kind")=="developed") {
+        } else if((developed_schema||top_schema||anvil_schema||frozen_schema||current_schema)&&cj.at("kind")=="developed") {
             s.developed=developed_from_json(cj.at("source"));
             c=developed_proxy_recipe(*s.developed);
-        } else if(current_schema&&cj.at("kind")=="frozen") {
-            s.frozen=frozen_from_json(cj.at("source"));c=frozen_proxy_recipe(*s.frozen);
-        } else if((anvil_schema||current_schema)&&cj.at("kind")=="anvil") {
+        } else if((frozen_schema||current_schema)&&cj.at("kind")=="frozen") {
+            s.frozen=frozen_from_json(cj.at("source"));c=frozen_proxy_recipe(*s.frozen);if(current_schema)s.finish_stack=finishing_from_json(cj.at("finishing"));
+        } else if((anvil_schema||frozen_schema||current_schema)&&cj.at("kind")=="anvil") {
             s.anvil=anvil_from_json(cj.at("source"));c=anvil_proxy_recipe(*s.anvil);
-        } else if((top_schema||anvil_schema||current_schema)&&cj.at("kind")=="top_lobes") {
+        } else if((top_schema||anvil_schema||frozen_schema||current_schema)&&cj.at("kind")=="top_lobes") {
             s.top_lobes=top_lobe_from_json(cj.at("source"));c=top_lobe_proxy_recipe(*s.top_lobes);
         } else throw std::invalid_argument("Unsupported cloud object kind");
     } else {
