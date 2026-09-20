@@ -1,12 +1,13 @@
 # ProjectWhite
 
 An original art-directable cloud creation tool. Implementation follows [the roadmap](https://github.com/MasafumiYamaguchi/Testbed/issues/2).
-Current milestone: Phase 0 cloud editing, noise and dense cache (#3–#12). The Windows application previews
+Current milestone: Phase 0 cloud editing, noise, dense cache and gate evaluation (#3–#14). The Windows application previews
 ellipsoid density with single scattering and provides primitive picking, Move/
 Scale gizmos, numeric inspection, a flat base, cuts, camera orbit, Undo/Redo and
 JSON Save/Open. Medium density modulation, micro edge erosion and bounded structural warp are
-available in Shape details. Dense preview caches and production export remain
-later milestones. Physical RTX validation is still outstanding.
+available in Shape details. Optional 128³/256³ density caches rebuild asynchronously
+and preserve the latest direct preview while editing. The [Phase-0 gate is Hold](docs/phase-0-gate.md):
+physical RTX validation is outstanding and Phase 1 has not started. Production export remains later work.
 
 ## Windows build
 
@@ -69,8 +70,8 @@ These checks do not establish physical RTX performance. [GPU contracts and accep
 separate numerical tests, lifecycle smoke checks and remaining physical GPU tests.
 
 See [architecture decision](docs/adr/0001-foundation.md) and
-[dependency notices](THIRD_PARTY.md). OpenVDB is reserved for the independent
-Issue #13 spike and is not on the preview build path. Real GPU validation and
+[dependency notices](THIRD_PARTY.md). The [optional OpenVDB spike](spikes/vdb/README.md) has its own build and
+write/reopen test and is not on the preview build path. Real GPU validation and
 performance measurements are separate from hosted CI success.
 
 ## Editing
@@ -85,3 +86,12 @@ Save/Open use the UTF-8 path shown at the top of the inspector. Open asks before
 discarding unsaved edits. Invalid values keep the last valid scene and show the
 validation error. The inspector scrolls on small windows. See the
 [reproduction steps and UI contract](docs/adr/0007-editor.md).
+
+## Fixed comparison captures
+
+The Release workflow also captures 17 saved Recipe/view fixtures, including
+direct versus 128³/256³ comparisons for seven shapes/detail variants. Download
+`windows-Release-evidence` and inspect `evidence/gate/` for the actual PNGs,
+recipes, hashes, adapter and numeric logs. The `--recipe` option accepts a saved
+Scene; render width, view/shadow steps and cache resolution can be fixed on the
+command line. See the [gate protocol and remaining measurements](docs/phase-0-gate.md).

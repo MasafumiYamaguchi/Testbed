@@ -1,0 +1,24 @@
+Start testing: Sep 19 04:17 Coordinated Universal Time
+----------------------------------------------------------
+1/1 Testing: vdb_roundtrip
+1/1 Test: vdb_roundtrip
+Command: "D:/a/Testbed/Testbed/build/vdb/Release/white_vdb_spike.exe" "--self-test" "D:/a/Testbed/Testbed/build/vdb/evidence"
+Directory: D:/a/Testbed/Testbed/build/vdb
+"vdb_roundtrip" start time: Sep 19 04:17 Coordinated Universal Time
+Output:
+----------------------------------------------------------
+OpenVDB=12.0.1 ABI=12.0.1abi12
+grid=density class=fog type=float background=0 active=32768 samples=39304 value_max_error=0 world_max_error_m=0 voxel_size_m=0.75 origin_m=[11.25, -3.5, 5.75] PASS
+grid=density class=fog type=float background=0 active=32768 samples=39304 value_max_error=0 world_max_error_m=0 voxel_size_m=0.75 origin_m=[11.25, -3.5, 5.75] PASS
+grid=density class=fog type=float background=0 active=32768 samples=39304 value_max_error=0 world_max_error_m=0 voxel_size_m=0.75 origin_m=[11.25, -3.5, 5.75] PASS
+collision_preserved=true interrupted_publish_absent=true invalid_path_preserved=true temp_cleanup=true PASS
+artifact=D:/a/Testbed/Testbed/build/vdb/evidence\run-1332672381000\density.vdb
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"vdb_roundtrip" end time: Sep 19 04:17 Coordinated Universal Time
+"vdb_roundtrip" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 19 04:17 Coordinated Universal Time

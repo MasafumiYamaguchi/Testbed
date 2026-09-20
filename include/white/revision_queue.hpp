@@ -22,7 +22,6 @@ public:
     std::uint64_t coalesced=0,discarded=0,published=0;
 private:
     std::optional<DensityJob> pending_,running_;
-    std::optional<std::uint64_t> published_hash_;
     std::uint64_t latest_hash_=0;
 };
 struct Invalidation {bool density=false,lighting=false,hdr=false,display=false;};

@@ -38,14 +38,26 @@ struct Ui {
 };
 }
 int main(int argc,char** argv) {
-    int frames=0,preset=2;
+    int frames=0,preset=2,render_width=160,view_steps=64,shadow_steps=8,cache=0;
+    std::string recipe;
     std::string capture;
     bool lifecycle=false,self_test=false;
     for(int i=1;i<argc;++i) {
         std::string_view arg(argv[i]);
         if(arg=="--help") {
             std::cout<<"ProjectWhite --frames N --capture output.bmp --self-test --lifecycle-test --scene 0..4\n"
+                "--recipe FILE --render-width 64..640 --view-steps 8..512 --shadow-steps 1..64 --cache 0|128|256\n"
                 "Windows D3D12 GPU field validation; startup fails if required GPU features are absent.\n"; return 0;
+        }
+        if(arg=="--recipe"&&i+1<argc){recipe=argv[++i];continue;}
+        if((arg=="--render-width"||arg=="--view-steps"||arg=="--shadow-steps"||arg=="--cache")&&i+1<argc){
+            std::string_view value(argv[++i]);int number=0;auto result=std::from_chars(value.data(),value.data()+value.size(),number);
+            bool valid=result.ec==std::errc{}&&result.ptr==value.data()+value.size();
+            if(arg=="--render-width"){valid=valid&&number>=64&&number<=640;render_width=number;}
+            if(arg=="--view-steps"){valid=valid&&number>=8&&number<=512;view_steps=number;}
+            if(arg=="--shadow-steps"){valid=valid&&number>=1&&number<=64;shadow_steps=number;}
+            if(arg=="--cache"){valid=valid&&(number==0||number==128||number==256);cache=number;}
+            if(!valid){std::cerr<<"Invalid quality/cache argument: "<<arg<<'\n';return 2;}continue;
         }
         if(arg=="--self-test") {self_test=true;continue;}
         if(arg=="--scene" && i+1<argc) {
@@ -64,6 +76,7 @@ int main(int argc,char** argv) {
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
     if(self_test&&frames>0&&frames<760){std::cerr<<"--self-test requires --frames >= 760 to finish UI checks\n";return 2;}
+    if(self_test&&!recipe.empty()){std::cerr<<"Use separate runs for fixed Recipe and scripted UI self-test\n";return 2;}
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
     int exit_code=0;
     try {
@@ -81,7 +94,16 @@ int main(int argc,char** argv) {
         if(self_test)for(int test=0;test<5;++test)gpu.create_cloud(test);
         gpu.create_cloud(preset);
         Ui ui;ui.init(gpu);
-        white::EditorUi editor(preset);gpu.set_scene(editor.session.document().scene(),editor.session.document().revision());
+        white::EditorUi editor(preset);
+        if(!recipe.empty())editor.session.load(std::filesystem::u8path(recipe),true);
+        gpu.internal_width=render_width;gpu.view_steps=view_steps;gpu.shadow_steps=shadow_steps;
+        gpu.set_scene(editor.session.document().scene(),editor.session.document().revision());
+        if(!recipe.empty())white::gpu_check(SDL_SetWindowSize(gpu.window,1110,540),"Set fixed 16:9 viewport");
+        if(cache){gpu.set_cache_resolution(cache);gpu.use_cache=true;}
+        if(!recipe.empty()){
+            gpu.wait_bakes();
+            std::cout<<"fixed_recipe="<<recipe<<" density_hash="<<white::density_input_hash(editor.session.document().scene())<<" internal_width="<<render_width<<" view_steps="<<view_steps<<" shadow_steps="<<shadow_steps<<" cache="<<cache<<" camera_sun=from_saved_recipe\n";
+        }
         bool running=true,captured=false;
         std::vector<float> baseline_hdr;
         int convergence_frame=-1;
@@ -147,16 +169,17 @@ int main(int argc,char** argv) {
                 blit.load_op=SDL_GPU_LOADOP_DONT_CARE;blit.filter=SDL_GPU_FILTER_NEAREST;
                 SDL_BlitGPUTexture(cmd,&blit);
             }
-            if(self_test) {
+            if(self_test||!recipe.empty()) {
                 const auto recorded=std::chrono::steady_clock::now();auto* fence=SDL_SubmitGPUCommandBufferAndAcquireFence(cmd);white::gpu_check(fence!=nullptr,"Submit timed frame");
                 if(swap)gpu.note_present(gpu.rendered_revision);
                 const bool waited=SDL_WaitForGPUFences(gpu.device,true,&fence,1);SDL_ReleaseGPUFence(gpu.device,fence);white::gpu_check(waited,"Wait timed frame");
-                if(hdr_work)std::cout<<"frame_revision="<<gpu.scene_revision<<" mode="<<(gpu.use_cache?"cache":"direct")<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(recorded-record_start).count()<<" submit_to_fence_wall_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-recorded).count()<<" gpu_timestamp_ms=unavailable\n";
+                if(hdr_work)std::cout<<"frame_revision="<<gpu.scene_revision<<" mode="<<(gpu.use_cache&&gpu.cache_current()?"cache":"direct")<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(recorded-record_start).count()<<" submit_to_fence_wall_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-recorded).count()<<" gpu_timestamp_ms=unavailable\n";
             }else {white::gpu_check(SDL_SubmitGPUCommandBuffer(cmd),"Submit frame");if(swap)gpu.note_present(gpu.rendered_revision);}
             if(swap && !capture.empty() && !captured && frame>=60) {
                 gpu.save_capture(capture);captured=true;std::cout<<"capture="<<capture<<" frame="<<frame<<'\n';
                 if(gpu.show_volume&&gpu.fixture==2) {
                     baseline_hdr=gpu.read_hdr();
+                    if(!recipe.empty())std::cout<<"fixed_capture width="<<gpu.hdr_width<<" height="<<gpu.hdr_height<<" revision="<<gpu.rendered_revision<<" pending="<<gpu.bake_pending()<<'\n';
                     if(self_test){gpu.view_steps*=2;gpu.volume_dirty=true;convergence_frame=frame;}
                 }
             }
