@@ -218,10 +218,15 @@ void EditorUi::draw(GpuSpike& gpu) {
             sc.camera.position=sc.camera.target+Vec3{length*std::cos(pitch)*std::sin(yaw),length*std::sin(pitch),length*std::cos(pitch)*std::cos(yaw)};sc.camera.up={0,1,0};apply(std::move(sc));
         }else {session.end_drag();orbit_drag_=false;}
     }
+    if(gpu.report.starts_with("Bake failed"))status_=gpu.report;
+    const bool actual_cache=gpu.use_cache&&gpu.cache_current();
+    const auto mode=std::string(actual_cache?"Dense ":"Direct ")+(actual_cache?std::to_string(gpu.extent[0])+"x"+std::to_string(gpu.extent[1])+"x"+std::to_string(gpu.extent[2]):"evaluator")+(gpu.bake_pending()?" | baking latest":"");
+    ImGui::GetForegroundDrawList()->AddText({vx,40},IM_COL32(170,185,205,255),mode.c_str());
     ImGui::GetForegroundDrawList()->AddText({vx,20},IM_COL32(220,225,235,255),"Click: select | Right-drag: orbit | Wheel: zoom | Esc: cancel");
+    gpu.set_interacting(gizmo_drag_||inspector_drag_||orbit_drag_);
     if(session.document().revision()!=gpu.scene_revision&&session.document().revision()!=last_scene_attempt_) {
         last_scene_attempt_=session.document().revision();
-        try{gpu.set_scene(session.document().scene(),session.document().revision());}
+        try{gpu.set_scene(session.document().scene(),session.document().revision(),session.document().changed_at());}
         catch(const std::exception& e){status_=std::string("Preview stale; document kept: ")+e.what();}
     }
 }

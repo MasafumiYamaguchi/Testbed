@@ -4,7 +4,7 @@ New-Item -ItemType Directory -Force $OutputDirectory | Out-Null
 $out = (Resolve-Path $OutputDirectory).Path
 $exe = (Resolve-Path $Executable).Path
 # Keep the process alive while PowerShell compiles the native capture helper.
-$process = Start-Process -FilePath $exe -ArgumentList @("--frames", "720", "--self-test", "--lifecycle-test", "--capture", "client.bmp") -WorkingDirectory $out -PassThru -RedirectStandardOutput "$out/app.stdout.log" -RedirectStandardError "$out/app.stderr.log"
+$process = Start-Process -FilePath $exe -ArgumentList @("--frames", "840", "--self-test", "--lifecycle-test", "--capture", "client.bmp") -WorkingDirectory $out -PassThru -RedirectStandardOutput "$out/app.stdout.log" -RedirectStandardError "$out/app.stderr.log"
 try {
     $ready = $false
     for ($i = 0; $i -lt 600; $i++) {
@@ -52,7 +52,7 @@ public class WindowCapture {
         $img = [System.Drawing.Image]::FromFile("$out/step-half.bmp")
         try { $img.Save("$out/step-half.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $img.Dispose() }
     }
-    foreach ($name in @("gizmo-move", "gizmo-scale")) {
+    foreach ($name in @("gizmo-move", "gizmo-scale", "stress-idle")) {
         $img = [System.Drawing.Image]::FromFile("$out/$name.bmp")
         try { $img.Save("$out/$name.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $img.Dispose() }
     }

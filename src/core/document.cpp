@@ -126,6 +126,6 @@ bool Document::replace(Scene scene) {
     require_valid(scene);if(scene==scene_)return false;
     if(revision_==std::numeric_limits<std::uint64_t>::max())throw std::overflow_error("Document revision exhausted");
     const auto dirty=classify_change(scene_,scene);
-    scene_=std::move(scene);last_change_=dirty;++revision_;return true;
+    scene_=std::move(scene);last_change_=dirty;++revision_;changed_at_=std::chrono::steady_clock::now();return true;
 }
 }
