@@ -1,14 +1,24 @@
 #include "white/editor_ui.hpp"
 #include <imgui.h>
 #include <algorithm>
+#include <limits>
 namespace white {
 void EditorUi::poll_generation(){
     if(!generation_job_.valid()||generation_job_.wait_for(std::chrono::seconds(0))!=std::future_status::ready)return;
     auto outcome=generation_job_.get();generation_message_=outcome.message;
-    if(outcome.status==GenerationStatus::completed){generation_candidate_=std::move(outcome.candidate);generation_guard_=std::move(generation_job_guard_);}
+    if(outcome.status==GenerationStatus::completed)try{
+        auto fixed=freeze_candidate(*outcome.candidate);
+        if(!generation_job_resets_edits_&&generation_job_guard_)fixed=preserve_candidate_finish(*generation_job_guard_,std::move(fixed));
+        generation_discarded_.reset();generation_discarded_guard_.reset();generation_discarded_fixed_.reset();
+        generation_candidate_fixed_=std::move(fixed);generation_candidate_resets_edits_=generation_job_resets_edits_;generation_candidate_is_clone_=false;
+        generation_candidate_draft_token_=generation_job_draft_token_;
+        generation_candidate_=std::move(outcome.candidate);generation_guard_=std::move(generation_job_guard_);
+    }catch(const std::exception& e){generation_message_=std::string("Candidate rejected; current cloud retained: ")+e.what();}
 }
 void EditorUi::launch_generation(bool cancel_before_start){
     if(generation_job_.valid()||!generation_initial_)throw std::logic_error("Generation already running or no initial recipe");
+    generation_preview_candidate_=false;generation_job_resets_edits_=generation_draft_resets_edits_;
+    generation_job_draft_token_=generation_draft_token_;
     generation_job_guard_=session.document().scene();generation_stop_=std::stop_source{};generation_progress_=std::make_shared<std::atomic<double>>(0);
     if(cancel_before_start)generation_stop_.request_stop();
     auto source=*generation_initial_;source.camera=generation_job_guard_->camera;source.sun=generation_job_guard_->sun;source.exposure_ev=generation_job_guard_->exposure_ev;source.preview_approx=generation_job_guard_->preview_approx;
@@ -16,11 +26,34 @@ void EditorUi::launch_generation(bool cancel_before_start){
     generation_job_=std::async(std::launch::async,[source,settings,stop,progress]{return generate_cloud_state(source,settings,stop,[progress](double value){progress->store(value);});});
     ++generation_runs_;generation_message_="Generating selected state...";
 }
-void EditorUi::adopt_generation_candidate(){
-    if(generation_job_.valid()||!generation_candidate_||!generation_guard_||session.document().scene()!=*generation_guard_)throw std::logic_error("Generate a current completed candidate before Freeze");
-    const auto fixed=adopt_frozen_with_finish(session.document().scene(),freeze_candidate(*generation_candidate_));apply(fixed);
+void EditorUi::adopt_generation_candidate(bool reset_confirmed){
+    if(generation_job_.valid()||!generation_candidate_fixed_||!generation_guard_||!candidate_scene_unchanged(session.document().scene(),*generation_guard_))throw std::logic_error("Prepare a completed candidate from the current cloud before adoption");
+    if(generation_candidate_resets_edits_&&!reset_confirmed)throw std::logic_error("Preset adoption requires confirmation before replacing manual edits");
+    if(generation_candidate_is_clone_&&generation_draft_token_==std::numeric_limits<std::uint64_t>::max())throw std::overflow_error("Candidate draft identity namespace exhausted");
+    const auto fixed=generation_candidate_view();apply(fixed);
     if(session.document().scene()!=fixed)throw std::runtime_error("Freeze adoption failed");
-    generation_guard_=session.document().scene();generation_message_="Selected state frozen. Detail edits keep the evaluated structure; Undo restores the previous cloud.";
+    if(generation_candidate_is_clone_){
+        ++generation_draft_token_;
+        generation_initial_.reset();generation_draft_resets_edits_=false;
+        if(frozen_can_regenerate(*fixed.frozen)){generation_initial_=generation_initial_scene(*fixed.frozen);generation_settings_=fixed.frozen->provenance->settings;}
+    }
+    // Even identical prepared inputs express a distinct pending reset intent.
+    if(generation_candidate_draft_token_==generation_draft_token_)generation_draft_resets_edits_=false;
+    generation_preview_candidate_=false;generation_candidate_resets_edits_=false;generation_guard_=session.document().scene();generation_message_="Selected state frozen. Detail edits keep the evaluated structure; Undo restores the previous cloud.";
+}
+void EditorUi::discard_generation_candidate(){
+    if(generation_job_.valid()||!generation_candidate_fixed_)throw std::logic_error("Wait for generation before discarding a completed candidate");
+    generation_discarded_is_clone_=generation_candidate_is_clone_;generation_discarded_resets_edits_=generation_candidate_resets_edits_;
+    generation_discarded_draft_token_=generation_candidate_draft_token_;
+    generation_preview_candidate_=false;generation_discarded_=std::move(generation_candidate_);generation_discarded_fixed_=std::move(generation_candidate_fixed_);generation_candidate_fixed_.reset();generation_discarded_guard_=generation_guard_;generation_candidate_.reset();
+    generation_message_="Candidate discarded; current cloud retained. This discard can be undone.";
+}
+void EditorUi::undo_generation_candidate_discard(){
+    if(generation_job_.valid()||!generation_discarded_fixed_||generation_candidate_fixed_)throw std::logic_error("No discarded candidate is available to restore");
+    generation_candidate_is_clone_=generation_discarded_is_clone_;generation_candidate_resets_edits_=generation_discarded_resets_edits_;
+    generation_candidate_draft_token_=generation_discarded_draft_token_;
+    generation_candidate_=std::move(generation_discarded_);generation_candidate_fixed_=std::move(generation_discarded_fixed_);generation_discarded_fixed_.reset();generation_guard_=std::move(generation_discarded_guard_);generation_discarded_.reset();
+    generation_message_="Candidate restored. The current cloud is unchanged.";
 }
 void EditorUi::draw_generation_ui(){
     if(!prefab_source(session.document().scene())&&!editable_developed_source(session.document().scene())&&!generation_initial_&&!session.document().scene().frozen)return;
@@ -30,16 +63,17 @@ void EditorUi::draw_generation_ui(){
     const auto& current=session.document().scene();
     if(!current.frozen&&ImGui::Button("Use current shape as start"))try{
         auto initial=session.document().scene();auto settings=default_generation_settings(initial);
-        generation_initial_=std::move(initial);generation_settings_=std::move(settings);generation_candidate_.reset();generation_message_="Initial shape captured. Set a stage, then generate a candidate.";
+        prepare_generation_draft({std::move(initial),std::move(settings),{},0},false);generation_message_="Initial shape captured. Set a stage, then generate a candidate.";
     }catch(const std::exception& e){generation_message_=e.what();}
     if(current.frozen){
         ImGui::BeginDisabled(!frozen_can_regenerate(*current.frozen));
-        if(ImGui::Button("Use saved generation recipe"))try{generation_initial_=generation_initial_scene(*current.frozen);generation_settings_=current.frozen->provenance->settings;generation_candidate_.reset();generation_message_="Saved inputs loaded; generate a separate candidate to change stage or wind.";}catch(const std::exception& e){generation_message_=e.what();}
+        if(ImGui::Button("Use saved generation recipe"))try{prepare_generation_draft({generation_initial_scene(*current.frozen),current.frozen->provenance->settings,{},0},false);generation_message_="Saved inputs loaded; generate a separate candidate to change stage or wind.";}catch(const std::exception& e){generation_message_=e.what();}
         ImGui::EndDisabled();
         if(!frozen_can_regenerate(*current.frozen))ImGui::TextWrapped("The fixed result is usable; this saved generation version is unavailable.");
     }
     ImGui::EndDisabled();
-    if(!generation_initial_){ImGui::TextWrapped("Capture a starting shape to compare growth and wind without changing the current cloud.");return;}
+    if(!generation_initial_)ImGui::TextWrapped("Capture a starting shape to compare growth and wind without changing the current cloud.");
+    else {
     ImGui::BeginDisabled(running);
     ImGui::SetNextItemWidth(100);ImGui::InputDouble("Stage 0..1",&generation_settings_.stage,0,0,"%.3f");
     ImGui::SetNextItemWidth(100);ImGui::InputDouble("Initial height fraction",&generation_settings_.initial_height_fraction,0,0,"%.3f");
@@ -88,19 +122,35 @@ void EditorUi::draw_generation_ui(){
     }
     if(ImGui::Button("Generate candidate"))try{launch_generation();}catch(const std::exception& e){generation_message_=e.what();}
     ImGui::EndDisabled();
-    if(generation_job_.valid()){
-        ImGui::ProgressBar(float(generation_progress_->load()),{-1,0});if(ImGui::Button("Cancel generation"))generation_stop_.request_stop();
     }
-    if(generation_candidate_){
-        ImGui::Text("Candidate stage %.3f / %.2f ms",generation_candidate_->settings.stage,generation_candidate_->elapsed_ms);
-        const bool scene_unchanged=generation_guard_&&session.document().scene()==*generation_guard_;
+    if(generation_job_.valid()){
+        ImGui::ProgressBar(float(generation_progress_->load()),{-1,0});if(ImGui::Button("Cancel generation")){generation_stop_.request_stop();generation_preview_candidate_=false;}
+    }
+    if(generation_candidate_fixed_){
+        if(generation_candidate_is_clone_)ImGui::TextWrapped("Cloned current state / fresh IDs / no growth");
+        else if(generation_candidate_)ImGui::Text("Candidate stage %.3f / %.2f ms",generation_candidate_->settings.stage,generation_candidate_->elapsed_ms);
+        ImGui::BeginDisabled(generation_job_.valid()||gizmo_drag_||inspector_drag_||orbit_drag_);
+        if(ImGui::RadioButton("Current",!generation_preview_candidate_))generation_preview_candidate_=false;
+        ImGui::SameLine();if(ImGui::RadioButton("Candidate",generation_preview_candidate_))generation_preview_candidate_=true;
+        ImGui::EndDisabled();
+        ImGui::TextWrapped("Current and one candidate share camera and light. Candidate preview does not edit the saved cloud.");
+        const bool scene_unchanged=generation_guard_&&candidate_scene_unchanged(session.document().scene(),*generation_guard_);
         ImGui::BeginDisabled(generation_job_.valid()||!scene_unchanged||gizmo_drag_||inspector_drag_||orbit_drag_);
-        if(ImGui::Button("Freeze and adopt candidate"))try{adopt_generation_candidate();}catch(const std::exception& e){generation_message_=e.what();}
+        if(ImGui::Button(generation_candidate_is_clone_?"Adopt cloned candidate":"Freeze and adopt candidate")){
+            if(generation_candidate_resets_edits_)ImGui::OpenPopup("Adopt preset candidate?");
+            else try{adopt_generation_candidate();}catch(const std::exception& e){generation_message_=e.what();}
+        }
         ImGui::EndDisabled();
         if(!scene_unchanged)ImGui::TextWrapped("The scene changed after generation. Generate again before adopting so newer edits cannot be overwritten.");
-        ImGui::BeginDisabled(generation_job_.valid());if(ImGui::SmallButton("Discard candidate")){generation_discarded_=std::move(generation_candidate_);generation_discarded_guard_=generation_guard_;generation_candidate_.reset();generation_message_="Candidate discarded; current cloud retained. This discard can be undone.";}ImGui::EndDisabled();
+        ImGui::BeginDisabled(generation_job_.valid());if(ImGui::SmallButton("Discard candidate"))discard_generation_candidate();ImGui::EndDisabled();
     }
-    if(generation_discarded_&&!generation_job_.valid()&&ImGui::SmallButton("Undo candidate discard")){generation_candidate_=std::move(generation_discarded_);generation_guard_=std::move(generation_discarded_guard_);generation_discarded_.reset();}
+    if(ImGui::BeginPopupModal("Adopt preset candidate?",nullptr,ImGuiWindowFlags_AlwaysAutoResize)){
+        ImGui::TextWrapped("This preset replaces the current generated structure and its source cuts/manual adjustments. Undo restores the current cloud. Clear any finishing layers explicitly before replacing the preset.");
+        if(ImGui::Button("Adopt and replace")){try{adopt_generation_candidate(true);ImGui::CloseCurrentPopup();}catch(const std::exception& e){generation_message_=e.what();}}
+        ImGui::SameLine();if(ImGui::Button("Keep current")){generation_preview_candidate_=false;ImGui::CloseCurrentPopup();}
+        ImGui::EndPopup();
+    }
+    if(generation_discarded_fixed_&&!generation_job_.valid()&&ImGui::SmallButton("Undo candidate discard"))undo_generation_candidate_discard();
     if(!generation_message_.empty())ImGui::TextWrapped("%s",generation_message_.c_str());
 }
 }

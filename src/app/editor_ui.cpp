@@ -105,15 +105,15 @@ void EditorUi::draw(GpuSpike& gpu) {
     ImGuizmo::BeginFrame();ImGuizmo::Enable(true);
     auto& io=ImGui::GetIO();
     if(ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-        session.cancel_drag();gizmo_drag_=inspector_drag_=orbit_drag_=false;ImGuizmo::Enable(false);status_="Edit cancelled";
+        generation_preview_candidate_=false;session.cancel_drag();gizmo_drag_=inspector_drag_=orbit_drag_=false;ImGuizmo::Enable(false);status_="Edit cancelled";
     }
-    if(!io.WantTextInput&&io.KeyCtrl&&ImGui::IsKeyPressed(ImGuiKey_Z))session.undo();
-    if(!io.WantTextInput&&io.KeyCtrl&&ImGui::IsKeyPressed(ImGuiKey_Y))session.redo();
+    if(!candidate_preview_active()&&!io.WantTextInput&&io.KeyCtrl&&ImGui::IsKeyPressed(ImGuiKey_Z))session.undo();
+    if(!candidate_preview_active()&&!io.WantTextInput&&io.KeyCtrl&&ImGui::IsKeyPressed(ImGuiKey_Y))session.redo();
     ImGui::SetNextWindowPos({15,15},ImGuiCond_Always);ImGui::SetNextWindowSize({260,io.DisplaySize.y-30},ImGuiCond_Always);
     ImGui::Begin("Cloud editor",nullptr,ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoCollapse);
     ImGui::Text("PROJECT WHITE / PHASE 2");ImGui::TextUnformatted(session.modified()?"Unsaved changes":"Saved");
     const bool dragging=gizmo_drag_||inspector_drag_||orbit_drag_;
-    ImGui::BeginDisabled(dragging);
+    ImGui::BeginDisabled(dragging||candidate_preview_active());
     if(ImGui::Button("Undo"))session.undo();
     ImGui::SameLine();
     if(ImGui::Button("Redo"))session.redo();
@@ -145,7 +145,9 @@ void EditorUi::draw(GpuSpike& gpu) {
         apply(new_developed_scene(session.document().scene()));development_=session.document().scene().developed->cells.front().id;curve_point_=0;
     }
     ImGui::EndDisabled();
+    draw_preset_ui();
     draw_generation_ui();
+    ImGui::BeginDisabled(candidate_preview_active());
     draw_frozen_ui();
     draw_modifier_ui();
     draw_top_lobes_ui();
@@ -257,10 +259,11 @@ void EditorUi::draw(GpuSpike& gpu) {
     }
     auto s=session.document().scene();
     ImGui::Separator();
+    ImGui::EndDisabled();
     ImGui::TextUnformatted("Camera");if(ImGui::Button("Front"))camera_preset(0);ImGui::SameLine();if(ImGui::Button("Side"))camera_preset(1);ImGui::SameLine();if(ImGui::Button("Top"))camera_preset(2);
     ImGui::Checkbox("Lit volume",&gpu.show_volume);
     if(focus_noise_)ImGui::SetNextItemOpen(true);
-    if(!session.document().scene().frozen&&!editable_developed_source(session.document().scene())&&ImGui::CollapsingHeader("Shape details")) {
+    if(!candidate_preview_active()&&!session.document().scene().frozen&&!editable_developed_source(session.document().scene())&&ImGui::CollapsingHeader("Shape details")) {
         ImGui::PushItemWidth(110);
         s=session.document().scene();float medium=float(s.cloud.noise.medium_strength);
         bool changed=ImGui::SliderFloat("Medium",&medium,0,1);s.cloud.noise.medium_strength=medium;inspector_item(changed,s);
@@ -302,6 +305,7 @@ void EditorUi::draw(GpuSpike& gpu) {
         ImGui::Text("Builds: %u",gpu.sun_cache_builds);
         ImGui::TextWrapped("Requires current baked density. Editing uses direct shadows. Tau interpolation is approximate; direct mode remains available.");
     }
+    ImGui::BeginDisabled(candidate_preview_active());
     if(ImGui::CollapsingHeader("Optical properties")) {
         ImGui::PushItemWidth(120);
         bool changed=false;
@@ -316,6 +320,7 @@ void EditorUi::draw(GpuSpike& gpu) {
         ImGui::TextWrapped("g=0: isotropic. Positive g favors forward photon scattering. Optical changes preserve density caches.");
         ImGui::PopItemWidth();
     }
+    ImGui::EndDisabled();
     if(ImGui::CollapsingHeader("Preview multiple scattering")) {
         s=session.document().scene();bool enabled=s.preview_approx.enabled;
         bool changed=ImGui::Checkbox("Approximation (experimental)",&enabled);s.preview_approx.enabled=enabled;inspector_item(changed,s);
@@ -374,17 +379,17 @@ void EditorUi::draw(GpuSpike& gpu) {
         if(point!=active_curve->points.end()){selected_center=sample_centerline(*active_curve,point->t).position+(development?development->translation:Vec3{});selected_radii={1,1,1};selected=true;curve_endpoint=point->t==0||point->t==1;}else {curve_point_=0;curve=false;}}
     const bool whole=(development||prefab_source(current))&&prefab_group_;
     if(whole){const auto& p=development?development->shape.source.parameters:prefab_source(current)->parameters;selected_center=(scale_?Vec3{p.width*.5,p.cloud_base+p.height,0}:Vec3{0,p.cloud_base,0})+(development?development->translation:Vec3{});selected_radii={1,1,1};selected=true;}
-    if(gpu.show_volume&&editable_developed_source(current)){for(const auto& cell:editable_developed_source(current)->cells){const auto recipe=lower_centerline_to_recipe(cell.shape);for(const auto& c:recipe.cells)if(std::find(cell.roles.begin(),cell.roles.end(),unsigned(&c-recipe.cells.data()))!=cell.roles.end())draw_primitive(current,c.center+cell.translation,c.radii,cell.id==development_,false,vx,vy,vw,vh);}}
-    if(gpu.show_volume&&editable_top_lobe_source(current)){for(const auto& node:generate_top_lobes(*editable_top_lobe_source(current)))draw_primitive(current,node.primitive.center,node.primitive.radii,false,false,vx,vy,vw,vh);}
-    if(gpu.show_volume&&current.frozen){for(const auto& field:current.frozen->fields)for(const auto& c:field.recipe.cells)draw_primitive(current,c.center+field.translation,c.radii,false,false,vx,vy,vw,vh);}
-    if(gpu.show_volume&&!current.frozen&&!editable_developed_source(current)){
+    if(!candidate_preview_active()&&gpu.show_volume&&editable_developed_source(current)){for(const auto& cell:editable_developed_source(current)->cells){const auto recipe=lower_centerline_to_recipe(cell.shape);for(const auto& c:recipe.cells)if(std::find(cell.roles.begin(),cell.roles.end(),unsigned(&c-recipe.cells.data()))!=cell.roles.end())draw_primitive(current,c.center+cell.translation,c.radii,cell.id==development_,false,vx,vy,vw,vh);}}
+    if(!candidate_preview_active()&&gpu.show_volume&&editable_top_lobe_source(current)){for(const auto& node:generate_top_lobes(*editable_top_lobe_source(current)))draw_primitive(current,node.primitive.center,node.primitive.radii,false,false,vx,vy,vw,vh);}
+    if(!candidate_preview_active()&&gpu.show_volume&&current.frozen){for(const auto& field:current.frozen->fields)for(const auto& c:field.recipe.cells)draw_primitive(current,c.center+field.translation,c.radii,false,false,vx,vy,vw,vh);}
+    if(!candidate_preview_active()&&gpu.show_volume&&!current.frozen&&!editable_developed_source(current)){
         for(const auto& c:current.cloud.cells)draw_primitive(current,c.center,c.radii,!select_cuts_&&selected_==c.id,false,vx,vy,vw,vh);
         for(const auto& c:current.cloud.cuts)draw_primitive(current,c.center,c.radii,select_cuts_&&selected_==c.id,true,vx,vy,vw,vh);
     }
     const bool modal=ImGui::IsPopupOpen(nullptr,ImGuiPopupFlags_AnyPopupId);
-    const bool anvil_handles=current.anvil&&anvil_handle_!=0&&gpu.show_volume&&!inspector_drag_&&!orbit_drag_&&!modal;
+    const bool anvil_handles=!candidate_preview_active()&&current.anvil&&anvil_handle_!=0&&gpu.show_volume&&!inspector_drag_&&!orbit_drag_&&!modal;
     if(anvil_handles)draw_anvil_gizmo(vx,vy,vw,vh);
-    const bool gizmo_active=selected&&gpu.show_volume&&!inspector_drag_&&!orbit_drag_&&!modal&&!anvil_handles;
+    const bool gizmo_active=!candidate_preview_active()&&selected&&gpu.show_volume&&!inspector_drag_&&!orbit_drag_&&!modal&&!anvil_handles;
     if(gizmo_active) {
         auto view=camera_view(current.camera),projection=camera_projection(current.camera,vw/vh),model=primitive_matrix(current.cloud.transform,selected_center,selected_radii);
         ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());ImGuizmo::SetRect(vx,vy,vw,vh);ImGuizmo::SetOrthographic(false);
@@ -428,7 +433,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     }
     const bool over=io.MousePos.x>=vx&&io.MousePos.x<vx+vw&&io.MousePos.y>=vy&&io.MousePos.y<vy+vh;
     if(over&&!modal&&!((gizmo_active||anvil_handles)&&ImGuizmo::IsOver())&&!gizmo_drag_&&!inspector_drag_) {
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole&&!curve&&!current.frozen&&!editable_developed_source(current)) {
+        if(!candidate_preview_active()&&ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole&&!curve&&!current.frozen&&!editable_developed_source(current)) {
             const auto& sc=session.document().scene();auto ray=camera_ray(sc.camera,(io.MousePos.x-vx)/vw,(io.MousePos.y-vy)/vh,vw/vh);
             if(auto pick=pick_primitive(sc.cloud,ray,select_cuts_)){selected_=*pick;prefab_group_=false;curve_point_=0;}
         }
@@ -449,13 +454,9 @@ void EditorUi::draw(GpuSpike& gpu) {
     const bool actual_cache=gpu.use_cache&&gpu.cache_current();
     const auto mode=std::string(actual_cache?"Dense ":"Direct ")+(actual_cache?std::to_string(gpu.extent[0])+"x"+std::to_string(gpu.extent[1])+"x"+std::to_string(gpu.extent[2]):"evaluator")+(gpu.bake_pending()?" | baking latest":"");
     ImGui::GetForegroundDrawList()->AddText({vx,40},IM_COL32(170,185,205,255),(mode+" | g="+std::to_string(session.document().scene().cloud.optics.g)).c_str());
-    ImGui::GetForegroundDrawList()->AddText({vx,20},IM_COL32(220,225,235,255),"Click: select | Right-drag: orbit | Wheel: zoom | Esc: cancel");
+    ImGui::GetForegroundDrawList()->AddText({vx,20},IM_COL32(220,225,235,255),candidate_preview_active()?"CANDIDATE PREVIEW | Current cloud retained | Esc: return":"CURRENT | Click: select | Right-drag: orbit | Wheel: zoom");
     gpu.set_interacting(gizmo_drag_||(inspector_drag_&&inspector_transport_)||orbit_drag_);
-    if(session.document().revision()!=gpu.scene_revision&&session.document().revision()!=last_scene_attempt_) {
-        last_scene_attempt_=session.document().revision();
-        try{gpu.set_scene(session.document().scene(),session.document().revision(),session.document().changed_at());}
-        catch(const std::exception& e){status_=std::string("Preview stale; document kept: ")+e.what();}
-    }
+    publish_editor_preview(gpu);
 }
 void EditorUi::scripted_input(int frame) {
     auto& io=ImGui::GetIO();

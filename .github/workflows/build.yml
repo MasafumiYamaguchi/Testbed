@@ -43,6 +43,15 @@ jobs:
         run: ctest --test-dir build/windows -C ${{ matrix.config }} --output-on-failure
       - name: Capture actual Windows app
         run: ./scripts/capture-window.ps1 -Executable ./build/windows/${{ matrix.config }}/white_app.exe
+      - name: Versioned presets and native candidate clone comparisons
+        if: matrix.config == 'Release'
+        run: ./scripts/capture-presets.ps1 -Executable ./build/windows/Release/white_app.exe -Generator ./build/windows/Release/white_cloud_preset_tests.exe -Compare ./build/windows/Release/white_hdr_compare.exe
+      - name: Publish preset evidence checkpoint
+        if: always() && matrix.config == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-Release-preset-evidence
+          path: evidence/presets/
       - name: Selected growth stage and altitude wind comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-growth.ps1 -Executable ./build/windows/Release/white_app.exe -Generator ./build/windows/Release/white_generation_tests.exe

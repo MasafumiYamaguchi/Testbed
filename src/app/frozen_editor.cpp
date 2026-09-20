@@ -51,7 +51,9 @@ void EditorUi::freeze_test_step(int frame){
         apply(scene_with_frozen_detail(before,top.development_id,noise,top.recipe.detail_seed+17,top.layers));
         const auto detailed=session.document().scene();check(detailed.frozen->content_hash==before.frozen->content_hash,"Detail regenerated the fixed structure");
         check(session.undo()&&session.document().scene()==before&&session.redo()&&session.document().scene()==detailed,"Detail edit lost atomic Undo/Redo");
-        auto view=detailed;view.exposure_ev=.4;view.cloud.optics.albedo=.85;view.camera.position.x+=8;view.sun.irradiance={.9,1,1.1};apply(view);
+        // Change light colour as part of the zero-growth edit check while
+        // keeping the finishing captures bright enough for visual review.
+        auto view=detailed;view.exposure_ev=.4;view.cloud.optics.albedo=.85;view.camera.position.x+=8;view.sun.irradiance={13.5,15,16.5};apply(view);
         check(generation_job_count()==freeze_test_jobs_+1&&generation_runs_==1,"Detail/camera/light started a growth job");
         smoke_before_=session.document().scene();save_scene_atomic(smoke_before_,"freeze-detail.white.json");
         std::cout<<"freeze_native=finish content_hash_stable=true detail_camera_light_generation_jobs=0 single_undo=true PASS\n";

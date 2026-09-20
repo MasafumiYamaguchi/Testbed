@@ -47,11 +47,11 @@ int main(int argc,char** argv) {
     unsigned progressive_samples=0,diagnostic_mode=0;
     bool empty_skip=false;
     std::string capture,hdr_output;
-    bool lifecycle=false,self_test=false,prefab_test=false,centerline_test=false,developed_test=false,top_lobes_test=false,anvil_test=false,freeze_test=false,modifier_test=false;
+    bool lifecycle=false,self_test=false,prefab_test=false,centerline_test=false,developed_test=false,top_lobes_test=false,anvil_test=false,freeze_test=false,modifier_test=false,preset_test=false;
     for(int i=1;i<argc;++i) {
         std::string_view arg(argv[i]);
         if(arg=="--help") {
-            std::cout<<"ProjectWhite --export-hdr NEW_DIRECTORY --frames N --capture output.bmp --self-test --prefab-test --centerline-test --developed-test --top-lobes-test --anvil-test --freeze-test --modifier-test --lifecycle-test --scene 0..4\n"
+            std::cout<<"ProjectWhite --export-hdr NEW_DIRECTORY --frames N --capture output.bmp --self-test --prefab-test --centerline-test --developed-test --top-lobes-test --anvil-test --freeze-test --modifier-test --preset-test --lifecycle-test --scene 0..4\n"
                 "--recipe FILE --render-width 64..640 --view-steps 8..512 --shadow-steps 1..64 --cache 0|128|256\n"
                 "--benchmark-updates 30..10000 --benchmark-track density|camera|exposure --benchmark-output FILE --no-validation\n"
                 "Windows D3D12 GPU field validation; startup fails if required GPU features are absent.\n"; return 0;
@@ -70,6 +70,7 @@ int main(int argc,char** argv) {
             if(arg=="--cache"){valid=valid&&(number==0||number==128||number==256);cache=number;}
             if(!valid){std::cerr<<"Invalid quality/cache argument: "<<arg<<'\n';return 2;}continue;
         }
+        if(arg=="--preset-test"){preset_test=true;continue;}
         if(arg=="--modifier-test"){modifier_test=true;continue;}
         if(arg=="--freeze-test"){freeze_test=true;continue;}
         if(arg=="--anvil-test"){anvil_test=true;continue;}
@@ -98,6 +99,7 @@ int main(int argc,char** argv) {
         }
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
+    if(preset_test&&(self_test||prefab_test||centerline_test||developed_test||top_lobes_test||anvil_test||freeze_test||modifier_test||lifecycle||benchmark_updates||!recipe.empty()||frames<300||progressive_samples)){std::cerr<<"--preset-test requires --frames >= 300 and excludes other scripted runs\n";return 2;}
     if(modifier_test&&(self_test||prefab_test||centerline_test||developed_test||top_lobes_test||anvil_test||freeze_test||lifecycle||benchmark_updates||!recipe.empty()||frames<120||progressive_samples)){std::cerr<<"--modifier-test requires --frames >= 120 and excludes other scripted runs\n";return 2;}
     if(freeze_test&&(self_test||prefab_test||centerline_test||developed_test||top_lobes_test||anvil_test||lifecycle||benchmark_updates||!recipe.empty()||frames<215||progressive_samples)){std::cerr<<"--freeze-test requires --frames >= 215 and excludes other scripted runs\n";return 2;}
     if(anvil_test&&(self_test||prefab_test||centerline_test||developed_test||top_lobes_test||lifecycle||benchmark_updates||!recipe.empty()||frames<200||progressive_samples)){std::cerr<<"--anvil-test requires --frames >= 200 and excludes other scripted runs\n";return 2;}
@@ -152,12 +154,13 @@ int main(int argc,char** argv) {
         if(anvil_test)editor.start_anvil_test();
         if(freeze_test)editor.start_freeze_test();
         if(modifier_test)editor.start_modifier_test();
+        if(preset_test)editor.start_preset_test();
         if(!recipe.empty())editor.session.load(std::filesystem::u8path(recipe),true);
         trace_stage("editor_initialize_complete");
         gpu.internal_width=render_width;gpu.view_steps=view_steps;gpu.shadow_steps=shadow_steps;
         trace_stage("scene_request_begin");
         gpu.set_scene(editor.session.document().scene(),editor.session.document().revision());
-        if(!recipe.empty())white::gpu_check(SDL_SetWindowSize(gpu.window,1110,540),"Set fixed 16:9 viewport");
+        if(!recipe.empty()||preset_test)white::gpu_check(SDL_SetWindowSize(gpu.window,1110,540),"Set fixed 16:9 viewport");
         if(cache){gpu.set_cache_resolution(cache);gpu.use_cache=true;}
         trace_stage("scene_request_complete");
         if(!recipe.empty()){
@@ -229,6 +232,7 @@ int main(int argc,char** argv) {
             if(anvil_test)editor.anvil_test_input(frame);
             if(freeze_test)editor.freeze_test_step(frame);
             if(modifier_test)editor.modifier_test_step(frame);
+            if(preset_test)editor.preset_test_step(frame,gpu);
             ImGui::NewFrame();
             editor.draw(gpu);
             gpu.poll_bakes();
@@ -307,6 +311,21 @@ int main(int argc,char** argv) {
             }
             if(freeze_test&&swap&&(frame==100||frame==140||frame==200)){gpu.wait_bakes();gpu.validate();gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("freeze-"+std::to_string(frame)+".bmp"));}
             if(modifier_test&&swap&&(frame==55||frame==85||frame==110)){gpu.wait_bakes();gpu.validate();gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("modifier-"+std::to_string(frame)+".bmp"));}
+            if(preset_test&&swap&&(frame==100||frame==125||frame==140||frame==180||frame==235||frame==255||frame==285)){
+                gpu.wait_bakes();gpu.validate();gpu.validate_cache_samples();const auto pixels=gpu.read_hdr();
+                const auto directory=std::filesystem::path(capture).parent_path();const auto stem="preset-"+std::to_string(frame);
+                const char* state=frame==100?"candidate":frame==125?"current":frame==140?"detail":frame==180?"scoped":frame==235?"adopted":frame==255?"clone":"clone-adopted";
+                const bool candidate_view=frame==100||frame==180||frame==255;
+                if((gpu.rendered_revision>=(UINT64_C(1)<<63))!=candidate_view)throw std::runtime_error("Preset capture rendered the wrong comparison slot");
+                if(!candidate_view&&gpu.rendered_revision!=editor.session.document().revision())throw std::runtime_error("Preset Current capture has a stale document revision");
+                // UI hooks save the exact active view. Candidate geometry never
+                // passes through Document; strict fresh-process comparisons of
+                // this export verify that the saved view matches rendered HDR.
+                const auto active=white::read_scene("preset-"+std::string(state)+".white.json");
+                white::export_hdr({gpu.hdr_width,gpu.hdr_height,pixels},{active,std::uint64_t(frame),gpu.rendered_revision,unsigned(gpu.rendered_view_steps()),unsigned(gpu.rendered_shadow_steps()),gpu.rendered_from_cache(),gpu.rendered_sun_resolution(),gpu.rendered_empty_skip(),1,gpu.diagnostic_mode,{},gpu.rendered_density_extent()},directory/(stem+"-hdr"));
+                gpu.save_capture(directory/(stem+".bmp"));
+                std::cout<<"preset_capture frame="<<frame<<" scene="<<state<<" document_revision="<<editor.session.document().revision()<<" rendered_revision="<<gpu.rendered_revision<<" generation_jobs="<<white::generation_job_count()<<" PASS\n";
+            }
             if(anvil_test&&swap&&(frame==120||frame==160||frame==185)){gpu.wait_bakes();gpu.validate();gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("anvil-"+std::to_string(frame)+".bmp"));}
             if(top_lobes_test&&swap&&(frame==100||frame==140||frame==180)){gpu.validate();gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("top-lobes-"+std::to_string(frame)+".bmp"));}
             if(developed_test&&swap&&(frame==116||frame==160)){gpu.validate();gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("developed-"+std::to_string(frame)+".bmp"));}
