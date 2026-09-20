@@ -18,6 +18,8 @@ Scene freeze_candidate(const GenerationCandidate&);
 Scene generation_initial_scene(const FrozenCloudState&);
 bool frozen_can_regenerate(const FrozenCloudState&);
 CloudRecipe frozen_effective_recipe(const FrozenField&);
+// Evaluated-data precision allowance; never consults generation provenance.
+double frozen_anvil_edge_error_bound(const FrozenCloudState&);
 // Recompute finite support/rho_max and content hash after an authorized edit.
 void refresh_frozen_cloud(FrozenCloudState&);
 Scene scene_with_frozen_detail(Scene,Id field_id,NoiseSettings,std::uint64_t detail_seed,FrozenDetailLayers);

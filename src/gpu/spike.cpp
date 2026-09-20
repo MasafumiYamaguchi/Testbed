@@ -61,7 +61,11 @@ DensityAllowance density_allowance(const Scene& scene){
         // most one (coverage + bridge <= 1, overlap <= 1): sum its allowance.
     }else include_profile(scene.cloud,0);
     double anvil_bound=0,anvil_tolerance=0;
-    if(scene_has_active_anvil(scene)){
+    if(scene.frozen&&scene.frozen->anvil){
+        anvil_bound=frozen_anvil_edge_error_bound(*scene.frozen);
+        const auto recipe=frozen_effective_recipe(scene.frozen->fields.front());
+        anvil_tolerance=anvil_bound*recipe.density*scene.frozen->anvil->density_scale*AltitudeDensityEvaluator(recipe.altitude_density).maximum();
+    }else if(scene_has_active_anvil(scene)){
         anvil_bound=anvil_edge_error_bound(*scene.anvil);
         const auto& source=*scene.anvil;const auto& cells=source.cloud.trunk.cells;
         const auto& cell=*std::find_if(cells.begin(),cells.end(),[&](const auto& value){return value.id==source.cloud.target_cell;});

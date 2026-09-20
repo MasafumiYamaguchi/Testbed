@@ -61,6 +61,43 @@ void provenance_hash(){
     auto initial=source(false,false);const auto settings=default_generation_settings(initial);const auto hash=generation_input_hash(initial,settings);initial.anvil->settings.extension+=3;refresh_anvil_scene(initial);
     check(generation_input_hash(initial,settings)!=hash,"Generation provenance ignored dormant anvil source controls");
 }
+void numeric_domain(){
+    GenerationSettings disabled;disabled.enabled=false;
+    // Each local profile is valid, but subtracting a large packed translation
+    // before normalization adds a second error source, including cancellation.
+    Scene local;local.cloud.altitude_density={true,100000,400,{{0,0},{1,1}}};
+    const auto frozen=freeze_candidate(generate_cloud_state(local,disabled));
+    auto translated=frozen;translated.frozen->fields[0].translation.y=-100000;
+    rejects([&]{refresh_frozen_scene(translated);},"Frozen translation bypassed the source altitude precision gate");
+    auto top=fixed(source(true,false));top.frozen->fields[1].recipe.base.transition=.1;
+    rejects([&]{refresh_frozen_scene(top);},"Frozen top mask bypassed its source precision gate");
+
+    auto initial=source(false,true);auto& a=initial.anvil->settings;
+    a.thickness=2;a.width=100;a.extension=360;a.edge_fade=.2;
+    initial.anvil->cloud.trunk.cells[0].shape.source.modifiers.noise={};refresh_anvil_scene(initial);
+    auto sheet=freeze_candidate(generate_cloud_state(initial,disabled));
+    const auto jobs=generation_job_count();const double before=anvil_edge_error_bound(*initial.anvil);
+    check(std::abs(frozen_anvil_edge_error_bound(*sheet.frozen)-before)<1e-14,"Freeze changed the evaluated anvil precision allowance");
+    sheet.frozen->provenance.reset();sheet.frozen->generation_version=999;refresh_frozen_scene(sheet);
+    check(std::abs(frozen_anvil_edge_error_bound(*sheet.frozen)-before)<1e-14&&generation_job_count()==jobs,"Frozen precision validation needs generation history");
+    const auto& field=sheet.frozen->fields[0];auto noise=field.recipe.noise;noise.micro_erosion=20;noise.micro_frequency=2;
+    rejects([&]{scene_with_frozen_detail(sheet,field.development_id,noise,field.recipe.detail_seed,field.layers);},"Frozen detail bypassed the inherited erosion error gate");
+    auto hidden=field.layers;hidden.micro=false;
+    const auto disabled_micro=scene_with_frozen_detail(sheet,field.development_id,noise,field.recipe.detail_seed,hidden);
+    check(frozen_anvil_edge_error_bound(*disabled_micro.frozen)==before&&generation_job_count()==jobs,"Disabled erosion changed the effective precision bound or started growth");
+}
+void stable_cut_identity(){
+    auto initial=source(true,false);auto& cell=initial.anvil->cloud.trunk.cells[0];cell.translation={15,0,-7};
+    cell.shape.source.modifiers.cuts.push_back({991,{100,100,100},{1,1,1},1});refresh_anvil_scene(initial);
+    const auto scene=fixed(initial);check(scene.frozen->fields[0].recipe.cuts.size()==1&&scene.frozen->fields[1].recipe.cuts.size()==1,"Freeze lost inherited cut identity");
+    check(parse_scene_json(scene_json(scene))==scene,"Translated inherited cuts did not roundtrip");
+    for(auto collision:std::array{scene.frozen->id,scene.frozen->fields[0].development_id,scene.frozen->fields[0].recipe.cells[0].id}){
+        auto bad=scene;bad.frozen->fields[1].recipe.cuts[0].id=collision;
+        rejects([&]{refresh_frozen_scene(bad);},"Frozen cut reused another structural ID");
+    }
+    auto conflicting=scene;conflicting.frozen->fields[1].recipe.cuts[0].center.x+=1;
+    rejects([&]{refresh_frozen_scene(conflicting);},"Inherited cut ID referred to different evaluated geometry");
+}
 void fixtures(const std::filesystem::path& dir){
     std::filesystem::create_directories(dir);
     for(bool windy:{false,true}){auto initial=source(true,true);auto settings=default_generation_settings(initial);settings.stage=.8;if(windy)settings.wind.back().displacement={50,0,10};
@@ -71,4 +108,4 @@ void fixtures(const std::filesystem::path& dir){
     }
 }
 }
-int main(int argc,char** argv){try{equality();detail_and_lifecycle();provenance_hash();if(argc>1)fixtures(argv[1]);std::cout<<"FrozenCloudState contract PASS\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{equality();detail_and_lifecycle();provenance_hash();numeric_domain();stable_cut_identity();if(argc>1)fixtures(argv[1]);std::cout<<"FrozenCloudState contract PASS\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

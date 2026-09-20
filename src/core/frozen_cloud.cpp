@@ -81,6 +81,16 @@ CloudRecipe frozen_effective_recipe(const FrozenField& field){
     if(!field.layers.micro)r.noise.micro_erosion=0;
     return r;
 }
+double frozen_anvil_edge_error_bound(const FrozenCloudState& state){
+    if(!state.anvil)return 0;
+    if(state.fields.empty())return INFINITY;
+    const auto& a=*state.anvil;const auto& field=state.fields.front();const auto recipe=frozen_effective_recipe(field);
+    if(recipe.density==0)return 0;
+    AnvilSettings settings;settings.enabled=true;settings.thickness=2*a.half_thickness;
+    settings.width=2*a.cross_radius;settings.extension=2*(a.along_radius-a.cross_radius);
+    settings.direction=a.direction;settings.shear=a.shear;settings.edge_fade=a.edge_fade;settings.density_scale=a.density_scale;
+    return anvil_edge_error_bound(settings,a.center,state.support,recipe.noise,field.translation);
+}
 std::vector<std::string> validate_frozen_cloud(const FrozenCloudState& s){
     std::vector<std::string> errors;auto check=[&](bool okay,const char* text){if(!okay)errors.emplace_back(text);};
     check(s.contract_version==frozen_cloud_contract_version,"Unsupported frozen data contract version");
@@ -98,11 +108,25 @@ std::vector<std::string> validate_frozen_cloud(const FrozenCloudState& s){
         check(f.development_id==f.recipe.id,"Frozen field ID differs from evaluated recipe ID");
         check(f.recipe.transform==Transform{}&&f.recipe.optics==s.optics,"Frozen field transform/optics must share object authority");
         Scene r;r.cloud=f.recipe;for(const auto& e:validate(r))errors.push_back("Frozen field: "+e);
+        if(f.translation.y!=0&&f.recipe.altitude_density.enabled){
+            auto shifted=f.recipe.altitude_density;shifted.base+=f.translation.y;
+            const double error=2*(altitude_density_error_bound(f.recipe.altitude_density)+altitude_density_error_bound(shifted));
+            check(error<=max_altitude_density_error,"Translated frozen field exceeds the altitude modulation error budget");
+        }
         count+=f.recipe.cells.size();for(const auto& cell:f.recipe.cells)check(primitives.insert(cell.id).second,"Frozen primitive IDs must be globally unique");
     }
     check(count<=8,"Frozen cloud exceeds eight structural primitives");
     check(!primitives.contains(s.id),"Frozen cloud ID collides with a primitive");
     for(auto id:fields)check(!primitives.contains(id),"Frozen field ID collides with a primitive");
+    std::map<Id,std::pair<std::size_t,Cut>> cuts;
+    for(std::size_t i=0;i<std::min<std::size_t>(s.fields.size(),2);++i)for(auto cut:s.fields[i].recipe.cuts){
+        check(cut.id!=s.id&&!fields.contains(cut.id)&&!primitives.contains(cut.id),"Frozen cut ID collides with structural identity");
+        cut.center=cut.center+s.fields[i].translation;
+        const auto [found,inserted]=cuts.emplace(cut.id,std::pair{i,cut});
+        // A generated top inherits the trunk's same logical cuts. Retain that
+        // alias only when both records describe the same object-local cut.
+        check(inserted||(s.top_enabled&&i==1&&found->second.first==0&&found->second.second==cut),"Frozen cut ID aliases a different cut");
+    }
     std::set<Id> curves;
     for(const auto& curve:s.curves){
         check(fields.contains(curve.development_id)&&curves.insert(curve.development_id).second,"Frozen curve requires one matching field ID");
@@ -124,6 +148,8 @@ std::vector<std::string> validate_frozen_cloud(const FrozenCloudState& s){
         const auto& r=s.fields[1].recipe;for(const auto& c:r.cells)top_primitives.insert(c.id);
         check(r.base.enabled&&r.base.height==s.top_boundary,"Frozen top mask differs from evaluated field boundary");
         check(r.cells.size()==s.hierarchy.size(),"Frozen hierarchy does not cover the top field primitives");
+        const AltitudeDensityProfile mask{true,r.base.height,r.base.transition,{{0,0},{1,1}}};
+        check(1.5*altitude_density_error_bound(mask)<=max_altitude_density_error,"Frozen top mask exceeds the float modulation error budget");
     }
     for(const auto& node:s.hierarchy){
         check(node.id!=0&&!nodes.contains(node.id)&&top_primitives.contains(node.id),"Frozen hierarchy must refer to unique top-field primitives");
@@ -138,6 +164,7 @@ std::vector<std::string> validate_frozen_cloud(const FrozenCloudState& s){
         check(range(a.shear,-4,4)&&range(a.edge_fade,.01,250)&&a.edge_fade<=a.half_thickness*.25&&range(a.density_scale,0,1)&&std::isfinite(a.start_height),"Frozen anvil density/fade invalid");
         double scale=1;for(auto p:{s.support.min,s.support.max,a.center})scale=std::max({scale,std::abs(p.x),std::abs(p.y),std::abs(p.z)});
         check(scale*std::numeric_limits<float>::epsilon()*8/a.edge_fade<=.002,"Frozen anvil exceeds GPU coordinate precision budget");
+        check(frozen_anvil_edge_error_bound(s)<=max_anvil_edge_error,"Frozen anvil edge arithmetic exceeds the coverage error budget");
     }
     if(s.provenance){check(s.provenance->settings.algorithm_version==s.generation_version,"Provenance generation version differs from frozen metadata");check(s.provenance->settings.stage==s.selection_value,"Provenance selected stage differs from frozen metadata");}
     if(errors.empty())try{const auto expected=metrics(s);check(s.support==expected.support&&s.rho_max==expected.maximum,"Frozen support/rho_max differs from evaluated structure");check(s.content_hash==frozen_content_hash(s),"Frozen structural identity mismatch");check(s.payload_hash==frozen_payload_hash(s),"Frozen payload checksum mismatch");}catch(const std::exception& e){errors.emplace_back(e.what());}

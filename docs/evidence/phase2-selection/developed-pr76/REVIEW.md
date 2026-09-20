@@ -4,10 +4,13 @@
 passed all four Windows/CPU Debug/Release jobs. PR #76 head is
 `864e0e5c6e540bce3dc0d39ba9e67f0cb77e8a4e`; the tested merge is
 `048fa4c1d532cafc49c15ee7876c2dc0b70358e4`.
+The current-head [CPU reference run 35530527906](https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35530527906)
+also passed; grouped reference MC remains explicitly unsupported.
 
 Release artifact `10611991159` ZIP SHA256 was verified after download:
 `8fe2f39afc96f4bd5cf05e7c30bf7c98c23194c0e19ec3ee7598ae06ecbfd1b8`.
 The PNGs, saved sources, HDR/metadata and raw logs here are unmodified extracts.
+The renderer's unadorned `display.ppm` images are preserved beside the HDR files.
 `files-sha256.json` identifies their bytes; this review is added separately.
 The runner reports Microsoft Hyper-V Video, D3D12, and no hardware GPU timestamp.
 
