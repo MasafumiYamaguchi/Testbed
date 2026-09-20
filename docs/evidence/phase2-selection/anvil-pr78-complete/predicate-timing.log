@@ -1,0 +1,9 @@
+scene=/workspace/scratch/59c2b798b94d/pr78-passing-release/evidence/anvil/wide-front.white.json calls=1000 direct=1 elapsed_ms=312.951561 per_call_us=312.951561 extrapolated_300495_ms=94040.379323
+scene=/workspace/scratch/59c2b798b94d/pr78-passing-release/evidence/anvil/wide-front.white.json calls=2000 direct=1 elapsed_ms=627.382819 per_call_us=313.691410 extrapolated_300495_ms=94262.700098
+scene=/workspace/scratch/59c2b798b94d/pr78-passing-release/evidence/anvil/wide-front.white.json calls=4000 direct=1 elapsed_ms=1209.094845 per_call_us=302.273711 extrapolated_300495_ms=90831.738862
+scene=/workspace/scratch/59c2b798b94d/pr77-release/evidence/top-lobes/top-lobes-children.white.json calls=1000 direct=1 elapsed_ms=150.396729 per_call_us=150.396729 extrapolated_300495_ms=45193.465081
+scene=/workspace/scratch/59c2b798b94d/pr77-release/evidence/top-lobes/top-lobes-children.white.json calls=2000 direct=1 elapsed_ms=297.423346 per_call_us=148.711673 extrapolated_300495_ms=44687.114178
+scene=/workspace/scratch/59c2b798b94d/pr77-release/evidence/top-lobes/top-lobes-children.white.json calls=4000 direct=1 elapsed_ms=647.721590 per_call_us=161.930397 extrapolated_300495_ms=48659.274797
+scene=/workspace/scratch/59c2b798b94d/pr77-release/evidence/developed/developed-smoke.white.json calls=1000 direct=1 elapsed_ms=0.002474 per_call_us=0.002474 extrapolated_300495_ms=0.743425
+scene=/workspace/scratch/59c2b798b94d/pr77-release/evidence/developed/developed-smoke.white.json calls=2000 direct=1 elapsed_ms=0.004928 per_call_us=0.002464 extrapolated_300495_ms=0.740420
+scene=/workspace/scratch/59c2b798b94d/pr77-release/evidence/developed/developed-smoke.white.json calls=4000 direct=1 elapsed_ms=0.009764 per_call_us=0.002441 extrapolated_300495_ms=0.733508

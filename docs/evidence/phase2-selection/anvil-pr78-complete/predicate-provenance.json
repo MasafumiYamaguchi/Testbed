@@ -1,0 +1,37 @@
+{
+  "measurement": "Repeated scene_density_requires_direct calls only; no GPU; no full-grid timings measured",
+  "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0",
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-DNDEBUG",
+    "-pthread"
+  ],
+  "host": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "core_library_sha256": "f6b679a45db763a83ee445de88ed8e38a3959d049658d45127f95c98edf8a20b",
+  "predicate_source_git_blob": "9a64d8707f261894e476fd3b5ee79e32a3e7cc17",
+  "source_sha256": "9fa7a8cc4546ea30a29cded72af24f755325a005443bfc99eaad69ade307cca6",
+  "log_sha256": "126bd6c2fe35af3b634424715c9c670c0c17e28d294f25e389b7b052373d2ba5",
+  "local_checkout_recorded": "91f4f985e70de9ce77814a1883a0457fcae51c03",
+  "equivalent_published_tree_commit": "5a9ece3d3a1b59fb2e2d29444d46b018f053a831",
+  "inputs": [
+    {
+      "path": "/workspace/scratch/59c2b798b94d/pr78-passing-release/evidence/anvil/wide-front.white.json",
+      "sha256": "3b85bd1aff6e8d8262ba82fa83f235c05ebecf8077b185feac3e8596fda6a083"
+    },
+    {
+      "path": "/workspace/scratch/59c2b798b94d/pr77-release/evidence/top-lobes/top-lobes-children.white.json",
+      "sha256": "41808686405ab4b2a1b4dafb1d3672fb29a0883c30f1394aefb4412660e67425"
+    },
+    {
+      "path": "/workspace/scratch/59c2b798b94d/pr77-release/evidence/developed/developed-smoke.white.json",
+      "sha256": "60bd66566369afe00c6cf6cf462a1942840b542de1478134c87092a9ba422b45"
+    }
+  ],
+  "voxel_count_for_extrapolation": 300495,
+  "counts_measured": [
+    1000,
+    2000,
+    4000
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "artifacts": [
+    {
+      "id": 10614455350,
+      "name": "windows-Release-evidence",
+      "size_in_bytes": 22485985,
+      "url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10614455350",
+      "archive_download_url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10614455350/zip",
+      "expired": false,
+      "created_at": "2026-09-20T21:37:15Z",
+      "expires_at": "2026-12-19T20:23:17Z",
+      "updated_at": "2026-09-20T21:37:15Z",
+      "digest": "sha256:9d86b2bfc507c36ec688ae236bdf72fb5430c408e05aa9f62d88b60cbadf91a4",
+      "workflow_run": {
+        "id": 35535382397,
+        "repository_id": 1363007241,
+        "head_repository_id": 1363007241,
+        "head_branch": "codex/phase2-anvil-integration",
+        "head_sha": "34a1976de3d953b0f762f5c5a51b4bc3761a557e"
+      }
+    },
+    {
+      "id": 10612611400,
+      "name": "windows-Debug-evidence",
+      "size_in_bytes": 5771347,
+      "url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10612611400",
+      "archive_download_url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10612611400/zip",
+      "expired": false,
+      "created_at": "2026-09-20T20:35:16Z",
+      "expires_at": "2026-12-19T20:23:17Z",
+      "updated_at": "2026-09-20T20:35:16Z",
+      "digest": "sha256:aff1f407c7edb3421c38d83732e18caa4c7bb8e8abcb65db4eb4701cde1c4db1",
+      "workflow_run": {
+        "id": 35535382397,
+        "repository_id": 1363007241,
+        "head_repository_id": 1363007241,
+        "head_branch": "codex/phase2-anvil-integration",
+        "head_sha": "34a1976de3d953b0f762f5c5a51b4bc3761a557e"
+      }
+    },
+    {
+      "id": 10612575849,
+      "name": "cpu-release-logs",
+      "size_in_bytes": 12611,
+      "url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10612575849",
+      "archive_download_url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10612575849/zip",
+      "expired": false,
+      "created_at": "2026-09-20T20:25:28Z",
+      "expires_at": "2026-12-19T20:23:17Z",
+      "updated_at": "2026-09-20T20:25:28Z",
+      "digest": "sha256:9816b28f7e2edb3368bba6959d2b996d02054532b89abccad89183df4e3b6ef0",
+      "workflow_run": {
+        "id": 35535382397,
+        "repository_id": 1363007241,
+        "head_repository_id": 1363007241,
+        "head_branch": "codex/phase2-anvil-integration",
+        "head_sha": "34a1976de3d953b0f762f5c5a51b4bc3761a557e"
+      }
+    },
+    {
+      "id": 10612545985,
+      "name": "cpu-debug-logs",
+      "size_in_bytes": 12656,
+      "url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10612545985",
+      "archive_download_url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10612545985/zip",
+      "expired": false,
+      "created_at": "2026-09-20T20:24:59Z",
+      "expires_at": "2026-12-19T20:23:17Z",
+      "updated_at": "2026-09-20T20:24:59Z",
+      "digest": "sha256:b8dc11c7fffb7205b84cf22bd82a1027a1a33d36bbfb73537547f9008b34c2de",
+      "workflow_run": {
+        "id": 35535382397,
+        "repository_id": 1363007241,
+        "head_repository_id": 1363007241,
+        "head_branch": "codex/phase2-anvil-integration",
+        "head_sha": "34a1976de3d953b0f762f5c5a51b4bc3761a557e"
+      }
+    }
+  ]
+}

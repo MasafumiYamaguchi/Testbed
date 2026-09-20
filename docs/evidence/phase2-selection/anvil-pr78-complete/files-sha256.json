@@ -1,0 +1,396 @@
+{
+  "artifact_id": 10614455350,
+  "artifact_zip_sha256": "9d86b2bfc507c36ec688ae236bdf72fb5430c408e05aa9f62d88b60cbadf91a4",
+  "copied_without_modification": [
+    {
+      "path": "README.txt",
+      "artifact_relative_path": "evidence/anvil/README.txt",
+      "bytes": 307,
+      "sha256": "5d80120de5581740bf990df20fd10b8bc8f294e0e11ab3f2baa1ea56edab1613"
+    },
+    {
+      "path": "anvil-edited.white.json",
+      "artifact_relative_path": "evidence/anvil/anvil-edited.white.json",
+      "bytes": 6458,
+      "sha256": "cade72949dcb2e381d08f4d9c885cecb9515eaff84eb5e51795adbf6e7a9520f"
+    },
+    {
+      "path": "contract.log",
+      "artifact_relative_path": "evidence/anvil/contract.log",
+      "bytes": 142,
+      "sha256": "7037cc4d2cf225233cb052292378b174ddbd12c23f568747e9e8cfb2326b15cf"
+    },
+    {
+      "path": "fallback-comparison.txt",
+      "artifact_relative_path": "evidence/anvil/fallback-comparison.txt",
+      "bytes": 33,
+      "sha256": "1db9ecbb3dc3a7843fd81a6ac67672d37d4b923e8558301c739b2a92950caef3"
+    },
+    {
+      "path": "input.stderr.log",
+      "artifact_relative_path": "evidence/anvil/input.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "input.stdout.log",
+      "artifact_relative_path": "evidence/anvil/input.stdout.log",
+      "bytes": 17988,
+      "sha256": "52bd3e56081f506a57984cf87b665dcfbdadf1e1818efee77a5e529a61f49375"
+    },
+    {
+      "path": "manifest.json",
+      "artifact_relative_path": "evidence/anvil/manifest.json",
+      "bytes": 1971,
+      "sha256": "b4df184bc830ff37a5f56dbd290cf90af4b02d769af26a3a2a2d847357aebf81"
+    },
+    {
+      "path": "manual-front-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/manual-front-hdr/metadata.json",
+      "bytes": 7856,
+      "sha256": "2cc32112018a702f0a35828168c225a51cab282cc98847d0b93c61f5adc30687"
+    },
+    {
+      "path": "manual-front.stderr.log",
+      "artifact_relative_path": "evidence/anvil/manual-front.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "manual-front.stdout.log",
+      "artifact_relative_path": "evidence/anvil/manual-front.stdout.log",
+      "bytes": 4866,
+      "sha256": "f08418d717a71524bc04abf6ccb4d2a90ee4099285049d8c168b66c3508410a7"
+    },
+    {
+      "path": "manual-side-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/manual-side-hdr/metadata.json",
+      "bytes": 7855,
+      "sha256": "44a9cef620360ca8b26fbaad606e89be5753788ebeed27db8a1a3b1a41e13466"
+    },
+    {
+      "path": "manual-side.stderr.log",
+      "artifact_relative_path": "evidence/anvil/manual-side.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "manual-side.stdout.log",
+      "artifact_relative_path": "evidence/anvil/manual-side.stdout.log",
+      "bytes": 4864,
+      "sha256": "8d98aa1510d698a097872df48939ef2b0ee754359d57d7ecc174162ddae44dc1"
+    },
+    {
+      "path": "narrow-front-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/narrow-front-hdr/metadata.json",
+      "bytes": 7805,
+      "sha256": "3f60e22df559e08f2539ce63c87ac48179c95c196164fbbf4496964bff37c458"
+    },
+    {
+      "path": "narrow-front.stderr.log",
+      "artifact_relative_path": "evidence/anvil/narrow-front.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "narrow-front.stdout.log",
+      "artifact_relative_path": "evidence/anvil/narrow-front.stdout.log",
+      "bytes": 4866,
+      "sha256": "970538a32a5bbf04d695eab535e2ecead5fecd1641884068060c59fe6743fcbd"
+    },
+    {
+      "path": "narrow-side-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/narrow-side-hdr/metadata.json",
+      "bytes": 7804,
+      "sha256": "59feca297a83895be4c51a5268dcc651d1333cfeeb30dc9ae05828bd40d3f812"
+    },
+    {
+      "path": "narrow-side.stderr.log",
+      "artifact_relative_path": "evidence/anvil/narrow-side.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "narrow-side.stdout.log",
+      "artifact_relative_path": "evidence/anvil/narrow-side.stdout.log",
+      "bytes": 4862,
+      "sha256": "905c95439caff36195d151fc6e2f6ef25681e7e7cfe8f591f3b611fc96f7fb28"
+    },
+    {
+      "path": "off-front-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/off-front-hdr/metadata.json",
+      "bytes": 7807,
+      "sha256": "b1cf4c3fa63d778db7a652b4b4234c63f34f4b08b4c2561edccb4214699f6232"
+    },
+    {
+      "path": "off-front.stderr.log",
+      "artifact_relative_path": "evidence/anvil/off-front.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "off-front.stdout.log",
+      "artifact_relative_path": "evidence/anvil/off-front.stdout.log",
+      "bytes": 4679,
+      "sha256": "4873410df6b8cc1c155e9ee977674d9fc2173133d8dab2dd72b66f30fd8dbbdc"
+    },
+    {
+      "path": "off-side-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/off-side-hdr/metadata.json",
+      "bytes": 7806,
+      "sha256": "15897300bb4412782b34cac9f9083b52596f5c65c9170fbb92e531dcaf5ca296"
+    },
+    {
+      "path": "off-side.stderr.log",
+      "artifact_relative_path": "evidence/anvil/off-side.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "off-side.stdout.log",
+      "artifact_relative_path": "evidence/anvil/off-side.stdout.log",
+      "bytes": 4671,
+      "sha256": "9799a342a55d350a6ef7f2f337937e715d139ca2a34a8ea01b70860dc502451c"
+    },
+    {
+      "path": "tilted-front-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/tilted-front-hdr/metadata.json",
+      "bytes": 7807,
+      "sha256": "0661d3ef7dd4d17e67519d550955a657eee86b708bd6e34aea1861e566107662"
+    },
+    {
+      "path": "tilted-front.stderr.log",
+      "artifact_relative_path": "evidence/anvil/tilted-front.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "tilted-front.stdout.log",
+      "artifact_relative_path": "evidence/anvil/tilted-front.stdout.log",
+      "bytes": 4866,
+      "sha256": "d2cf0566d9b1eb477ab43e2545727828cb89a6ca606e0665527ea4348f090c68"
+    },
+    {
+      "path": "tilted-side-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/tilted-side-hdr/metadata.json",
+      "bytes": 7806,
+      "sha256": "25dc7d553514fcff20ef1f24940fb552f8fec235886e52c39df4d612016e1ed6"
+    },
+    {
+      "path": "tilted-side.stderr.log",
+      "artifact_relative_path": "evidence/anvil/tilted-side.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "tilted-side.stdout.log",
+      "artifact_relative_path": "evidence/anvil/tilted-side.stdout.log",
+      "bytes": 4856,
+      "sha256": "f38553da4ef47679746a3de94a444dfa54c0e5452ac3dc085e846dbfbf48d178"
+    },
+    {
+      "path": "top-wind-front-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/top-wind-front-hdr/metadata.json",
+      "bytes": 7916,
+      "sha256": "fff8ebce0193edae499070be44c38c5ea53ba487984fb3db0ccda64a1d118022"
+    },
+    {
+      "path": "top-wind-front.stderr.log",
+      "artifact_relative_path": "evidence/anvil/top-wind-front.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "top-wind-front.stdout.log",
+      "artifact_relative_path": "evidence/anvil/top-wind-front.stdout.log",
+      "bytes": 4892,
+      "sha256": "39ad7f1c2484cde760c7cc352165493385f8f5375ce633132cc66e2ac70a27b2"
+    },
+    {
+      "path": "top-wind-side-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/top-wind-side-hdr/metadata.json",
+      "bytes": 7915,
+      "sha256": "33adc2e5a38fa84d1f163c684c00556ec9cd28e638b3a231810e5a5ee1e74829"
+    },
+    {
+      "path": "top-wind-side.stderr.log",
+      "artifact_relative_path": "evidence/anvil/top-wind-side.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "top-wind-side.stdout.log",
+      "artifact_relative_path": "evidence/anvil/top-wind-side.stdout.log",
+      "bytes": 4891,
+      "sha256": "654174542d4b375b9eb8fb0bf6f6f6dceb3ce8b03b227618172453168f10e9bd"
+    },
+    {
+      "path": "top-wind-slice-hdr/display.ppm",
+      "artifact_relative_path": "evidence/anvil/top-wind-slice-hdr/display.ppm",
+      "bytes": 43214,
+      "sha256": "c5206b58c83886a8515958f72ccbe288800c8b00ad20106c814cfba3a8b01d96"
+    },
+    {
+      "path": "top-wind-slice-hdr/linear.exr",
+      "artifact_relative_path": "evidence/anvil/top-wind-slice-hdr/linear.exr",
+      "bytes": 8319,
+      "sha256": "0c114efdd089ab44f63f5cb9cf1e0ec83ddea11dc34e71e1758f4c5adbf44945"
+    },
+    {
+      "path": "top-wind-slice-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/top-wind-slice-hdr/metadata.json",
+      "bytes": 7982,
+      "sha256": "6db60b17fe35df07ce67a9180f6f8825502bbf781f2e37c6cdbbede1bfabf074"
+    },
+    {
+      "path": "top-wind-slice.png",
+      "artifact_relative_path": "evidence/anvil/top-wind-slice.png",
+      "bytes": 45332,
+      "sha256": "34ae6c3306299dc72ab2df6f143af3af0323feddba815e01d3556737f2233252"
+    },
+    {
+      "path": "top-wind-slice.stderr.log",
+      "artifact_relative_path": "evidence/anvil/top-wind-slice.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "top-wind-slice.stdout.log",
+      "artifact_relative_path": "evidence/anvil/top-wind-slice.stdout.log",
+      "bytes": 4863,
+      "sha256": "4858a56032e9bab54cd69b58da58cd214edeefda68b9b7819e1795c6f6b6dc8a"
+    },
+    {
+      "path": "wide-fallback-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/wide-fallback-hdr/metadata.json",
+      "bytes": 7807,
+      "sha256": "39e804c7041245535cd452a600d881807110301716c7dfe32ada95217b2a9f6f"
+    },
+    {
+      "path": "wide-fallback.stderr.log",
+      "artifact_relative_path": "evidence/anvil/wide-fallback.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "wide-fallback.stdout.log",
+      "artifact_relative_path": "evidence/anvil/wide-fallback.stdout.log",
+      "bytes": 4853,
+      "sha256": "783c506e5d719b03ae85176efc4e8805cba86feacdcc260e81ff898f687df516"
+    },
+    {
+      "path": "wide-front-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/wide-front-hdr/metadata.json",
+      "bytes": 7807,
+      "sha256": "39e804c7041245535cd452a600d881807110301716c7dfe32ada95217b2a9f6f"
+    },
+    {
+      "path": "wide-front.stderr.log",
+      "artifact_relative_path": "evidence/anvil/wide-front.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "wide-front.stdout.log",
+      "artifact_relative_path": "evidence/anvil/wide-front.stdout.log",
+      "bytes": 4857,
+      "sha256": "6e383b3df228f2f0755ba9eb93941f5b2d33ed0a9bc90d584cc24b929bec316f"
+    },
+    {
+      "path": "wide-side-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/wide-side-hdr/metadata.json",
+      "bytes": 7806,
+      "sha256": "9608ebfba247cd026f53aa79da31a8381c4913356940b8eb5653adf631efe7e4"
+    },
+    {
+      "path": "wide-side.stderr.log",
+      "artifact_relative_path": "evidence/anvil/wide-side.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "wide-side.stdout.log",
+      "artifact_relative_path": "evidence/anvil/wide-side.stdout.log",
+      "bytes": 4855,
+      "sha256": "b42e6541c8180cf7c43c334c9ddf4d97fb01cfb7f55aee946b768c5ec46b7ec7"
+    },
+    {
+      "path": "wind-front-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/wind-front-hdr/metadata.json",
+      "bytes": 7911,
+      "sha256": "b8a35548601731cdb1a2fe5138b7740581686cd8ed41c2a3a6dfd299bb5cfae2"
+    },
+    {
+      "path": "wind-front.stderr.log",
+      "artifact_relative_path": "evidence/anvil/wind-front.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "wind-front.stdout.log",
+      "artifact_relative_path": "evidence/anvil/wind-front.stdout.log",
+      "bytes": 4857,
+      "sha256": "260eb5fda0f5ae14a568d80f1f231b3e165252cb22eb356ede34ef650d511391"
+    },
+    {
+      "path": "wind-side-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/wind-side-hdr/metadata.json",
+      "bytes": 7910,
+      "sha256": "66c3dc474401267c3cc3e78fc36d8fe030563ffb9716ea457d2dd3ffe2045250"
+    },
+    {
+      "path": "wind-side.stderr.log",
+      "artifact_relative_path": "evidence/anvil/wind-side.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "wind-side.stdout.log",
+      "artifact_relative_path": "evidence/anvil/wind-side.stdout.log",
+      "bytes": 4854,
+      "sha256": "4b0fce5cde50e22d7e11c2f3ed5c0e8173f3de0bf1ae623cdcf74b6d9317db1d"
+    },
+    {
+      "path": "young-front-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/young-front-hdr/metadata.json",
+      "bytes": 8063,
+      "sha256": "1890d74c6550bfd0fb9841450ef3bf7ffe94e76e973804125b94382c146bc39c"
+    },
+    {
+      "path": "young-front.stderr.log",
+      "artifact_relative_path": "evidence/anvil/young-front.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "young-front.stdout.log",
+      "artifact_relative_path": "evidence/anvil/young-front.stdout.log",
+      "bytes": 4863,
+      "sha256": "0ab9e02c4e4d2a465b3fb8da7268f63efa7ea8620fc45d6c3f1142a8a2933551"
+    },
+    {
+      "path": "young-side-hdr/metadata.json",
+      "artifact_relative_path": "evidence/anvil/young-side-hdr/metadata.json",
+      "bytes": 8062,
+      "sha256": "1f30a7466ffa725bcfdf5053cf7e4ba951d88b41c96fe08066d414ddcf7a81e9"
+    },
+    {
+      "path": "young-side.stderr.log",
+      "artifact_relative_path": "evidence/anvil/young-side.stderr.log",
+      "bytes": 160,
+      "sha256": "245187e700f054786994b84ad1d93a34a30c47d03f3fadd3a78fd19fe23d36ef"
+    },
+    {
+      "path": "young-side.stdout.log",
+      "artifact_relative_path": "evidence/anvil/young-side.stdout.log",
+      "bytes": 4856,
+      "sha256": "ed3762f07e8b3428875d674d1d4bbf341a3859136bcb8140a68b7e5116b396d7"
+    },
+    {
+      "path": "ctest.log",
+      "artifact_relative_path": "build/windows/Testing/Temporary/LastTest.log",
+      "bytes": 55293,
+      "sha256": "c4588f858d1edab136294c2da75bbe6972610f14512bd477b72497a1de6502cb"
+    }
+  ]
+}

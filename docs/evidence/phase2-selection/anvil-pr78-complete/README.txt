@@ -1,0 +1,1 @@
+OFF/narrow/wide/tilted, selected stage, altitude wind, manual override and top-lobe integration. Identical camera/light per view. Actual width/direction handle input, one-step Undo, Save/Open, Direct cache fallback and CPU/GPU density + HDR checks. Physical RTX and naturalness acceptance remain separate.
