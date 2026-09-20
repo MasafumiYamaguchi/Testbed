@@ -1,4 +1,5 @@
 /build/
 /evidence/
+/tools/
 CMakeUserPresets.json
 *.user

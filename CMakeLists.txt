@@ -11,6 +11,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSI
 endif()
 
 option(WHITE_BUILD_APP "Build the SDL desktop application" ON)
+option(WHITE_BUILD_GPU_SPIKE "Use the Windows SDL GPU validation application" ${WIN32})
 option(WHITE_BUILD_VDB_SPIKE "Build the independent OpenVDB spike (Issue #13)" OFF)
 if(WHITE_BUILD_VDB_SPIKE)
   message(FATAL_ERROR "OpenVDB spike is not implemented yet; see Issue #13. Leave WHITE_BUILD_VDB_SPIKE=OFF for the desktop app.")
@@ -27,8 +28,29 @@ endif()
 
 if(WHITE_BUILD_APP)
   include(cmake/Dependencies.cmake)
-  add_executable(white_app src/app/main.cpp)
-  target_link_libraries(white_app PRIVATE white_core SDL3::SDL3)
+  if(WHITE_BUILD_GPU_SPIKE)
+    if(NOT WIN32)
+      message(FATAL_ERROR "The GPU spike currently validates Windows/D3D12 only. Set WHITE_BUILD_GPU_SPIKE=OFF for the bootstrap window.")
+    endif()
+    FetchContent_MakeAvailable(imgui)
+    add_library(white_imgui STATIC
+      ${imgui_SOURCE_DIR}/imgui.cpp ${imgui_SOURCE_DIR}/imgui_draw.cpp
+      ${imgui_SOURCE_DIR}/imgui_tables.cpp ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+      ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
+      ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlgpu3.cpp)
+    target_include_directories(white_imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+    target_link_libraries(white_imgui PUBLIC SDL3::SDL3)
+    add_executable(white_app src/app/gpu_main.cpp src/gpu/spike.cpp)
+    target_link_libraries(white_app PRIVATE white_core white_imgui)
+    include(cmake/Shaders.cmake)
+    white_compile_shader(field.comp.hlsl cs_6_0)
+    white_compile_shader(sample.comp.hlsl cs_6_0)
+    white_compile_shader(fullscreen.vert.hlsl vs_6_0)
+    white_compile_shader(slice.frag.hlsl ps_6_0)
+  else()
+    add_executable(white_app src/app/main.cpp)
+    target_link_libraries(white_app PRIVATE white_core SDL3::SDL3)
+  endif()
   if(WIN32)
     add_custom_command(TARGET white_app POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:white_app>)
