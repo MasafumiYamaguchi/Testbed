@@ -33,9 +33,11 @@ copied to `shaders/` beside the executable. Preserve this directory when copying
 the app. `WHITE_BUILD_GPU_SPIKE=OFF` explicitly selects the older bootstrap window;
 the GPU app never silently falls back. Windows D3D12 support is required.
 
-## CPU-only build (no downloads or GPU)
+## CPU-only build (no GPU)
 
-GCC 11+ or a C++20-capable Clang, CMake 3.25+ and Ninja:
+GCC 11+ or a C++20-capable Clang, CMake 3.25+, Git and Ninja. Since Issue #6,
+the first configure fetches pinned nlohmann/json. Offline users may supply its
+source with `FETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON`:
 
 ```sh
 cmake --preset cpu-debug

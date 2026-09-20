@@ -1,0 +1,26 @@
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+fixture=0 extent=1x1x1 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=1 extent=1x1x1 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=32x32x32 row_bytes=256 max_abs_error=0 interpolation_error=7.92742e-06 PASS
+fixture=1 extent=32x32x32 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+fixture=1 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=0 PASS
+fixture=0 extent=17x19x23 row_bytes=256 max_abs_error=0 interpolation_error=1.70767e-05 PASS
+capture=client.bmp frame=60
+shutdown=clean lifecycle_test=1
