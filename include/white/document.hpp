@@ -171,6 +171,27 @@ struct DevelopedCloud {
     std::vector<DevelopedCell> cells; // Empty is a valid transparent cloud.
     bool operator==(const DevelopedCloud&)const=default;
 };
+inline constexpr std::uint32_t top_lobe_contract_version=1;
+inline constexpr unsigned max_top_lobe_depth=2,max_top_lobes=3;
+enum class TopLobeMode {off,parent,children};
+struct TopLobeSettings {
+    TopLobeMode mode=TopLobeMode::off;
+    unsigned depth_limit=2,child_limit=2;
+    double top_start=.65,parent_radius=18,child_radius_ratio=.55;
+    double hierarchy_density=1,mask_transition=6,fusion_width=4,density_scale=.75;
+    Vec3 growth_direction{0,1,0};
+    bool operator==(const TopLobeSettings&)const=default;
+};
+// One authority: a developed source plus a typed finite hierarchy generator.
+// This is not a CenterlineShape pretending that one role is a developed curve.
+struct TopLobeSource {
+    std::uint32_t contract_version=top_lobe_contract_version;
+    DevelopedCloud trunk;
+    Id target_cell=0,field_id=0;
+    std::array<Id,max_top_lobes> lobe_ids{}; // Reserved in every comparison mode.
+    TopLobeSettings settings{};
+    bool operator==(const TopLobeSource&)const=default;
+};
 struct Camera {
     Vec3 position{120,70,120},target{0,20,0},up{0,1,0};
     double vertical_fov_degrees=45,near_plane=0.1,far_plane=10000;
@@ -182,10 +203,11 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=7,algorithm_version=3;
+    std::uint32_t schema_version=8,algorithm_version=3;
     CloudRecipe cloud{}; // Derived render snapshot when cumulonimbus is present.
     std::optional<CumulonimbusGroup> cumulonimbus{};
     std::optional<CenterlineShape> centerline{}; // Exclusive source alternative.
+    std::optional<TopLobeSource> top_lobes{};
     std::optional<DevelopedCloud> developed{}; // Complete source; cloud is a validated metadata proxy for >1 group.
     Camera camera{};
     Sun sun{};

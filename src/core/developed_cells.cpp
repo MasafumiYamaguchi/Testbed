@@ -120,6 +120,7 @@ DevelopedCloud command_developed_cloud(const DevelopedCloud& source,const Develo
         else if constexpr(std::is_same_v<T,DevelopedMove>)selected(next,edit.id).translation=edit.translation;
         else if constexpr(std::is_same_v<T,DevelopedEdit>)selected(next,edit.id).shape=command_centerline(selected(next,edit.id).shape,edit.command);
         else if constexpr(std::is_same_v<T,DevelopedSetRoles>)selected(next,edit.id).roles=edit.roles;
+        else if constexpr(std::is_same_v<T,DevelopedSetFusion>){next.fusion_width=edit.width;next.overlap=edit.overlap;}
         else {
             auto copy=selected(next,edit.id);Id id=next_developed_id(source);copy.id=take_id(id);copy.shape.source.cloud_id=copy.id;
             for(auto& primitive:copy.shape.source.cell_ids){const Id old=primitive;primitive=take_id(id);for(auto& a:copy.shape.source.cell_adjustments)if(a.cell_id==old)a.cell_id=primitive;}

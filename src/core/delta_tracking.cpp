@@ -1,4 +1,5 @@
 #include "white/delta_tracking.hpp"
+#include "white/developed_scene.hpp"
 #include "white/optics.hpp"
 #include <algorithm>
 #include <cmath>
@@ -11,8 +12,8 @@ namespace {
 bool finite(Vec3 p) {return std::isfinite(p.x)&&std::isfinite(p.y)&&std::isfinite(p.z);}
 void validate_input(const Scene& scene,const GridLayout& grid) {
     require_valid(scene);
-    if(scene.developed&&scene.developed->cells.size()>1)
-        throw std::invalid_argument("Tracking snapshot does not support two developed groups: independent hard-mask frozen-grid contract required");
+    if(scene_density_requires_direct(scene))
+        throw std::invalid_argument("Tracking snapshot does not support independent developments or active top lobes: independent hard-mask frozen-grid contract required");
     (void)index_to_local(grid,{}); // Validates bounds and all three extents.
 }
 void validate_majorant(const GridLayout& grid,std::span<const float> density,const Majorant& supplied) {

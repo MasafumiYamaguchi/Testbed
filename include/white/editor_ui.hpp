@@ -4,6 +4,7 @@
 #include "white/cumulonimbus.hpp"
 #include "white/centerline_scene.hpp"
 #include "white/developed_scene.hpp"
+#include "white/top_lobe_scene.hpp"
 namespace white {
 class EditorUi {
 public:
@@ -18,6 +19,8 @@ public:
     void start_prefab_test();
     void prefab_test_input(int frame);
     void verify_prefab_test(int frame);
+    void start_top_lobes_test();
+    void top_lobes_test_step(int frame);
     void start_developed_test();
     void developed_test_input(int frame);
     void verify_developed_test(int frame);
@@ -29,6 +32,8 @@ private:
     Id development_=0;
     bool duplicate_regenerate_=false;
     void draw_developed_ui();
+    void draw_top_lobes_ui();
+    void top_lobe_item(bool,const TopLobeSettings&);
     void developed_item(bool,const DevelopedCommand&);
     Id curve_point_=0;
     bool prefab_group_=true;

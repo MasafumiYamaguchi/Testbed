@@ -35,8 +35,21 @@ DensityAllowance density_allowance(const Scene& scene){
         const double unmodulated_max=recipe.cells.empty()?0:recipe.density*(1+recipe.overlap*double(recipe.cells.size()-1));
         profile_bound=std::max(profile_bound,bound);profile_tolerance+=bound*unmodulated_max;
     };
-    if(scene_density_requires_direct(scene)){
-        const DevelopedEvaluationPlan plan(*scene.developed);
+    const auto* grouped=scene.top_lobes?&scene.top_lobes->trunk:(scene.developed?&*scene.developed:nullptr);
+    if(scene.top_lobes&&TopLobeEvaluationPlan(*scene.top_lobes).gpu_params().mask.x!=0){
+        const auto& source=*scene.top_lobes;const DevelopedEvaluationPlan trunk(source.trunk);
+        include_profile(trunk.fields()[0].recipe(),trunk.cloud().cells[0].translation.y);
+        // The top group uses object-local coordinates; its inherited profile
+        // and mask are shifted once when lowered, matching its GPU packet.
+        const auto& cell=source.trunk.cells[0];auto top=lower_centerline_to_recipe(cell.shape);
+        top.density*=source.settings.density_scale;top.overlap=0;
+        if(top.altitude_density.enabled)top.altitude_density.base+=cell.translation.y;
+        include_profile(top,0);
+        const AltitudeDensityProfile ramp{true,top_lobe_mask_height(source),source.settings.mask_transition,{{0,0},{1,1}}};
+        const double mask_bound=1.5*altitude_density_error_bound(ramp);
+        profile_bound=std::max(profile_bound,mask_bound);profile_tolerance+=mask_bound*top.density;
+    }else if(grouped&&grouped->cells.size()>1){
+        const DevelopedEvaluationPlan plan(*grouped);
         for(size_t i=0;i<plan.fields().size();++i)include_profile(plan.fields()[i].recipe(),plan.cloud().cells[i].translation.y);
         // Each nonnegative profile coefficient has piecewise derivative at
         // most one (coverage + bridge <= 1, overlap <= 1): sum its allowance.
@@ -207,7 +220,7 @@ void GpuSpike::set_scene(const Scene& scene,std::uint64_t revision,std::chrono::
     require_valid(scene);const auto dirty=classify_change(scene_snapshot_,scene);
     const bool density_changed=has(dirty,Dirty::density)||fixture!=2;
     scene_snapshot_=scene;scene_revision=revision;exposure_ev=float(scene.exposure_ev);accepted_=accepted;
-    if(scene_density_requires_direct(scene_snapshot_))std::cout<<"density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints\n";
+    if(scene_density_requires_direct(scene_snapshot_))std::cout<<"density_mode=grouped_direct groups=2 top_lobes="<<(scene_snapshot_.top_lobes&&gpu_scene_density_params(scene_snapshot_).mask.x!=0)<<" density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints\n";
     const auto invalidate=invalidation(dirty);if(invalidate.hdr)volume_dirty=true;
     if(density_changed)try{const auto n=Uint32(cache_resolution);queue_bake(use_cache&&!scene_density_requires_direct(scene_snapshot_)?std::array<Uint32,3>{n,n,n}:std::array<Uint32,3>{65,67,69});}
     catch(const std::exception& e){report=std::string("Bake failed; direct preview active: ")+e.what();}

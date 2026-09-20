@@ -19,6 +19,9 @@ struct DevelopedRemove {Id id;};
 struct DevelopedMove {Id id;Vec3 translation;};
 struct DevelopedEdit {Id id;CenterlineCommand command;};
 struct DevelopedSetRoles {Id id;std::vector<unsigned> roles;};
+// Shared shape fusion (local metres) and density overlap are separate controls.
+// A caller editing one passes the current value of the other.
+struct DevelopedSetFusion {double width,overlap;};
 struct DevelopedDuplicate {
     Id id;
     DevelopedDuplicateSeed policy;
@@ -27,7 +30,7 @@ struct DevelopedDuplicate {
         :id(target),policy(choice),structure_seed(seed){}
 };
 using DevelopedCommand=std::variant<DevelopedAdd,DevelopedRemove,DevelopedMove,
-    DevelopedEdit,DevelopedSetRoles,DevelopedDuplicate>;
+    DevelopedEdit,DevelopedSetRoles,DevelopedSetFusion,DevelopedDuplicate>;
 DevelopedCloud command_developed_cloud(const DevelopedCloud&,const DevelopedCommand&);
 // Distances/fusion are local metres; coefficients are nonnegative dimensionless
 // densities. Geometric bridge is continuously gated by both coefficients.
