@@ -34,7 +34,7 @@ void main(uint3 id:SV_DispatchThreadID){
     // An active sheet uses direct evaluation even when its base cloud still
     // contains one density group. The CPU expects density plus actual XYZ in
     // this branch, not the legacy density/cache/constrained-cache tuple.
-    if(densityPacket.settings.x==2||cloudPacket.settings.x!=0){results[id.x]=float4(densityAt(p),p);return;}
+    if(densityPacket.settings.x==2||cloudPacket.settings.x!=0||finishStack.settings.x>0){results[id.x]=float4(densityAt(p),p);return;}
     float raw=field.SampleLevel(linearClamp,(p-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz),0);
     results[id.x]=float4(densityAt(p),raw,constrainCache(p,raw),1);
 }

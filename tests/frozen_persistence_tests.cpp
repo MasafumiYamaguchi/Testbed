@@ -71,7 +71,7 @@ Scene detailed_frozen() {
 void roundtrip_and_compatibility() {
     const auto scene=detailed_frozen();const auto jobs=generation_job_count();
     const auto text=scene_json(scene);const auto json=Json::parse(text);const auto& source=json.at("cloud").at("source");
-    check(json.at("schema_version")==10&&json.at("cloud").size()==2&&json.at("cloud").at("kind")=="frozen","Frozen state lacks one schema10 authority");
+    check(json.at("schema_version")==11&&json.at("cloud").size()==3&&json.at("cloud").at("kind")=="frozen","Frozen state lacks one schema11 frozen authority plus finishing");
     check(!source.contains("assets")&&!source.contains("path")&&source.at("fields").size()==2&&source.at("hierarchy").size()==3&&!source.at("anvil").is_null(),"Frozen file omitted evaluated structure or added external storage");
     check(source.at("hierarchy").back().at("id")=="18446744073709551615","Frozen uint64 hierarchy identity lost precision");
     const auto loaded=parse_scene_json(text);
@@ -191,7 +191,7 @@ void atomic_save_and_legacy() {
     }
     const auto v1=std::filesystem::path(__FILE__).parent_path()/"fixtures"/"scene-v1.white.json";
     const auto legacy=read_scene(v1);
-    check(legacy.schema_version==10&&!legacy.frozen&&!legacy.cumulonimbus&&!legacy.centerline&&!legacy.developed&&!legacy.top_lobes&&!legacy.anvil,"Legacy fixture inferred a source or frozen state");
+    check(legacy.schema_version==11&&!legacy.frozen&&!legacy.cumulonimbus&&!legacy.centerline&&!legacy.developed&&!legacy.top_lobes&&!legacy.anvil,"Legacy fixture inferred a source or frozen state");
     check(parse_scene_json(scene_json(legacy))==legacy&&generation_job_count()==jobs,"Legacy fixture migration changed state or started generation");
 }
 }

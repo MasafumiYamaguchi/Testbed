@@ -18,7 +18,7 @@ void EditorUi::launch_generation(bool cancel_before_start){
 }
 void EditorUi::adopt_generation_candidate(){
     if(generation_job_.valid()||!generation_candidate_||!generation_guard_||session.document().scene()!=*generation_guard_)throw std::logic_error("Generate a current completed candidate before Freeze");
-    const auto fixed=freeze_candidate(*generation_candidate_);apply(fixed);
+    const auto fixed=adopt_frozen_with_finish(session.document().scene(),freeze_candidate(*generation_candidate_));apply(fixed);
     if(session.document().scene()!=fixed)throw std::runtime_error("Freeze adoption failed");
     generation_guard_=session.document().scene();generation_message_="Selected state frozen. Detail edits keep the evaluated structure; Undo restores the previous cloud.";
 }

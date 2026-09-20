@@ -293,6 +293,32 @@ struct FrozenCloudState {
     std::optional<GenerationProvenance> provenance;
     bool operator==(const FrozenCloudState&)const=default;
 };
+inline constexpr std::uint32_t modifier_stack_contract_version=1;
+inline constexpr std::size_t max_finish_modifiers=4;
+enum class FinishModifierKind {cut,density,protect_detail};
+enum class FinishTargetKind {object,field};
+struct EllipsoidMask {
+    Vec3 center{},radii{15,15,15};
+    double falloff=2; // Outward feather, object-local metres; interior is one.
+    bool operator==(const EllipsoidMask&)const=default;
+};
+struct FinishModifier {
+    Id id=0;
+    FinishModifierKind kind=FinishModifierKind::cut;
+    bool enabled=true;
+    double strength=1;
+    EllipsoidMask mask;
+    FinishTargetKind target_kind=FinishTargetKind::object;
+    Id target_id=0;
+    double density_multiplier=1;
+    bool hard_cut=true; // Full-strength cut interiors remain zero after every layer.
+    bool operator==(const FinishModifier&)const=default;
+};
+struct FinishStack {
+    std::uint32_t contract_version=modifier_stack_contract_version;
+    std::vector<FinishModifier> layers; // Ordered, object-local; world space unsupported.
+    bool operator==(const FinishStack&)const=default;
+};
 struct Camera {
     Vec3 position{120,70,120},target{0,20,0},up{0,1,0};
     double vertical_fov_degrees=45,near_plane=0.1,far_plane=10000;
@@ -304,7 +330,7 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=10,algorithm_version=3;
+    std::uint32_t schema_version=11,algorithm_version=3;
     CloudRecipe cloud{}; // Derived render snapshot when cumulonimbus is present.
     std::optional<CumulonimbusGroup> cumulonimbus{};
     std::optional<CenterlineShape> centerline{}; // Exclusive source alternative.
@@ -312,6 +338,7 @@ struct Scene {
     std::optional<AnvilSource> anvil{};
     std::optional<DevelopedCloud> developed{}; // Complete source; cloud is a validated metadata proxy for >1 group.
     std::optional<FrozenCloudState> frozen{}; // Exclusive, authoritative evaluated field.
+    FinishStack finish_stack{}; // Mutable finishing graph outside frozen authority.
     Camera camera{};
     Sun sun{};
     double exposure_ev=0;

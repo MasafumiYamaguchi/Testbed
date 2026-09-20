@@ -1,5 +1,6 @@
 #pragma once
 #include "white/anvil.hpp"
+#include "white/modifiers.hpp"
 
 
 namespace white {
@@ -24,7 +25,7 @@ Scene scene_with_frozen_detail(Scene,Id field_id,NoiseSettings,std::uint64_t det
 class FrozenEvaluationPlan {
 public:
     explicit FrozenEvaluationPlan(FrozenCloudState);
-    double at(Vec3 object_local)const;
+    double at(Vec3 object_local,const ModifierFieldScales& scales={})const;
     double maximum()const{return state_.rho_max;}
     Bounds local_support()const{return state_.support;}
     Bounds world_support()const;

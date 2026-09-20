@@ -25,10 +25,10 @@ int main(){try {
     auto parent=scene_with_top_lobe_settings(off,parent_settings);check(scene_has_active_top_lobes(parent)&&scene_density_requires_direct(parent),"Active hierarchy did not require complete direct evaluation");
     auto children_settings=parent_settings;children_settings.mode=TopLobeMode::children;
     auto scene=scene_with_top_lobe_settings(parent,children_settings);scene.top_lobes->lobe_ids[2]=std::numeric_limits<Id>::max();refresh_top_lobe_scene(scene);
-    check(scene.schema_version==10&&scene.algorithm_version==3,"Wrong source/evaluation version");
+    check(scene.schema_version==11&&scene.algorithm_version==3,"Wrong source/evaluation version");
     const SceneDensityEvaluator full(scene);const TopLobeEvaluationPlan expected(*scene.top_lobes);const auto gpu=full.gpu_params();const auto reference_gpu=expected.gpu_params();
     check(full.maximum()==expected.maximum()&&full.local_support()==expected.local_support()&&scene.cloud.envelope==full.local_support(),"Scene wrapper/proxy omitted hierarchy bounds");
-    check(std::memcmp(&gpu.cloud,&reference_gpu,sizeof(reference_gpu))==0,"Scene wrapper omitted hierarchy mask/GPU data");
+    check(std::memcmp(&gpu.field.cloud,&reference_gpu,sizeof(reference_gpu))==0,"Scene wrapper omitted hierarchy mask/GPU data");
     std::size_t samples=0;for(int y=0;y<190;y+=3)for(int x=-60;x<65;x+=5){const Vec3 p{double(x),double(y),0};check(full.at(p)==expected.at(p),"Scene wrapper ignored hierarchy density");++samples;}
     const auto bytes=scene_json(scene);const auto encoded=Json::parse(bytes);check(encoded.at("cloud").size()==2&&encoded.at("cloud").at("kind")=="top_lobes","Top source not saved as single authority");
     check(encoded.at("cloud").at("source").at("lobe_ids")[2]=="18446744073709551615"&&parse_scene_json(bytes)==scene&&scene_json(parse_scene_json(bytes))==bytes,"Reserved uint64 IDs/source roundtrip changed");
