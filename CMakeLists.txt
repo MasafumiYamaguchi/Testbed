@@ -14,7 +14,7 @@ option(WHITE_BUILD_APP "Build the SDL desktop application" ON)
 option(WHITE_BUILD_GPU_SPIKE "Use the Windows SDL GPU validation application" ${WIN32})
 option(WHITE_BUILD_VDB_SPIKE "Build the independent OpenVDB spike (Issue #13)" OFF)
 if(WHITE_BUILD_VDB_SPIKE)
-  message(FATAL_ERROR "OpenVDB spike is not implemented yet; see Issue #13. Leave WHITE_BUILD_VDB_SPIKE=OFF for the desktop app.")
+  add_subdirectory(spikes/vdb)
 endif()
 
 include(FetchContent)
