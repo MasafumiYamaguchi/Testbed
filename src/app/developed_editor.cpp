@@ -76,8 +76,10 @@ void EditorUi::start_developed_test(){
 void EditorUi::developed_test_input(int frame){
     if(frame==80){auto scene=session.document().scene();auto cell=make_developed_cell(*scene.developed);cell.translation={90,0,0};cell.shape.source.parameters.structure_seed=987654321;cell.shape.profile={{1,0,1,1},{2,.5,1.25,.35},{3,1,.8,1}};development_=cell.id;apply(scene_with_developed_command(scene,DevelopedAdd{cell}));}
     if(frame==90){smoke_before_=session.document().scene();const auto& c=smoke_before_.developed->cells.back();auto& io=ImGui::GetIO();const float vx=290,vy=60,vw=io.DisplaySize.x-310,vh=io.DisplaySize.y-90;const auto view=camera_view(smoke_before_.camera),projection=camera_projection(smoke_before_.camera,vw/vh);const auto p=local_to_world(smoke_before_.cloud.transform,c.translation+Vec3{0,c.shape.source.parameters.cloud_base,0});const double x=view[0]*p.x+view[4]*p.y+view[8]*p.z+view[12],y=view[1]*p.x+view[5]*p.y+view[9]*p.z+view[13],z=view[2]*p.x+view[6]*p.y+view[10]*p.z+view[14];smoke_x_=vx+float(.5+.5*projection[0]*x/-z)*vw+35;smoke_y_=vy+float(.5-.5*projection[5]*y/-z)*vh;}
-    if(frame>=100&&frame<=114){auto& io=ImGui::GetIO();io.AddMousePosEvent(smoke_x_+float(frame-100)*2,smoke_y_);if(frame==100)io.AddMouseButtonEvent(0,true);}
-    if(frame==115)ImGui::GetIO().AddMouseButtonEvent(0,false);
+    // Keep the scripted pointer at the final position through release. SDL's
+    // backend also polls the real desktop cursor every frame; releasing without
+    // a position event lets that unrelated cursor move the active gizmo once.
+    if(frame>=95&&frame<=116){auto& io=ImGui::GetIO();io.AddFocusEvent(true);io.AddMousePosEvent(smoke_x_+float(std::clamp(frame-100,0,14))*2,smoke_y_);if(frame==100)io.AddMouseButtonEvent(0,true);if(frame==115)io.AddMouseButtonEvent(0,false);}
 }
 void EditorUi::verify_developed_test(int frame){
     if(frame==120){const auto scene=session.document().scene();const auto& c=scene.developed->cells.back();if(c.translation.x<=90.1||gizmo_drag_)throw std::runtime_error("Development move gizmo did not move selected cell");const auto command=scene_with_developed_command(smoke_before_,DevelopedMove{development_,c.translation});if(scene!=command||!session.undo()||session.document().scene()!=smoke_before_||!session.redo()||session.document().scene()!=scene)throw std::runtime_error("Development gizmo/Command/Undo mismatch");std::cout<<"developed_move_gizmo_command_undo=true PASS\n";}
