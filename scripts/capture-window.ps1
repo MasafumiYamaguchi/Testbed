@@ -48,6 +48,10 @@ public class WindowCapture {
     $memory | Export-Csv "$out/process-memory.csv" -NoTypeInformation
     if (!$process.HasExited) { throw "App did not exit within thirty seconds" }
     if ($process.ExitCode -ne 0) { throw "App failed with exit code $($process.ExitCode)" }
+    if (Test-Path "$out/step-half.bmp") {
+        $img = [System.Drawing.Image]::FromFile("$out/step-half.bmp")
+        try { $img.Save("$out/step-half.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $img.Dispose() }
+    }
     # Independent launches cover shutdown/reinitialization and preserve all five
     # shape cases; each PNG comes from the GPU target, not a generated mockup.
     foreach ($scene in 0..4) {

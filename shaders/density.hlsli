@@ -1,6 +1,9 @@
 // Shared pointwise field for preview, bake and future export.
 // Approximate ellipsoid implicit distance; never use as a sphere-tracing step.
-cbuffer Cloud : register(b1, space2) {
+#ifndef DENSITY_SPACE
+#define DENSITY_SPACE space2
+#endif
+cbuffer Cloud : register(b1, DENSITY_SPACE) {
     float4 centers[8]; float4 radii[8]; float4 cutCenters[8]; float4 cutRadii[8];
     float4 envelopeMin; float4 envelopeMax; float4 settings; float4 config;
 };

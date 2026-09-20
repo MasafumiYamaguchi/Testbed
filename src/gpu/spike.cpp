@@ -1,5 +1,6 @@
 #include "white/gpu_spike.hpp"
 #include "white/build_info.hpp"
+#include "white/optics.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -50,6 +51,11 @@ float reference(Uint32 x, Uint32 y, Uint32 z, std::array<Uint32,3> dims, Uint32 
 GpuSpike::~GpuSpike() {
     if (device) {
         SDL_WaitForGPUIdle(device);
+        if(volume_pipeline)SDL_ReleaseGPUGraphicsPipeline(device,volume_pipeline);
+        if(tonemap_pipeline)SDL_ReleaseGPUGraphicsPipeline(device,tonemap_pipeline);
+        if(optical_test)SDL_ReleaseGPUComputePipeline(device,optical_test);
+        if(hdr)SDL_ReleaseGPUTexture(device,hdr);
+        if(point_sampler)SDL_ReleaseGPUSampler(device,point_sampler);
         if (display) SDL_ReleaseGPUGraphicsPipeline(device, display);
         if (sample) SDL_ReleaseGPUComputePipeline(device, sample);
         if (generate) SDL_ReleaseGPUComputePipeline(device, generate);
@@ -77,6 +83,7 @@ void GpuSpike::initialize() {
     window=SDL_CreateWindow("ProjectWhite | GPU field laboratory",900,600,SDL_WINDOW_RESIZABLE);
     gpu_check(window != nullptr,"Create window");
     SDL_SetWindowPosition(window,40,40);
+    SDL_SetWindowMinimumSize(window,640,480);
     device=SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_DXIL, true, "direct3d12");
     gpu_check(device != nullptr,"Create D3D12 device (no silent CPU fallback)");
     gpu_check(SDL_ClaimWindowForGPUDevice(device,window),"Claim GPU window"); claimed=true;
@@ -120,6 +127,7 @@ void GpuSpike::initialize() {
         gpu_check(display != nullptr,"Create display pipeline");
     } catch (...) { SDL_ReleaseGPUShader(device,vs); if(fs) SDL_ReleaseGPUShader(device,fs); throw; }
     SDL_ReleaseGPUShader(device,vs); SDL_ReleaseGPUShader(device,fs);
+    initialize_volume();
 }
 void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
     if (kind>2) throw std::invalid_argument("Unknown field fixture");
@@ -129,7 +137,7 @@ void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
         SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE|SDL_GPU_TEXTUREUSAGE_SAMPLER,dims[0],dims[1],dims[2]);
     SDL_WaitForGPUIdle(device);
     if(field) SDL_ReleaseGPUTexture(device,field);
-    field=replacement; extent=dims; fixture=kind;
+    field=replacement; extent=dims; fixture=kind;volume_dirty=true;
     auto* cmd=SDL_AcquireGPUCommandBuffer(device); gpu_check(cmd != nullptr,"Acquire generation command buffer");
     const std::array<Uint32,4> params{dims[0],dims[1],dims[2],kind};
     SDL_PushGPUComputeUniformData(cmd,0,params.data(),sizeof(params));
@@ -212,16 +220,19 @@ void GpuSpike::resize(Uint32 w, Uint32 h) {
         SDL_GPU_TEXTUREUSAGE_COLOR_TARGET|SDL_GPU_TEXTUREUSAGE_SAMPLER,w,h,1);
     gpu_check(SDL_WaitForGPUIdle(device),"Wait before resize");
     if(target) SDL_ReleaseGPUTexture(device,target);
-    target=replacement; width=w; height=h;
+    target=replacement; width=w; height=h;volume_dirty=true;
 }
 void GpuSpike::draw(SDL_GPUCommandBuffer* cmd,float slice,Uint32 axis) {
+    const bool lit=show_volume&&fixture==2;
+    if(lit)render_volume(cmd);
     SDL_GPUColorTargetInfo color{}; color.texture=target; color.load_op=SDL_GPU_LOADOP_CLEAR; color.store_op=SDL_GPU_STOREOP_STORE;
     color.clear_color={0.02f,0.03f,0.055f,1};
     auto* pass=SDL_BeginGPURenderPass(cmd,&color,1,nullptr);
-    SDL_BindGPUGraphicsPipeline(pass,display);
-    SDL_GPUTextureSamplerBinding input{field,sampler}; SDL_BindGPUFragmentSamplers(pass,0,&input,1);
+    SDL_BindGPUGraphicsPipeline(pass,lit?tonemap_pipeline:display);
+    SDL_GPUTextureSamplerBinding input{lit?hdr:field,lit?point_sampler:sampler}; SDL_BindGPUFragmentSamplers(pass,0,&input,1);
     struct View {float slice; Uint32 axis,fixture; float padding;} view{slice,axis,fixture,0};
-    SDL_PushGPUFragmentUniformData(cmd,0,&view,sizeof(view));
+    if(lit) {const Float4 display_params{exposure_ev,0,0,0};SDL_PushGPUFragmentUniformData(cmd,0,&display_params,sizeof(display_params));}
+    else SDL_PushGPUFragmentUniformData(cmd,0,&view,sizeof(view));
     // Leave room for controls on the left; the remaining rectangle is a slice.
     SDL_GPUViewport viewport{290,60,std::max(1.0f,float(width)-310),std::max(1.0f,float(height)-90),0,1};
     SDL_SetGPUViewport(pass,&viewport); SDL_DrawGPUPrimitives(pass,3,1,0,0); SDL_EndGPURenderPass(pass);
@@ -239,5 +250,130 @@ void GpuSpike::save_capture(const std::filesystem::path& path) {
     bool saved=false;
     if(surface) { saved=SDL_SaveBMP(surface,path.string().c_str()); SDL_DestroySurface(surface); }
     SDL_UnmapGPUTransferBuffer(device,transfer.buffer); gpu_check(saved,"Save GPU framebuffer screenshot");
+}
+void GpuSpike::initialize_volume() {
+    auto make_shader=[&](const char* name,SDL_GPUShaderStage stage,Uint32 samplers,Uint32 uniforms) {
+        auto bytes=shader(name);SDL_GPUShaderCreateInfo ci{};
+        ci.code=bytes.data();ci.code_size=bytes.size();ci.entrypoint="main";ci.format=SDL_GPU_SHADERFORMAT_DXIL;
+        ci.stage=stage;ci.num_samplers=samplers;ci.num_uniform_buffers=uniforms;
+        auto* result=SDL_CreateGPUShader(device,&ci);gpu_check(result!=nullptr,"Create volume shader");return result;
+    };
+    auto make_pipeline=[&](const char* name,bool tone) {
+        auto* vs=make_shader("fullscreen.vert.hlsl.dxil",SDL_GPU_SHADERSTAGE_VERTEX,0,0);
+        SDL_GPUShader* fs=nullptr;SDL_GPUGraphicsPipeline* p=nullptr;
+        try {
+            fs=make_shader(name,SDL_GPU_SHADERSTAGE_FRAGMENT,tone?1:0,tone?1:2);
+            SDL_GPUColorTargetDescription color{};color.format=tone?SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
+            SDL_GPUGraphicsPipelineCreateInfo ci{};ci.vertex_shader=vs;ci.fragment_shader=fs;ci.primitive_type=SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+            ci.target_info.num_color_targets=1;ci.target_info.color_target_descriptions=&color;
+            p=SDL_CreateGPUGraphicsPipeline(device,&ci);gpu_check(p!=nullptr,"Create volume/tonemap pipeline");
+        }catch(...){SDL_ReleaseGPUShader(device,vs);if(fs)SDL_ReleaseGPUShader(device,fs);throw;}
+        SDL_ReleaseGPUShader(device,vs);SDL_ReleaseGPUShader(device,fs);return p;
+    };
+    volume_pipeline=make_pipeline("volume.frag.hlsl.dxil",false);
+    tonemap_pipeline=make_pipeline("tonemap.frag.hlsl.dxil",true);
+    SDL_GPUSamplerCreateInfo sci{};sci.min_filter=sci.mag_filter=SDL_GPU_FILTER_NEAREST;
+    sci.address_mode_u=sci.address_mode_v=sci.address_mode_w=SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    point_sampler=SDL_CreateGPUSampler(device,&sci);gpu_check(point_sampler!=nullptr,"Create HDR point sampler");
+    auto bytes=shader("optics.comp.hlsl.dxil");SDL_GPUComputePipelineCreateInfo ci{};
+    ci.code=bytes.data();ci.code_size=bytes.size();ci.entrypoint="main";ci.format=SDL_GPU_SHADERFORMAT_DXIL;
+    ci.num_readwrite_storage_buffers=1;ci.threadcount_x=ci.threadcount_y=ci.threadcount_z=1;
+    optical_test=SDL_CreateGPUComputePipeline(device,&ci);gpu_check(optical_test!=nullptr,"Create optical test pipeline");
+}
+void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
+    if(!volume_dirty)return;
+    if(view_steps<8||view_steps>512||shadow_steps<1||shadow_steps>64||internal_width<64||internal_width>640)
+        throw std::invalid_argument("Invalid rendering quality budget");
+    const Uint32 w=Uint32(internal_width),h=Uint32(std::max(1.0f,float(w)*std::max(1.0f,float(height)-90)/std::max(1.0f,float(width)-310)));
+    if(checked_volume_bytes(w,h,1,16)>16*1024*1024)throw std::invalid_argument("HDR target exceeds 16 MiB budget");
+    if(!hdr||hdr_width!=w||hdr_height!=h) {
+        auto* replacement=texture(device,SDL_GPU_TEXTURETYPE_2D,SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT,
+            SDL_GPU_TEXTUREUSAGE_COLOR_TARGET|SDL_GPU_TEXTUREUSAGE_SAMPLER,w,h,1);
+        gpu_check(SDL_WaitForGPUIdle(device),"Wait before HDR resize");
+        if(hdr)SDL_ReleaseGPUTexture(device,hdr);
+        hdr=replacement;hdr_width=w;hdr_height=h;
+    }
+    auto normalize=[](Vec3 p){return p*(1/std::sqrt(dot(p,p)));};
+    auto cross=[](Vec3 a,Vec3 b){return Vec3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
+    const auto recipe=density_fixture(cloud_preset);const auto field_params=gpu_density_params(DensityField(recipe));
+    const Vec3 eye{120,70,120},target_point{0,35,0};
+    const auto forward=normalize(target_point-eye),right=normalize(cross(forward,{0,1,0})),up=cross(right,forward);
+    const auto origin=world_to_local(recipe.transform,{0,0,0});
+    const auto x=world_to_local(recipe.transform,{1,0,0})-origin,y=world_to_local(recipe.transform,{0,1,0})-origin,z=world_to_local(recipe.transform,{0,0,1})-origin;
+    const double angle=sun_angle*3.141592653589793/180;
+    const auto sun=normalize(Vec3{std::sin(angle),0.8,std::cos(angle)});
+    auto pack=[](Vec3 v,float w=0){return Float4{float(v.x),float(v.y),float(v.z),w};};
+    const std::array<Float4,10> view{
+        pack(eye,0.1f),pack(right,float(std::tan(45.0*3.141592653589793/360))),pack(up),pack(forward,float(recipe.optics.extinction_scale)),
+        pack(sun,float(recipe.optics.albedo)),Float4{15,15,15,10000},
+        Float4{float(x.x),float(y.x),float(z.x),float(origin.x)},Float4{float(x.y),float(y.y),float(z.y),float(origin.y)},Float4{float(x.z),float(y.z),float(z.z),float(origin.z)},
+        Float4{float(view_steps),float(shadow_steps),float(w)/float(h),0}};
+    SDL_PushGPUFragmentUniformData(cmd,0,view.data(),sizeof(view));
+    SDL_PushGPUFragmentUniformData(cmd,1,&field_params,sizeof(field_params));
+    SDL_GPUColorTargetInfo color{};color.texture=hdr;color.load_op=SDL_GPU_LOADOP_CLEAR;color.store_op=SDL_GPU_STOREOP_STORE;
+    auto* pass=SDL_BeginGPURenderPass(cmd,&color,1,nullptr);SDL_BindGPUGraphicsPipeline(pass,volume_pipeline);
+    SDL_DrawGPUPrimitives(pass,3,1,0,0);SDL_EndGPURenderPass(pass);volume_dirty=false;
+}
+void GpuSpike::validate_optics() {
+    SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,14*4*sizeof(float),0};
+    auto* output=SDL_CreateGPUBuffer(device,&bi);gpu_check(output!=nullptr,"Create optical result buffer");
+    try {
+        Transfer transfer(device,bi.size);auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire optical test commands");
+        SDL_GPUStorageBufferReadWriteBinding binding{};binding.buffer=output;
+        auto* pass=SDL_BeginGPUComputePass(cmd,nullptr,0,&binding,1);SDL_BindGPUComputePipeline(pass,optical_test);
+        SDL_DispatchGPUCompute(pass,14,1,1);SDL_EndGPUComputePass(pass);
+        auto* copy=SDL_BeginGPUCopyPass(cmd);SDL_GPUBufferRegion source{output,0,bi.size};SDL_GPUTransferBufferLocation destination{transfer.buffer,0};
+        SDL_DownloadFromGPUBuffer(copy,&source,&destination);SDL_EndGPUCopyPass(copy);submit_wait(device,cmd);
+        auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map optical test");
+        const double sigma[]={0,0.01,0.1,1,10,0.0000001,0.25,2},distance[]={100,20,15,2,10,100,8,0};
+        double error=0;bool finite=true;
+        for(int i=0;i<8;++i){double T=std::exp(-sigma[i]*distance[i]);for(int j=0;j<4;++j){finite=finite&&std::isfinite(values[i*4+j]);error=std::max(error,std::abs(double(values[i*4+j])-(j==0?T:0.5*(1-T))));}}
+        const std::array<Float4,6> bounds_expected{Float4{1,2,4,1},Float4{1,0,1,1},Float4{0,0,0,1},Float4{1,2,4,1},Float4{1,2,4,1},Float4{1,float(2*std::sqrt(3)),float(4*std::sqrt(3)),1}};
+        double bounds_error=0;
+        for(int i=0;i<6;++i){const float expected[]{bounds_expected[i].x,bounds_expected[i].y,bounds_expected[i].z,bounds_expected[i].w};for(int j=0;j<4;++j){finite=finite&&std::isfinite(values[(i+8)*4+j]);bounds_error=std::max(bounds_error,std::abs(double(values[(i+8)*4+j])-expected[j]));}}
+        SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
+        std::cout<<"GPU ray/box six cases max_abs_error="<<bounds_error<<'\n';
+        if(!finite||bounds_error>1e-4)throw std::runtime_error("GPU ray/box regression failed");
+        std::cout<<"GPU homogeneous optics max_abs_error="<<error<<" tolerance=0.001\n";
+        if(!finite||error>1e-3)throw std::runtime_error("GPU optical integration failed analytic comparison");
+    }catch(...){SDL_ReleaseGPUBuffer(device,output);throw;}
+    SDL_ReleaseGPUBuffer(device,output);
+}
+std::vector<float> GpuSpike::read_hdr() {
+    if(!hdr)throw std::runtime_error("HDR target unavailable");
+    const Uint32 pitch=(hdr_width+15)/16*16;Transfer transfer(device,Uint32(checked_volume_bytes(pitch,hdr_height,1,16)));
+    auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire HDR readback");
+    auto* copy=SDL_BeginGPUCopyPass(cmd);SDL_GPUTextureRegion source{};source.texture=hdr;source.w=hdr_width;source.h=hdr_height;source.d=1;
+    SDL_GPUTextureTransferInfo dest{transfer.buffer,0,pitch,hdr_height};SDL_DownloadFromGPUTexture(copy,&source,&dest);SDL_EndGPUCopyPass(copy);submit_wait(device,cmd);
+    std::vector<float> result(size_t(hdr_width)*hdr_height*4);bool valid=true;float maximum=0;
+    const auto* values=static_cast<const float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map HDR readback");
+    for(Uint32 y=0;y<hdr_height;++y)for(Uint32 x=0;x<hdr_width;++x)for(Uint32 c=0;c<4;++c){float value=values[(y*pitch+x)*4+c];result[(y*hdr_width+x)*4+c]=value;valid=valid&&std::isfinite(value)&&value>=0&&(c!=3||value<=1);maximum=std::max(maximum,value);}
+    SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
+    if(!valid)throw std::runtime_error("HDR contains NaN/Inf/negative radiance or invalid transmittance");
+    // Independently integrate the CPU field along every pixel ray. This catches
+    // blank images, wrong camera uniforms and mismatched volume coordinates,
+    // which finite-value and isolated shader tests cannot detect.
+    const DensityField cpu(density_fixture(cloud_preset));const auto& recipe=cpu.recipe();
+    const Vec3 eye{120,70,120},target_point{0,35,0};
+    auto normalize=[](Vec3 v){return v*(1/std::sqrt(dot(v,v)));};
+    auto cross=[](Vec3 a,Vec3 b){return Vec3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
+    const auto forward=normalize(target_point-eye),right=normalize(cross(forward,{0,1,0})),up=cross(right,forward);
+    const auto origin=world_to_local(recipe.transform,eye);
+    double error=0,min_t=1;
+    for(Uint32 y=0;y<hdr_height;++y)for(Uint32 x=0;x<hdr_width;++x) {
+        const double px=(2*(x+0.5)/hdr_width-1)*double(hdr_width)/hdr_height,py=1-2*(y+0.5)/hdr_height;
+        const auto direction=normalize(forward+(right*px+up*py)*std::tan(45.0*3.141592653589793/360));
+        const auto local_direction=world_to_local(recipe.transform,eye+direction)-origin;
+        double tau=0;
+        if(const auto interval=intersect_bounds(origin,local_direction,recipe.envelope,0.1,10000)) {
+            const double dt=(interval->exit-interval->entry)/view_steps;
+            for(int i=0;i<view_steps;++i)tau+=cpu.at(origin+local_direction*(interval->entry+(i+0.5)*dt))*recipe.optics.extinction_scale*dt;
+        }
+        const double expected=std::exp(-tau),actual=result[(y*hdr_width+x)*4+3];
+        error=std::max(error,std::abs(actual-expected));min_t=std::min(min_t,actual);
+    }
+    std::cout<<"HDR verified "<<hdr_width<<'x'<<hdr_height<<" view_steps="<<view_steps<<" shadow_steps="<<shadow_steps<<" max_channel="<<maximum<<" min_T="<<min_t<<" CPU_T_max_error="<<error<<'\n';
+    if(error>0.001)throw std::runtime_error("Rendered transmittance disagrees with CPU field/camera reference");
+    return result;
 }
 }
