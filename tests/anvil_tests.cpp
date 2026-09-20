@@ -4,6 +4,7 @@
 #include "white/persistence.hpp"
 #include "white/revision_queue.hpp"
 #include <nlohmann/json.hpp>
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <filesystem>
@@ -101,6 +102,31 @@ void precision_domain(){
     auto placed=enabled(original);placed.anvil->cloud.trunk.transform.translation={100000,0,-100000};
     refresh_anvil_scene(placed);const AnvilEvaluationPlan field(*placed.anvil),baseline(*enabled(original).anvil);
     check(field.local_support()==baseline.local_support()&&field.at(field.connection_point())==baseline.at(baseline.connection_point()),"World placement changed the local anvil precision domain");
+    check(anvil_edge_error_bound(*original.anvil)==0&&anvil_edge_error_bound(*placed.anvil)==anvil_edge_error_bound(*enabled(original).anvil),"Edge allowance leaked into disabled/world-placement state");
+
+    auto thin=original;auto& source=*thin.anvil;auto& settings=source.settings;
+    source.cloud.trunk.cells.front().shape.source.modifiers.overlap=0;
+    settings.enabled=true;settings.thickness=2;settings.width=100;settings.extension=360;settings.edge_fade=.2;
+    refresh_anvil_scene(thin);const AnvilEvaluationPlan precise(source);const TopLobeEvaluationPlan trunk(source.cloud);
+    const auto gpu=precise.gpu_params();const double allowance=anvil_edge_error_bound(source)*settings.density_scale;
+    double maximum_error=0;
+    // Differential precision regression: points through the sheet's steepest
+    // edge compare the double evaluator with the packed float shader formula.
+    // This isolates new sheet arithmetic while retaining the same trunk value.
+    for(int i=1;i<10000;++i){
+        const double theta=i*.001;const Vec3 p{gpu.center.x+230*.9*std::cos(theta),gpu.center.y+.9*std::sin(theta),0};
+        const float u=(float(p.x)-gpu.center.x)/gpu.dimensions.x,w=(float(p.y)-gpu.center.y)/gpu.dimensions.z;
+        const float distance=(std::sqrt(u*u+w*w)-1)*gpu.dimensions.z;
+        const float t=std::clamp((distance+gpu.dimensions.w)/gpu.dimensions.w,0.f,1.f);
+        const double addition=gpu.cloud.fields.groups[0].settings.z*gpu.settings.y*(1-t*t*(3-2*t));
+        maximum_error=std::max(maximum_error,std::abs(precise.at(p)-std::max(trunk.at(p),addition)));
+    }
+    check(maximum_error>1e-5&&maximum_error<=allowance,"Float sheet edge error escaped its declared coverage bound");
+    auto wider=source;wider.settings.edge_fade=.25;
+    check(anvil_edge_error_bound(wider)<anvil_edge_error_bound(source),"Wider fade did not reduce edge amplification");
+    auto erosion=source;erosion.cloud.trunk.cells.front().shape.source.modifiers.noise.micro_erosion=20;
+    erosion.cloud.trunk.cells.front().shape.source.modifiers.noise.micro_frequency=2;
+    check(anvil_edge_error_bound(erosion)>max_anvil_edge_error&&!validate_anvil(erosion).empty(),"Narrow fade accepted unbounded inherited erosion precision");
 }
 void fixtures(const std::filesystem::path& dir){
     std::filesystem::create_directories(dir);const auto off=fixture();auto narrow=enabled(off);narrow.anvil->settings.width=70;narrow.anvil->settings.extension=30;refresh_anvil_scene(narrow);

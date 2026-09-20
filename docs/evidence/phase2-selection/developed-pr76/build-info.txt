@@ -1,0 +1,5 @@
+commit=048fa4c1d532cafc49c15ee7876c2dc0b70358e4
+configuration=Release
+runner=windows-2022
+backend=D3D12
+RTX-performance=not-validated

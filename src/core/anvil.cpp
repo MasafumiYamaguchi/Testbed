@@ -21,6 +21,76 @@ Bounds anvil_bounds(const AnvilSource& source){
     const Vec3 extent{std::abs(p.direction.x)*along+std::abs(side.x)*cross,p.thickness*.5,std::abs(p.direction.z)*along+std::abs(side.z)*cross};
     return {center-extent,center+extent};
 }
+double float_ulp(double magnitude){
+    const float value=float(std::abs(magnitude));
+    if(!std::isfinite(value))return INFINITY;
+    return std::max(double(std::nextafter(value,INFINITY))-value,double(value)-std::nextafter(value,-INFINITY));
+}
+double packed_error(double value){return std::abs(double(float(value))-value);}
+double product_error(double a,double b,double ea,double eb){
+    return a*eb+b*ea+ea*eb+.5*float_ulp((a+ea)*(b+eb));
+}
+double edge_error(const AnvilSource& source){
+    const auto& s=source.settings;
+    if(!s.enabled||s.density_scale==0)return 0;
+    const auto& cell=target(source);const auto a=anchor(source),center=a+s.direction*(s.extension*.5);
+    auto support=TopLobeEvaluationPlan(source.cloud).local_support();const auto sheet=anvil_bounds(source);grow(support,sheet.min,sheet.max);
+    const double along=(s.width+s.extension)*.5,cross=s.width*.5,half=s.thickness*.5;
+    const double dx=std::abs(s.direction.x),dz=std::abs(s.direction.z),shear=std::abs(s.shear);
+    const double edx=packed_error(s.direction.x),edz=packed_error(s.direction.z),eshear=packed_error(s.shear);
+    const double qx=dx*along+dz*cross,qz=dz*along+dx*cross;
+    const auto position_error=[&](double lo,double hi){return 4*float_ulp(std::max(std::abs(lo),std::abs(hi)));};
+    const double px=position_error(support.min.x,support.max.x),py=position_error(support.min.y,support.max.y),pz=position_error(support.min.z,support.max.z);
+    const auto subtract_error=[](double position,double origin,double extent){const double error=position+packed_error(origin);return error+.5*float_ulp(extent+error);};
+    double ex=subtract_error(px,center.x,qx+dx*shear*half),ey=subtract_error(py,center.y,half),ez=subtract_error(pz,center.z,qz+dz*shear*half);
+    const double shear_error=product_error(shear,half,eshear,ey);
+    const double sx=product_error(dx,shear*half,edx,shear_error),sz=product_error(dz,shear*half,edz,shear_error);
+    ex+=sx+.5*float_ulp(qx+ex+sx);ez+=sz+.5*float_ulp(qz+ez+sz);
+    const auto dot_error=[&](double ax,double az,double eax,double eaz,double radius){
+        const double error=product_error(qx,ax,ex,eax)+product_error(qz,az,ez,eaz);
+        return error+.5*float_ulp(radius+error);
+    };
+    const auto division_error=[](double error,double radius){
+        const double quotient=(error+packed_error(radius))/double(float(radius));
+        return quotient+.5*float_ulp(1+quotient);
+    };
+    const double eu=division_error(dot_error(dx,dz,edx,edz,along),along),ev=division_error(dot_error(dz,dx,edz,edx,cross),cross),ew=division_error(ey,half);
+    // Euclidean norm is 1-Lipschitz. Four ULPs allow its multiply/add/sqrt
+    // arithmetic independently of the coordinate/normalization perturbation.
+    const double norm_error=std::hypot(eu,ev,ew)+4*float_ulp(1+std::hypot(eu,ev,ew));
+    const double difference_error=norm_error+.5*float_ulp(1+norm_error);
+    double distance_error=product_error(1.,half,difference_error,packed_error(half));
+    const auto& noise=cell.shape.source.modifiers.noise;
+    if(noise.micro_erosion>0){
+        const auto coordinate_error=[&](double lo,double hi,double position,double translation,double origin){
+            double extent=std::max(std::abs(lo-translation),std::abs(hi-translation));
+            double error=position+packed_error(translation);error+=.5*float_ulp(extent+error);
+            extent=std::max(std::abs(lo-translation-origin),std::abs(hi-translation-origin));
+            error+=packed_error(origin);error+=.5*float_ulp(extent+error);
+            return product_error(extent,noise.micro_frequency,error,packed_error(noise.micro_frequency));
+        };
+        const double coordinate=coordinate_error(support.min.x,support.max.x,px,cell.translation.x,noise.origin.x)+coordinate_error(support.min.y,support.max.y,py,cell.translation.y,noise.origin.y)+coordinate_error(support.min.z,support.max.z,pz,cell.translation.z,noise.origin.z);
+        // Quintic value noise has per-axis derivative <= 1.875. The fixed
+        // 2:1 octaves raise this to 2.5; 128 epsilons cover interpolation and
+        // polynomial arithmetic on [0,1], including lattice-value packing.
+        const double noise_error=std::min(1.,2.5*coordinate+128*std::numeric_limits<float>::epsilon());
+        distance_error+=product_error(noise.micro_erosion,1.,packed_error(noise.micro_erosion),noise_error);
+        distance_error+=.5*float_ulp(half+noise.micro_erosion+distance_error);
+    }
+    const double fade_error=packed_error(s.edge_fade);
+    const double normalize_error=(distance_error+fade_error+.5*float_ulp(s.edge_fade+distance_error+fade_error))/double(float(s.edge_fade));
+    // Smoothstep's maximum derivative is 1.5. Extra scalar arithmetic is
+    // bounded separately; this allowance is never applied to legacy fields.
+    return std::min(1.,1.5*(normalize_error+.5*float_ulp(1+normalize_error))+16*std::numeric_limits<float>::epsilon());
+}
+}
+double anvil_edge_error_bound(const AnvilSource& source){
+    try{
+        const auto& s=source.settings;
+        if(!s.enabled||s.density_scale==0)return 0;
+        if(!range(s.thickness,1,2000)||!range(s.width,8,10000)||!range(s.extension,0,40000)||!range(s.edge_fade,.01,250)||!finite(s.direction)||!std::isfinite(s.shear))return INFINITY;
+        return edge_error(source);
+    }catch(const std::exception&){return INFINITY;}
 }
 Vec3 anvil_connection_point(const AnvilSource& source){return anchor(source);}
 AnvilSource make_anvil_source(const TopLobeSource& cloud){
@@ -51,6 +121,7 @@ std::vector<std::string> validate_anvil(const AnvilSource& source){
             const auto magnitude=[](Vec3 v){return std::max({std::abs(v.x),std::abs(v.y),std::abs(v.z)});};
             const double scale=std::max({1.,magnitude(bounds.min),magnitude(bounds.max),magnitude(local_anchor),magnitude(found->translation),s.width,s.extension});
             check(scale*std::numeric_limits<float>::epsilon()*8/s.edge_fade<=.002,"Anvil edge exceeds GPU precision budget; widen fade or reduce coordinate/extent");
+            check(anvil_edge_error_bound(source)<=max_anvil_edge_error,"Anvil edge arithmetic exceeds the 0.002 coverage error budget; widen fade or reduce coordinate/erosion");
         }
     }
     if(s.enabled)check(cells.size()==1,"Enabled anvil currently requires exactly one developed trunk");

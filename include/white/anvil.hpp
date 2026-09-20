@@ -4,6 +4,13 @@ namespace white {
 AnvilSource make_anvil_source(const TopLobeSource&);
 Vec3 anvil_connection_point(const AnvilSource&);
 std::vector<std::string> validate_anvil(const AnvilSource&);
+inline constexpr double max_anvil_edge_error=.002;
+// Absolute smooth-coverage error from float coordinates/packet arithmetic,
+// including inherited micro erosion. Assumes sample coordinates are within
+// four float ULPs at the local support's largest coordinate on each axis;
+// independent ray/grid construction errors are not covered. Density/profile
+// scaling and the legacy masks/noise allowance are applied by the consumer.
+double anvil_edge_error_bound(const AnvilSource&);
 struct alignas(16) GpuAnvilParams {
     GpuTopLobeParams cloud{};
     Float4 center{}; // Object-local center.

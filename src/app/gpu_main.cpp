@@ -265,6 +265,7 @@ int main(int argc,char** argv) {
                 gpu.save_capture(std::filesystem::path(capture).parent_path()/"step-half.bmp");
                 gpu.view_steps/=2;gpu.volume_dirty=true;convergence_frame=-1;baseline_hdr.clear();
             }
+            if(anvil_test&&swap&&(frame==120||frame==160||frame==185)){gpu.wait_bakes();gpu.validate();gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("anvil-"+std::to_string(frame)+".bmp"));}
             if(top_lobes_test&&swap&&(frame==100||frame==140||frame==180)){gpu.validate();gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("top-lobes-"+std::to_string(frame)+".bmp"));}
             if(developed_test&&swap&&(frame==116||frame==160)){gpu.validate();gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("developed-"+std::to_string(frame)+".bmp"));}
             if(centerline_test&&swap&&(frame==116||frame==160)) {gpu.validate();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("centerline-"+std::to_string(frame)+".bmp"));}

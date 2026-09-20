@@ -69,6 +69,13 @@ Fade is positive and at most one eighth of thickness. Directions are unit XZ
 vectors. Source validation and the GPU precision budget reject unsupported
 coordinates, including insufficient initial height during generation.
 
+GPU comparison additionally propagates source-specific float packing and
+coordinate ULPs through shear, ellipsoid normalization, inherited micro erosion
+and the edge smoothstep (maximum derivative 1.5/fade). Coverage error must stay
+within .002. Its density-scaled allowance is logged separately and does not
+relax legacy fields. Very thin, high-erosion edges may therefore require a wider
+fade even when their geometric dimensions alone are valid.
+
 `anvil_contract` checks exact lower density, positive necks, support and upper
 bounds across rotations/shear, protected cuts, shared wind, manual override,
 growth onset, top integration, source-only persistence, migration and one-step
