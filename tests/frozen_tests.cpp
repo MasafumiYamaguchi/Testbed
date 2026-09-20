@@ -32,7 +32,10 @@ void equality(){
     const auto frozen=fixed(independent,30);check(frozen.frozen->fields.size()==2&&!frozen.frozen->top_enabled,"Independent developments were flattened");
 }
 void detail_and_lifecycle(){
-    auto scene=fixed(source(true,true),45);const auto original=scene;const auto calls=generation_job_count();const auto content=scene.frozen->content_hash,cache=density_input_hash(scene);const auto& top=scene.frozen->fields[1];auto noise=top.recipe.noise;noise.medium_strength=.9;noise.micro_erosion=2;
+    auto scene=fixed(source(true,true),45);const auto original=scene;const auto calls=generation_job_count();const auto content=scene.frozen->content_hash,cache=density_input_hash(scene);
+    // The mutable Scene below replaces its fields; keep the baseline reference
+    // in the immutable snapshot for all later layer checks.
+    const auto& top=original.frozen->fields[1];auto noise=top.recipe.noise;noise.medium_strength=.9;noise.micro_erosion=2;
     scene=scene_with_frozen_detail(scene,top.development_id,noise,top.recipe.detail_seed+91,top.layers);
     check(scene.frozen->content_hash==content&&density_input_hash(scene)!=cache&&scene.frozen->payload_hash!=original.frozen->payload_hash,"Detail changed geometry or failed to invalidate density");
     check(scene.frozen->curves==original.frozen->curves&&scene.frozen->hierarchy==original.frozen->hierarchy&&scene.frozen->anvil==original.frozen->anvil&&scene.frozen->selection_value==original.frozen->selection_value,"Detail regenerated structural metadata");
