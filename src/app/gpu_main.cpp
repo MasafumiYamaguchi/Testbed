@@ -109,10 +109,23 @@ int main(int argc,char** argv) {
         if(recipe.empty()||self_test||lifecycle||frames){std::cerr<<"Benchmark requires --recipe and excludes --frames, --self-test and --lifecycle-test\n";return 2;}
         frames=benchmark_updates+90;
     }
+    // Keep the last completed stage available when a bounded capture is killed
+    // by its watchdog. Benchmarks retain their existing buffered timing path.
+    const bool trace_capture=frames>0&&benchmark_updates==0;
+    if(trace_capture)std::cout<<std::unitbuf;
+    const auto capture_start=std::chrono::steady_clock::now();
+    auto trace_stage=[&](const char* stage){
+        if(trace_capture)std::cout<<"capture_stage="<<stage<<" elapsed_ms="
+            <<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-capture_start).count()<<'\n';
+    };
+    trace_stage("sdl_initialize_begin");
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
+    trace_stage("sdl_initialize_complete");
     int exit_code=0;
     try {
-        white::GpuSpike gpu; gpu.initialize(validation);gpu.diagnostic_mode=diagnostic_mode;gpu.progressive=progressive_samples>0;if(progressive_samples)gpu.progressive_budget=progressive_samples;gpu.empty_skip=empty_skip;gpu.sun_cache_resolution=sun_cache;gpu.validate_optics();
+        white::GpuSpike gpu;trace_stage("gpu_initialize_begin");gpu.initialize(validation);trace_stage("gpu_initialize_complete");
+        gpu.diagnostic_mode=diagnostic_mode;gpu.progressive=progressive_samples>0;if(progressive_samples)gpu.progressive_budget=progressive_samples;gpu.empty_skip=empty_skip;gpu.sun_cache_resolution=sun_cache;
+        trace_stage("optics_validation_begin");gpu.validate_optics();trace_stage("optics_validation_complete");
         if(self_test) {
             for(auto dims:{std::array<Uint32,3>{1,1,1},{17,19,23},{32,32,32}}) {
                 for(Uint32 fixture=0;fixture<2;++fixture) {gpu.create_field(dims,fixture);gpu.validate();}
@@ -124,7 +137,8 @@ int main(int argc,char** argv) {
             }
         }
         if(self_test)for(int test=0;test<5;++test)gpu.create_cloud(test);
-        gpu.create_cloud(preset);
+        trace_stage("initial_field_begin");gpu.create_cloud(preset);trace_stage("initial_field_complete");
+        trace_stage("editor_initialize_begin");
         Ui ui;ui.init(gpu);
         white::EditorUi editor(preset);
         if(prefab_test)editor.start_prefab_test();
@@ -133,13 +147,19 @@ int main(int argc,char** argv) {
         if(top_lobes_test)editor.start_top_lobes_test();
         if(anvil_test)editor.start_anvil_test();
         if(!recipe.empty())editor.session.load(std::filesystem::u8path(recipe),true);
+        trace_stage("editor_initialize_complete");
         gpu.internal_width=render_width;gpu.view_steps=view_steps;gpu.shadow_steps=shadow_steps;
+        trace_stage("scene_request_begin");
         gpu.set_scene(editor.session.document().scene(),editor.session.document().revision());
         if(!recipe.empty())white::gpu_check(SDL_SetWindowSize(gpu.window,1110,540),"Set fixed 16:9 viewport");
         if(cache){gpu.set_cache_resolution(cache);gpu.use_cache=true;}
+        trace_stage("scene_request_complete");
         if(!recipe.empty()){
-            gpu.wait_bakes();
-            if(white::editable_developed_source(editor.session.document().scene())){gpu.validate();gpu.validate_cache_samples();}
+            trace_stage("density_wait_begin");gpu.wait_bakes();trace_stage("density_wait_complete");
+            if(white::editable_developed_source(editor.session.document().scene())){
+                trace_stage("density_validation_begin");gpu.validate();trace_stage("density_validation_complete");
+                trace_stage("sample_validation_begin");gpu.validate_cache_samples();trace_stage("sample_validation_complete");
+            }
             std::cout<<"fixed_recipe="<<recipe<<" density_hash="<<white::density_input_hash(editor.session.document().scene())<<" internal_width="<<render_width<<" view_steps="<<view_steps<<" shadow_steps="<<shadow_steps<<" cache="<<cache<<" camera_sun=from_saved_recipe\n";
         }
         const auto benchmark_base=editor.session.document().scene();
@@ -213,12 +233,15 @@ int main(int argc,char** argv) {
             ImGui::Render();
             bool hdr_work=false;
             const auto record_start=std::chrono::steady_clock::now();
+            if(frame==0)trace_stage("first_frame_acquire_begin");
             auto* cmd=SDL_AcquireGPUCommandBuffer(gpu.device);white::gpu_check(cmd != nullptr,"Acquire frame commands");
             SDL_GPUTexture* swap=nullptr;Uint32 w=0,h=0;
             if(!SDL_WaitAndAcquireGPUSwapchainTexture(cmd,gpu.window,&swap,&w,&h)) {
                 SDL_CancelGPUCommandBuffer(cmd);white::gpu_check(false,"Acquire swapchain");
             }
+            if(frame==0)trace_stage("first_frame_acquire_complete");
             if(swap) {
+                if(frame==0)trace_stage("first_frame_record_begin");
                 gpu.resize(w,h);gpu.prepare_preview();hdr_work=gpu.volume_dirty&&gpu.show_volume;gpu.draw(cmd,editor.slice,Uint32(editor.axis));
                 ImGui_ImplSDLGPU3_PrepareDrawData(ImGui::GetDrawData(),cmd);
                 SDL_GPUColorTargetInfo color{};color.texture=gpu.target;color.load_op=SDL_GPU_LOADOP_LOAD;color.store_op=SDL_GPU_STOREOP_STORE;
@@ -228,12 +251,17 @@ int main(int argc,char** argv) {
                 blit.destination.texture=swap;blit.destination.w=w;blit.destination.h=h;
                 blit.load_op=SDL_GPU_LOADOP_DONT_CARE;blit.filter=SDL_GPU_FILTER_NEAREST;
                 SDL_BlitGPUTexture(cmd,&blit);
+                if(frame==0)trace_stage("first_frame_record_complete");
             }
             if(self_test||!recipe.empty()) {
+                if(frame==0)trace_stage("first_frame_submit_begin");
                 const auto recorded=std::chrono::steady_clock::now();auto* fence=SDL_SubmitGPUCommandBufferAndAcquireFence(cmd);white::gpu_check(fence!=nullptr,"Submit timed frame");
                 const auto submitted=std::chrono::steady_clock::now();
+                if(frame==0)trace_stage("first_frame_submit_complete");
+                if(frame==0)trace_stage("first_frame_fence_begin");
                 const bool waited=SDL_WaitForGPUFences(gpu.device,true,&fence,1);SDL_ReleaseGPUFence(gpu.device,fence);white::gpu_check(waited,"Wait timed frame");
                 const auto completed=std::chrono::steady_clock::now();
+                if(frame==0)trace_stage("first_frame_fence_complete");
                 if(measuring){
                     if(!swap||gpu.rendered_revision!=editor.session.document().revision())throw std::runtime_error("Benchmark frame did not submit latest revision");
                     auto ms=[](auto start,auto end){return std::chrono::duration<double,std::milli>(end-start).count();};
