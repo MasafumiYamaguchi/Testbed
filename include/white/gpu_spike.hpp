@@ -31,6 +31,8 @@ public:
     std::uint64_t bake_count=0,estimated_gpu_bytes=0;
     double bake_record_ms=0,bake_wait_ms=0;
     void set_cache_resolution(int resolution);
+    bool empty_skip=false;
+    void validate_majorant();
     int sun_cache_resolution=0; // 0 direct, 32/64 tau cache
     unsigned sun_cache_builds=0;
     void validate_sun_cache();
@@ -69,6 +71,11 @@ public:
     void validate_cache_samples();
     std::vector<float> read_hdr();
 private:
+    SDL_GPUTexture* majorant_texture_=nullptr;
+    SDL_GPUComputePipeline* majorant_generate_=nullptr;
+    std::uint64_t majorant_key_=0;
+    std::array<Uint32,3> majorant_extent_{};
+    bool rendered_skip_=false;
     SDL_GPUTexture* sun_tau_=nullptr;
     SDL_GPUComputePipeline* sun_generate_=nullptr;
     std::uint64_t sun_key_=0;

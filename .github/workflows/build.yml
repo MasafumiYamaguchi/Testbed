@@ -52,6 +52,9 @@ jobs:
       - name: Sun cache comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-sun.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
+      - name: Conservative empty-space comparisons
+        if: matrix.config == 'Release'
+        run: ./scripts/capture-majorant.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
       - name: Bounded edit benchmark
         if: matrix.config == 'Release'
         run: ./scripts/benchmark-editor.ps1 -Executable ./build/windows/Release/white_app.exe -InternalWidth 160 -Updates 60
