@@ -1,3 +1,4 @@
+#include "phase.hlsli"
 #define DENSITY_SPACE space3
 #include "density.hlsli"
 #include "optics.hlsli"
@@ -32,7 +33,7 @@ float4 main(float4 position:SV_Position,float2 uv:TEXCOORD0):SV_Target0 {
             float3 q=localOrigin+localDirection*(entry+(i+0.5)*dt);
             float density=evaluateDensity(q);
             if(density>0) {
-                float3 source=irradianceFar.xyz*(lightAlbedo.w*0.07957747154594767)*shadowTransmittance(q);
+                float3 source=irradianceFar.xyz*(lightAlbedo.w*phaseHG(dot(lightAlbedo.xyz,direction),upUnused.w))*shadowTransmittance(q);
                 integrateSegment(L,T,density*forwardExtinction.w,dt,source);
             }
         }

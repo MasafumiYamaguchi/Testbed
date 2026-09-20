@@ -153,6 +153,19 @@ void EditorUi::draw(GpuSpike& gpu) {
         ImGui::Text("Resource budget: %.1f MiB",gpu.estimated_gpu_bytes/1048576.0);
         ImGui::TextWrapped("Filtering changes fine edges. Base and full cuts remain clipped.");
     }
+    if(ImGui::CollapsingHeader("Optical properties")) {
+        ImGui::PushItemWidth(120);
+        s=session.document().scene();float density=float(s.cloud.density);
+        bool changed=ImGui::SliderFloat("Density",&density,0,5);s.cloud.density=density;inspector_item(changed,s);
+        s=session.document().scene();float extinction=float(s.cloud.optics.extinction_scale);
+        changed=ImGui::SliderFloat("Extinction / m",&extinction,0,.2f,"%.4f");s.cloud.optics.extinction_scale=extinction;inspector_item(changed,s);
+        s=session.document().scene();float albedo=float(s.cloud.optics.albedo);
+        changed=ImGui::SliderFloat("Albedo",&albedo,0,1);s.cloud.optics.albedo=albedo;inspector_item(changed,s);
+        s=session.document().scene();float g=float(s.cloud.optics.g);
+        changed=ImGui::SliderFloat("HG g",&g,-.95f,.95f,"%.3f");s.cloud.optics.g=g;inspector_item(changed,s);
+        ImGui::TextWrapped("g=0: isotropic. Positive g favors forward photon scattering. Optical changes preserve density caches.");
+        ImGui::PopItemWidth();
+    }
     if(ImGui::CollapsingHeader("View settings")) {
         ImGui::PushItemWidth(120);
         if(ImGui::SliderInt("View steps",&gpu.view_steps,8,256))gpu.volume_dirty=true;
@@ -221,7 +234,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(gpu.report.starts_with("Bake failed"))status_=gpu.report;
     const bool actual_cache=gpu.use_cache&&gpu.cache_current();
     const auto mode=std::string(actual_cache?"Dense ":"Direct ")+(actual_cache?std::to_string(gpu.extent[0])+"x"+std::to_string(gpu.extent[1])+"x"+std::to_string(gpu.extent[2]):"evaluator")+(gpu.bake_pending()?" | baking latest":"");
-    ImGui::GetForegroundDrawList()->AddText({vx,40},IM_COL32(170,185,205,255),mode.c_str());
+    ImGui::GetForegroundDrawList()->AddText({vx,40},IM_COL32(170,185,205,255),(mode+" | g="+std::to_string(session.document().scene().cloud.optics.g)).c_str());
     ImGui::GetForegroundDrawList()->AddText({vx,20},IM_COL32(220,225,235,255),"Click: select | Right-drag: orbit | Wheel: zoom | Esc: cancel");
     gpu.set_interacting(gizmo_drag_||inspector_drag_||orbit_drag_);
     if(session.document().revision()!=gpu.scene_revision&&session.document().revision()!=last_scene_attempt_) {

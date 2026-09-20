@@ -1,5 +1,6 @@
 #include "white/gpu_spike.hpp"
 #include "white/benchmark.hpp"
+#include "white/phase.hpp"
 #include "white/build_info.hpp"
 #include "white/optics.hpp"
 #include "white/dense_cache.hpp"
@@ -386,7 +387,7 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     const auto sun=scene_snapshot_.sun.direction_to_light;
     auto pack=[](Vec3 v,float w=0){return Float4{float(v.x),float(v.y),float(v.z),w};};
     const std::array<Float4,10> view{
-        pack(eye,float(camera.near_plane)),pack(right,float(std::tan(camera.vertical_fov_degrees*3.141592653589793/360))),pack(up),pack(forward,float(recipe.optics.extinction_scale)),
+        pack(eye,float(camera.near_plane)),pack(right,float(std::tan(camera.vertical_fov_degrees*3.141592653589793/360))),pack(up,float(recipe.optics.g)),pack(forward,float(recipe.optics.extinction_scale)),
         pack(sun,float(recipe.optics.albedo)),pack(scene_snapshot_.sun.irradiance,float(camera.far_plane)),
         Float4{float(x.x),float(y.x),float(z.x),float(origin.x)},Float4{float(x.y),float(y.y),float(z.y),float(origin.y)},Float4{float(x.z),float(y.z),float(z.z),float(origin.z)},
         Float4{float(rendered_steps_),float(render_shadows),float(w)/float(h),rendered_cache_?1.0f:0.0f}};
@@ -420,13 +421,13 @@ void GpuSpike::validate_cache_samples() {
     }catch(...){SDL_ReleaseGPUBuffer(device,output);throw;}SDL_ReleaseGPUBuffer(device,output);
 }
 void GpuSpike::validate_optics() {
-    SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,24*4*sizeof(float),0};
+    SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,128*4*sizeof(float),0};
     auto* output=SDL_CreateGPUBuffer(device,&bi);gpu_check(output!=nullptr,"Create optical result buffer");
     try {
         Transfer transfer(device,bi.size);auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire optical test commands");
         SDL_GPUStorageBufferReadWriteBinding binding{};binding.buffer=output;
         auto* pass=SDL_BeginGPUComputePass(cmd,nullptr,0,&binding,1);SDL_BindGPUComputePipeline(pass,optical_test);
-        SDL_DispatchGPUCompute(pass,24,1,1);SDL_EndGPUComputePass(pass);
+        SDL_DispatchGPUCompute(pass,128,1,1);SDL_EndGPUComputePass(pass);
         auto* copy=SDL_BeginGPUCopyPass(cmd);SDL_GPUBufferRegion source{output,0,bi.size};SDL_GPUTransferBufferLocation destination{transfer.buffer,0};
         SDL_DownloadFromGPUBuffer(copy,&source,&destination);SDL_EndGPUCopyPass(copy);submit_wait(device,cmd);
         auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map optical test");
@@ -445,6 +446,13 @@ void GpuSpike::validate_optics() {
         }
         double previous=1;for(int i=0;i<3;++i){const double actual=values[(20+i)*4],difference=std::abs(actual-std::exp(-1.2));contract_ok=contract_ok&&std::isfinite(actual)&&difference<previous*.35+2e-6;previous=difference;std::cout<<"GPU optical_convergence steps="<<(16<<i)<<" T_abs_error="<<difference<<'\n';}
         contract_ok=contract_ok&&values[23*4]==0&&values[23*4+1]==0&&values[23*4+2]==0&&values[23*4+3]==1;
+        double phase_mu_error=0,phase_pdf_relative=0;const float gs[]{-.95f,-.5f,0,.5f,.95f};
+        for(int i=24;i<128;++i){const double g=gs[(i-24)%5],u=phase_random(i,3,0,42),v=phase_random(i,3,1,42);auto expected=sample_hg({0,0,1},g,u,v);
+            phase_mu_error=std::max(phase_mu_error,std::abs(double(values[i*4])-expected.direction.z));phase_pdf_relative=std::max(phase_pdf_relative,std::abs(double(values[i*4+1])-expected.pdf)/expected.pdf);
+            contract_ok=contract_ok&&std::isfinite(values[i*4])&&std::isfinite(values[i*4+1])&&values[i*4+1]>0&&values[i*4+2]==u&&values[i*4+3]==v;
+        }
+        contract_ok=contract_ok&&phase_mu_error<2e-5&&phase_pdf_relative<.001;
+        std::cout<<"GPU HG samples=104 cosine_max_error="<<phase_mu_error<<" pdf_max_relative_error="<<phase_pdf_relative<<" RNG_exact=true\n";
         SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
         if(!contract_ok)throw std::runtime_error("GPU optical integration contract failed");
         std::cout<<"GPU ray/box six cases max_abs_error="<<bounds_error<<'\n';

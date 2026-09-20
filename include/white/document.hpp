@@ -57,6 +57,7 @@ struct BasePlane {
 struct Optics {
     double extinction_scale=0.02; // 1/metre
     double albedo=0.9;
+    double g=0;
     bool operator==(const Optics&) const = default;
 };
 struct NoiseSettings {
@@ -90,7 +91,7 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=2,algorithm_version=2;
+    std::uint32_t schema_version=3,algorithm_version=2;
     CloudRecipe cloud{};
     Camera camera{};
     Sun sun{};

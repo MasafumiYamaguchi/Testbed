@@ -64,7 +64,7 @@ std::string scene_json(const Scene& s) {
             {"density",c.density},{"blend_width",c.blend_width},{"overlap",c.overlap},
             {"structure_seed",std::to_string(c.structure_seed)},{"detail_seed",std::to_string(c.detail_seed)},
             {"noise",noise_json(c.noise)},
-            {"optics",{{"extinction_scale",c.optics.extinction_scale},{"albedo",c.optics.albedo}}}}},
+            {"optics",{{"extinction_scale",c.optics.extinction_scale},{"albedo",c.optics.albedo},{"g",c.optics.g}}}}},
         {"camera",{{"position",vec(s.camera.position)},{"target",vec(s.camera.target)},{"up",vec(s.camera.up)},
             {"vertical_fov_degrees",s.camera.vertical_fov_degrees},{"near_plane",s.camera.near_plane},{"far_plane",s.camera.far_plane}}},
         {"sun",{{"direction_to_light",vec(s.sun.direction_to_light)},{"irradiance",vec(s.sun.irradiance)}}},
@@ -80,11 +80,13 @@ Scene parse_scene_json(std::string_view text) {
     shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev"});
     if(!j.at("schema_version").is_number_unsigned()||!j.at("algorithm_version").is_number_unsigned())throw std::invalid_argument("Version must be an unsigned integer");
     const bool legacy=j.at("schema_version")==1&&j.at("algorithm_version")==1;
-    if(!legacy&&(j.at("schema_version")!=2||j.at("algorithm_version")!=2))throw std::invalid_argument("Unsupported schema/algorithm version");
+    const bool version2=j.at("schema_version")==2&&j.at("algorithm_version")==2;
+    if(!legacy&&!version2&&(j.at("schema_version")!=3||j.at("algorithm_version")!=2))throw std::invalid_argument("Unsupported schema/algorithm version");
     if(legacy) {
         shape(j.at("cloud"),{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics"});
         j["cloud"]["noise"]=noise_json(NoiseSettings{}); // exact old shape: all noise amplitudes zero
     }
+    if(legacy||version2){shape(j["cloud"]["optics"],{"extinction_scale","albedo"});j["cloud"]["optics"]["g"]=0;}
     Scene s;auto& c=s.cloud;const auto& cj=j.at("cloud");
     shape(cj,{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics","noise"});
     const auto& noise=cj.at("noise");shape(noise,{"origin","medium_frequency","medium_strength","micro_frequency","micro_erosion","warp_frequency","warp_amplitude"});
@@ -110,8 +112,8 @@ Scene parse_scene_json(std::string_view text) {
     if(!base.at("enabled").is_boolean())throw std::invalid_argument("Base enabled must be boolean");
     c.base={base.at("enabled").get<bool>(),number(base.at("height")),number(base.at("transition"))};
     c.density=number(cj.at("density"));c.blend_width=number(cj.at("blend_width"));c.overlap=number(cj.at("overlap"));
-    const auto& optics=cj.at("optics");shape(optics,{"extinction_scale","albedo"});
-    c.optics={number(optics.at("extinction_scale")),number(optics.at("albedo"))};
+    const auto& optics=cj.at("optics");shape(optics,{"extinction_scale","albedo","g"});
+    c.optics={number(optics.at("extinction_scale")),number(optics.at("albedo")),number(optics.at("g"))};
     const auto& camera=j.at("camera");shape(camera,{"position","target","up","vertical_fov_degrees","near_plane","far_plane"});
     s.camera={vec(camera.at("position")),vec(camera.at("target")),vec(camera.at("up")),number(camera.at("vertical_fov_degrees")),number(camera.at("near_plane")),number(camera.at("far_plane"))};
     const auto& sun=j.at("sun");shape(sun,{"direction_to_light","irradiance"});

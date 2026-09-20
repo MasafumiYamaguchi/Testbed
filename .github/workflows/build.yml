@@ -46,6 +46,9 @@ jobs:
       - name: Fixed Phase-0 recipe comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-gate.ps1 -Executable ./build/windows/Release/white_app.exe
+      - name: HG phase comparison captures
+        if: matrix.config == 'Release'
+        run: ./scripts/capture-gate.ps1 -Executable ./build/windows/Release/white_app.exe -RecipeDirectory ./tests/fixtures/phase -OutputDirectory evidence/phase
       - name: Bounded edit benchmark
         if: matrix.config == 'Release'
         run: ./scripts/benchmark-editor.ps1 -Executable ./build/windows/Release/white_app.exe -InternalWidth 160 -Updates 60

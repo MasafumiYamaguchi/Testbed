@@ -1,0 +1,129 @@
+{
+  "algorithm_version": 2,
+  "camera": {
+    "far_plane": 10000.0,
+    "near_plane": 0.1,
+    "position": [
+      120.0,
+      70.0,
+      120.0
+    ],
+    "target": [
+      0.0,
+      35.0,
+      0.0
+    ],
+    "up": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "vertical_fov_degrees": 45.0
+  },
+  "cloud": {
+    "base": {
+      "enabled": false,
+      "height": 0,
+      "transition": 2
+    },
+    "blend_width": 12,
+    "cells": [
+      {
+        "id": "2",
+        "center": [
+          -12,
+          35,
+          0
+        ],
+        "radii": [
+          18,
+          48,
+          18
+        ],
+        "structure_seed": "0"
+      },
+      {
+        "id": "3",
+        "center": [
+          15,
+          30,
+          0
+        ],
+        "radii": [
+          25,
+          36,
+          22
+        ],
+        "structure_seed": "7"
+      }
+    ],
+    "cuts": [],
+    "density": 1.0,
+    "detail_seed": "17",
+    "envelope": {
+      "max": [
+        50.0,
+        100.0,
+        50.0
+      ],
+      "min": [
+        -50.0,
+        -20.0,
+        -50.0
+      ]
+    },
+    "id": "1",
+    "optics": {
+      "albedo": 0.9,
+      "extinction_scale": 0.02,
+      "g": 0.95
+    },
+    "overlap": 0.0,
+    "structure_seed": "42",
+    "transform": {
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "noise": {
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "medium_frequency": 0.12,
+      "medium_strength": 0,
+      "micro_frequency": 0.15,
+      "micro_erosion": 0,
+      "warp_frequency": 0.035,
+      "warp_amplitude": 0
+    }
+  },
+  "exposure_ev": 1.0,
+  "schema_version": 3,
+  "sun": {
+    "direction_to_light": [
+      -0.6925318281897135,
+      -0.20198844988866643,
+      -0.6925318281897135
+    ],
+    "irradiance": [
+      15.0,
+      15.0,
+      15.0
+    ]
+  }
+}
