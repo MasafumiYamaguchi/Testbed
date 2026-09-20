@@ -141,6 +141,18 @@ void EditorUi::draw(GpuSpike& gpu) {
         ImGui::PopItemWidth();
         if(focus_noise_){ImGui::SetScrollHereY(1);focus_noise_=false;}
     }
+    if(ImGui::CollapsingHeader("Dense cache")) {
+        bool cached=gpu.use_cache;
+        if(ImGui::Checkbox("Use baked density",&cached))try{
+            if(cached)gpu.set_cache_resolution(gpu.cache_resolution);
+            gpu.use_cache=cached;gpu.volume_dirty=true;status_=cached?"Dense cache":"Direct density";
+        }catch(const std::exception& e){status_=e.what();}
+        int resolution=gpu.cache_resolution==256?1:0;
+        if(ImGui::Combo("Grid",&resolution,"128 cubed\0 256 cubed\0"))try{gpu.set_cache_resolution(resolution?256:128);}catch(const std::exception& e){status_=e.what();}
+        ImGui::Text("Bakes: %llu",static_cast<unsigned long long>(gpu.bake_count));
+        ImGui::Text("Resource budget: %.1f MiB",gpu.estimated_gpu_bytes/1048576.0);
+        ImGui::TextWrapped("Filtering changes fine edges. Base and full cuts remain clipped.");
+    }
     if(ImGui::CollapsingHeader("View settings")) {
         ImGui::PushItemWidth(120);
         if(ImGui::SliderInt("View steps",&gpu.view_steps,8,256))gpu.volume_dirty=true;
@@ -156,6 +168,7 @@ void EditorUi::draw(GpuSpike& gpu) {
         ImGui::PopItemWidth();
     }
     if(ImGui::CollapsingHeader("Validation")) {
+        if(ImGui::Button("Retry preview"))last_scene_attempt_=0;
         if(ImGui::Button("Check density"))try{gpu.validate();status_=gpu.report;}catch(const std::exception& e){status_=e.what();}
         ImGui::Text("Revision: %llu",static_cast<unsigned long long>(session.document().revision()));
         ImGui::Text("Error: %.8f",gpu.max_error);
@@ -206,7 +219,11 @@ void EditorUi::draw(GpuSpike& gpu) {
         }else {session.end_drag();orbit_drag_=false;}
     }
     ImGui::GetForegroundDrawList()->AddText({vx,20},IM_COL32(220,225,235,255),"Click: select | Right-drag: orbit | Wheel: zoom | Esc: cancel");
-    if(session.document().revision()!=gpu.scene_revision)gpu.set_scene(session.document().scene(),session.document().revision());
+    if(session.document().revision()!=gpu.scene_revision&&session.document().revision()!=last_scene_attempt_) {
+        last_scene_attempt_=session.document().revision();
+        try{gpu.set_scene(session.document().scene(),session.document().revision());}
+        catch(const std::exception& e){status_=std::string("Preview stale; document kept: ")+e.what();}
+    }
 }
 void EditorUi::scripted_input(int frame) {
     auto& io=ImGui::GetIO();
@@ -270,6 +287,7 @@ void EditorUi::scripted_edit(int step) {
         session.apply(noise);
         if(session.document().scene().cloud.cells!=cells||session.document().scene().cloud.structure_seed!=structure)throw std::runtime_error("Noise edit changed macro parameters");
     }
+    if(step==17){auto compare=fixture_scene(4);compare.cloud.noise.medium_strength=0.8;compare.cloud.noise.micro_erosion=8;compare.cloud.noise.warp_amplitude=8;compare.cloud.noise.micro_frequency=0.15;session.apply(compare);}
     std::cout<<"editor_smoke_step="<<step<<" revision="<<session.document().revision()<<" PASS\n";
 }
 }

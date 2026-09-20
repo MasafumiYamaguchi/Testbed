@@ -15,6 +15,7 @@ public:
     const std::string& status() const{return status_;}
 private:
     bool focus_noise_=false;
+    std::uint64_t last_scene_attempt_=0;
     Scene smoke_original_{},smoke_before_{};
     float smoke_x_=0,smoke_y_=0;
     Id selected_=2;

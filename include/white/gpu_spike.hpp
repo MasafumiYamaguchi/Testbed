@@ -17,12 +17,17 @@ public:
     SDL_GPUGraphicsPipeline* display = nullptr;
     SDL_GPUComputePipeline* generate = nullptr;
     SDL_GPUComputePipeline* sample = nullptr;
+    SDL_GPUComputePipeline* cache_sample_test=nullptr;
     SDL_GPUComputePipeline* optical_test = nullptr;
     SDL_GPUGraphicsPipeline* volume_pipeline = nullptr;
     SDL_GPUGraphicsPipeline* tonemap_pipeline = nullptr;
     SDL_GPUTexture* hdr = nullptr;
     SDL_GPUSampler* point_sampler = nullptr;
-    bool show_volume = true, volume_dirty = true;
+    bool show_volume = true, volume_dirty = true,use_cache=false;
+    int cache_resolution=128;
+    std::uint64_t bake_count=0,estimated_gpu_bytes=0;
+    double bake_record_ms=0,bake_wait_ms=0;
+    void set_cache_resolution(int resolution);
     int view_steps = 64, shadow_steps = 8, internal_width = 160;
     float sun_angle = -40, exposure_ev = 1;
     Uint32 hdr_width=0,hdr_height=0;
@@ -46,9 +51,12 @@ public:
     void draw(SDL_GPUCommandBuffer* cmd, float slice, Uint32 axis);
     void save_capture(const std::filesystem::path& path);
     void validate_optics();
+    void validate_cache_samples();
     std::vector<float> read_hdr();
 private:
     Scene scene_snapshot_{};
+    std::vector<float> cache_reference_;
+    std::uint64_t validated_bake_=~std::uint64_t(0);
     std::vector<Uint8> shader(const char* name);
     void initialize_volume();
     void render_volume(SDL_GPUCommandBuffer* cmd);
