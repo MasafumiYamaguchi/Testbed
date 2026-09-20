@@ -1,3 +1,4 @@
+#include "white/field_graph.hpp"
 #include "white/gpu_spike.hpp"
 #include "white/benchmark.hpp"
 #include "white/phase.hpp"
@@ -154,7 +155,7 @@ void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
     auto* replacement=texture(device,SDL_GPU_TEXTURETYPE_3D,SDL_GPU_TEXTUREFORMAT_R32_FLOAT,
         SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE|SDL_GPU_TEXTUREUSAGE_SAMPLER,dims[0],dims[1],dims[2]);
     try {
-        const auto cloud=gpu_density_params(DensityField(scene_snapshot_.cloud));bake_wait_ms=0;
+        const auto cloud=FieldEvaluationPlan(field_graph_from_recipe(scene_snapshot_.cloud)).gpu_params();bake_wait_ms=0;
         // Bound each software-GPU dispatch; full volume still publishes atomically.
         for(Uint32 z=0;z<dims[2];z+=16) {
             auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire bake commands");
@@ -378,7 +379,10 @@ SDL_GPUTexture* GpuSpike::displayed_hdr()const{return progressive&&preview_state
 void GpuSpike::prepare_preview(){
     if(!progressive)return;
     if(progressive_budget<1||progressive_budget>256)throw std::invalid_argument("Progressive budget 1..256");
-    const std::array<unsigned,11> settings{width,height,unsigned(internal_width),unsigned(view_steps),unsigned(shadow_steps),unsigned(use_cache&&cache_current()),unsigned(cache_resolution),unsigned(sun_cache_resolution),unsigned(empty_skip),progressive_budget,diagnostic_mode};
+    const bool cached=use_cache&&cache_current();
+    // A new requested resolution can settle while the previous field is still
+    // displayed. Publication must reset its history even when density is unchanged.
+    const std::array<unsigned,14> settings{width,height,unsigned(internal_width),unsigned(view_steps),unsigned(shadow_steps),unsigned(cached),unsigned(cache_resolution),unsigned(sun_cache_resolution),unsigned(empty_skip),progressive_budget,diagnostic_mode,cached?extent[0]:0,cached?extent[1]:0,cached?extent[2]:0};
     const double now=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now().time_since_epoch()).count();
     if(preview_state.update(preview_key(scene_snapshot_,settings),interacting_,now)){volume_dirty=true;accumulation_next_=0;}
     if(!preview_state.editing()&&!progressive_paused&&preview_state.samples()<progressive_budget)volume_dirty=true;
@@ -391,7 +395,7 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     rendered_steps_=editing?std::min(view_steps,32):view_steps;
     rendered_cache_=use_cache&&field_density_hash_==density_input_hash(scene_snapshot_);
     const int render_width=editing?std::min(internal_width,96):internal_width;
-    const int render_shadows=editing?std::min(shadow_steps,4):shadow_steps;
+    const int render_shadows=editing?std::min(shadow_steps,4):shadow_steps;rendered_shadows_=render_shadows;
     const Uint32 w=Uint32(render_width),h=Uint32(std::max(1.0f,float(w)*std::max(1.0f,float(height)-90)/std::max(1.0f,float(width)-310)));
     if(checked_volume_bytes(w,h,1,16)>16*1024*1024)throw std::invalid_argument("HDR target exceeds 16 MiB budget");
     if(!hdr||hdr_width!=w||hdr_height!=h) {
@@ -403,11 +407,12 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     }
     auto normalize=[](Vec3 p){return p*(1/std::sqrt(dot(p,p)));};
     auto cross=[](Vec3 a,Vec3 b){return Vec3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x};};
-    const auto& recipe=scene_snapshot_.cloud;const auto field_params=gpu_density_params(DensityField(recipe));
+    const auto& recipe=scene_snapshot_.cloud;const auto field_params=FieldEvaluationPlan(field_graph_from_recipe(recipe)).gpu_params();
     const auto& camera=scene_snapshot_.camera;const auto eye=camera.position,target_point=camera.target;
     const auto forward=normalize(target_point-eye),right=normalize(cross(forward,camera.up)),up=cross(right,forward);
     const auto origin=world_to_local(recipe.transform,{0,0,0});
-    const auto x=world_to_local(recipe.transform,{1,0,0})-origin,y=world_to_local(recipe.transform,{0,1,0})-origin,z=world_to_local(recipe.transform,{0,0,1})-origin;
+    auto linear=recipe.transform;linear.translation={0,0,0};
+    const auto x=world_to_local(linear,{1,0,0}),y=world_to_local(linear,{0,1,0}),z=world_to_local(linear,{0,0,1});
     const auto sun=scene_snapshot_.sun.direction_to_light;
     auto pack=[](Vec3 v,float w=0){return Float4{float(v.x),float(v.y),float(v.z),w};};
     if(sun_cache_resolution!=0&&sun_cache_resolution!=32&&sun_cache_resolution!=64)throw std::invalid_argument("Sun cache must be 0/32/64");
@@ -419,7 +424,7 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
             if(sun_tau_)SDL_ReleaseGPUTexture(device,sun_tau_);sun_tau_=replacement;sun_extent_=sun_cache_resolution;sun_key_=0;
         }
         if(sun_key_!=key){
-            const auto start=std::chrono::steady_clock::now();const auto direction=world_to_local(recipe.transform,sun)-origin;
+            const auto start=std::chrono::steady_clock::now();const auto direction=world_to_local(linear,sun);
             const std::array<Float4,3> params{pack(direction,float(recipe.optics.extinction_scale)),Float4{float(sun_extent_),float(sun_extent_),float(sun_extent_),float(render_shadows)},Float4{float(camera.far_plane),0,0,0}};
             SDL_PushGPUComputeUniformData(cmd,0,params.data(),sizeof(params));SDL_PushGPUComputeUniformData(cmd,1,&field_params,sizeof(field_params));
             SDL_GPUStorageTextureReadWriteBinding output{};output.texture=sun_tau_;
@@ -448,11 +453,11 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
         }
     }
     const bool accumulate=progressive&&!preview_state.editing()&&!progressive_paused;
-    const std::array<Float4,14> view{
+    const std::array<Float4,15> view{
         pack(eye,float(camera.near_plane)),pack(right,float(std::tan(camera.vertical_fov_degrees*3.141592653589793/360))),pack(up,float(recipe.optics.g)),pack(forward,float(recipe.optics.extinction_scale)),
         pack(sun,float(recipe.optics.albedo)),pack(scene_snapshot_.sun.irradiance,float(camera.far_plane)),
         Float4{float(x.x),float(y.x),float(z.x),float(origin.x)},Float4{float(x.y),float(y.y),float(z.y),float(origin.y)},Float4{float(x.z),float(y.z),float(z.z),float(origin.z)},
-        Float4{float(rendered_steps_),float(render_shadows),float(w)/float(h),rendered_cache_?1.0f:0.0f},Float4{rendered_sun_?1.0f:0.0f,0,0,0},Float4{float(extent[0]),float(extent[1]),float(extent[2]),rendered_skip_?1.f:0.f},Float4{float(preview_state.samples()),accumulate?1.f:0.f,1.f/w,1.f/h},Float4{float(diagnostic_mode),0,0,0}};
+        Float4{float(rendered_steps_),float(render_shadows),float(w)/float(h),rendered_cache_?1.0f:0.0f},Float4{rendered_sun_?1.0f:0.0f,0,0,0},Float4{float(extent[0]),float(extent[1]),float(extent[2]),rendered_skip_?1.f:0.f},Float4{float(preview_state.samples()),accumulate?1.f:0.f,1.f/w,1.f/h},Float4{float(diagnostic_mode),0,0,0},Float4{scene_snapshot_.preview_approx.enabled?1.f:0.f,float(scene_snapshot_.preview_approx.strength),0,0}};
     SDL_PushGPUFragmentUniformData(cmd,0,view.data(),sizeof(view));
     SDL_PushGPUFragmentUniformData(cmd,1,&field_params,sizeof(field_params));
     SDL_GPUColorTargetInfo color{};color.texture=hdr;color.load_op=SDL_GPU_LOADOP_CLEAR;color.store_op=SDL_GPU_STOREOP_STORE;
@@ -508,7 +513,7 @@ void GpuSpike::validate_cache_samples() {
     auto* output=SDL_CreateGPUBuffer(device,&bi);gpu_check(output!=nullptr,"Create cache sample buffer");
     try{
         Transfer transfer(device,bi.size);auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire cache sample commands");
-        const auto cloud=gpu_density_params(DensityField(scene_snapshot_.cloud));SDL_PushGPUComputeUniformData(cmd,1,&cloud,sizeof(cloud));
+        const auto cloud=FieldEvaluationPlan(field_graph_from_recipe(scene_snapshot_.cloud)).gpu_params();SDL_PushGPUComputeUniformData(cmd,1,&cloud,sizeof(cloud));
         const Float4 unused{};SDL_PushGPUComputeUniformData(cmd,0,&unused,sizeof(unused));
         SDL_GPUStorageBufferReadWriteBinding binding{};binding.buffer=output;
         auto* pass=SDL_BeginGPUComputePass(cmd,nullptr,0,&binding,1);SDL_BindGPUComputePipeline(pass,cache_sample_test);

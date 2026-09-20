@@ -1,0 +1,154 @@
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+GPU optical_contract case=0 T=1 L=6 T_abs_error=0 L_abs_error=0 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=1 T=1 L=5e-09 T_abs_error=9.60465e-09 L_abs_error=9.46126e-17 L_absolute_tolerance=1e-14 relative_tolerance=2e-5
+GPU optical_contract case=2 T=0.496585 L=0.672666 T_abs_error=5.71405e-09 L_abs_error=2.64492e-08 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=3 T=0.496585 L=0.487224 T_abs_error=5.71405e-09 L_abs_error=1.18421e-10 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=4 T=0.367879 L=1.26424 T_abs_error=9.14976e-09 L_abs_error=1.82995e-08 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=5 T=0.367879 L=1.51709 T_abs_error=5.86897e-07 L_abs_error=1.33703e-06 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_convergence steps=16 T_abs_error=0.000294456
+GPU optical_convergence steps=32 T_abs_error=7.37696e-05
+GPU optical_convergence steps=64 T_abs_error=1.89631e-05
+GPU HG samples=104 cosine_max_error=1.57724e-05 pdf_max_relative_error=0.000123273 RNG_exact=true
+GPU ray/box six cases max_abs_error=4.76837e-07
+GPU homogeneous optics max_abs_error=9.99995e-06 tolerance=0.001
+bake=1 extent=65x67x69 texture_bytes=1201980 peak_requested_gpu_bytes=3568956 cpu_reference_bytes=1201980 record_cpu_ms=0.5473 submit_to_fence_wall_ms=38.2725 gpu_timestamp_ms=unavailable
+density_reference max_abs_error=4.52995e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+density_publish producer_revision=2 consumer_revision=2 matching_density_hash=16495154979482885505 peak_requested_gpu_bytes=87031808
+density_job_revision=2 input_hash=4773059869045599409 publish=1 coalesced=0 discarded=1 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=0.2668 generation_submit_and_fence_wall_ms=56.0275
+fixed_recipe=scene.white.json density_hash=16495154979482885505 internal_width=160 view_steps=64 shadow_steps=8 cache=128 camera_sun=from_saved_recipe
+edit_to_present_submission revision=2 ms=79.0504 samples=1 p50_ms=79.0504 p95_ms=79.0504
+frame_revision=2 mode=cache record_cpu_ms=2.7251 submit_to_fence_wall_ms=396.849 gpu_timestamp_ms=unavailable
+progressive_sample=1 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=1.3287 submit_to_fence_wall_ms=24.1441 gpu_timestamp_ms=unavailable
+progressive_sample=2 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3593 submit_to_fence_wall_ms=23.3174 gpu_timestamp_ms=unavailable
+progressive_sample=3 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.4048 submit_to_fence_wall_ms=22.4895 gpu_timestamp_ms=unavailable
+progressive_sample=4 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3294 submit_to_fence_wall_ms=22.6286 gpu_timestamp_ms=unavailable
+progressive_sample=5 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3313 submit_to_fence_wall_ms=22.6647 gpu_timestamp_ms=unavailable
+progressive_sample=6 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3343 submit_to_fence_wall_ms=22.9904 gpu_timestamp_ms=unavailable
+progressive_sample=7 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3332 submit_to_fence_wall_ms=22.7722 gpu_timestamp_ms=unavailable
+progressive_sample=8 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.334 submit_to_fence_wall_ms=23.1618 gpu_timestamp_ms=unavailable
+progressive_sample=9 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3385 submit_to_fence_wall_ms=22.2691 gpu_timestamp_ms=unavailable
+progressive_sample=10 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=1.1802 submit_to_fence_wall_ms=22.6304 gpu_timestamp_ms=unavailable
+progressive_sample=11 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.344 submit_to_fence_wall_ms=22.9582 gpu_timestamp_ms=unavailable
+progressive_sample=12 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3492 submit_to_fence_wall_ms=24.0567 gpu_timestamp_ms=unavailable
+progressive_sample=13 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3445 submit_to_fence_wall_ms=22.8106 gpu_timestamp_ms=unavailable
+progressive_sample=14 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3299 submit_to_fence_wall_ms=22.7972 gpu_timestamp_ms=unavailable
+progressive_sample=15 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3446 submit_to_fence_wall_ms=22.4105 gpu_timestamp_ms=unavailable
+progressive_sample=16 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3202 submit_to_fence_wall_ms=22.599 gpu_timestamp_ms=unavailable
+progressive_sample=17 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3381 submit_to_fence_wall_ms=22.2142 gpu_timestamp_ms=unavailable
+progressive_sample=18 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3125 submit_to_fence_wall_ms=21.9729 gpu_timestamp_ms=unavailable
+progressive_sample=19 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3358 submit_to_fence_wall_ms=22.0188 gpu_timestamp_ms=unavailable
+progressive_sample=20 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3306 submit_to_fence_wall_ms=22.4629 gpu_timestamp_ms=unavailable
+progressive_sample=21 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3288 submit_to_fence_wall_ms=22.6352 gpu_timestamp_ms=unavailable
+progressive_sample=22 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3222 submit_to_fence_wall_ms=22.5509 gpu_timestamp_ms=unavailable
+progressive_sample=23 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3461 submit_to_fence_wall_ms=22.9407 gpu_timestamp_ms=unavailable
+progressive_sample=24 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3262 submit_to_fence_wall_ms=22.5797 gpu_timestamp_ms=unavailable
+progressive_sample=25 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3371 submit_to_fence_wall_ms=22.6769 gpu_timestamp_ms=unavailable
+progressive_sample=26 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3223 submit_to_fence_wall_ms=22.3891 gpu_timestamp_ms=unavailable
+progressive_sample=27 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3399 submit_to_fence_wall_ms=22.3844 gpu_timestamp_ms=unavailable
+progressive_sample=28 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3439 submit_to_fence_wall_ms=22.8004 gpu_timestamp_ms=unavailable
+progressive_sample=29 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3226 submit_to_fence_wall_ms=22.3237 gpu_timestamp_ms=unavailable
+progressive_sample=30 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3139 submit_to_fence_wall_ms=21.8076 gpu_timestamp_ms=unavailable
+progressive_sample=31 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3111 submit_to_fence_wall_ms=22.4936 gpu_timestamp_ms=unavailable
+progressive_sample=32 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3965 submit_to_fence_wall_ms=22.8186 gpu_timestamp_ms=unavailable
+progressive_sample=33 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3272 submit_to_fence_wall_ms=22.6788 gpu_timestamp_ms=unavailable
+progressive_sample=34 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3529 submit_to_fence_wall_ms=22.6625 gpu_timestamp_ms=unavailable
+progressive_sample=35 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3375 submit_to_fence_wall_ms=22.5049 gpu_timestamp_ms=unavailable
+progressive_sample=36 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3303 submit_to_fence_wall_ms=22.7712 gpu_timestamp_ms=unavailable
+progressive_sample=37 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3459 submit_to_fence_wall_ms=22.8966 gpu_timestamp_ms=unavailable
+progressive_sample=38 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3535 submit_to_fence_wall_ms=22.9077 gpu_timestamp_ms=unavailable
+progressive_sample=39 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3447 submit_to_fence_wall_ms=22.636 gpu_timestamp_ms=unavailable
+progressive_sample=40 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3238 submit_to_fence_wall_ms=22.4679 gpu_timestamp_ms=unavailable
+progressive_sample=41 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3355 submit_to_fence_wall_ms=22.6094 gpu_timestamp_ms=unavailable
+progressive_sample=42 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3358 submit_to_fence_wall_ms=22.5755 gpu_timestamp_ms=unavailable
+progressive_sample=43 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3313 submit_to_fence_wall_ms=22.5988 gpu_timestamp_ms=unavailable
+progressive_sample=44 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3413 submit_to_fence_wall_ms=22.7447 gpu_timestamp_ms=unavailable
+progressive_sample=45 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3323 submit_to_fence_wall_ms=22.7613 gpu_timestamp_ms=unavailable
+progressive_sample=46 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3309 submit_to_fence_wall_ms=22.651 gpu_timestamp_ms=unavailable
+progressive_sample=47 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3268 submit_to_fence_wall_ms=22.2182 gpu_timestamp_ms=unavailable
+progressive_sample=48 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3314 submit_to_fence_wall_ms=22.7372 gpu_timestamp_ms=unavailable
+progressive_sample=49 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3385 submit_to_fence_wall_ms=22.5884 gpu_timestamp_ms=unavailable
+progressive_sample=50 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3141 submit_to_fence_wall_ms=22.2426 gpu_timestamp_ms=unavailable
+progressive_sample=51 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.323 submit_to_fence_wall_ms=22.3877 gpu_timestamp_ms=unavailable
+progressive_sample=52 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3289 submit_to_fence_wall_ms=22.6117 gpu_timestamp_ms=unavailable
+progressive_sample=53 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3079 submit_to_fence_wall_ms=23.3512 gpu_timestamp_ms=unavailable
+progressive_sample=54 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.32 submit_to_fence_wall_ms=22.1299 gpu_timestamp_ms=unavailable
+progressive_sample=55 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3313 submit_to_fence_wall_ms=22.7278 gpu_timestamp_ms=unavailable
+progressive_sample=56 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3253 submit_to_fence_wall_ms=21.9191 gpu_timestamp_ms=unavailable
+progressive_sample=57 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3209 submit_to_fence_wall_ms=22.8003 gpu_timestamp_ms=unavailable
+progressive_sample=58 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3338 submit_to_fence_wall_ms=22.5076 gpu_timestamp_ms=unavailable
+progressive_sample=59 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3635 submit_to_fence_wall_ms=23.2018 gpu_timestamp_ms=unavailable
+progressive_sample=60 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3654 submit_to_fence_wall_ms=22.6006 gpu_timestamp_ms=unavailable
+progressive_sample=61 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3426 submit_to_fence_wall_ms=22.8165 gpu_timestamp_ms=unavailable
+progressive_sample=62 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3508 submit_to_fence_wall_ms=22.663 gpu_timestamp_ms=unavailable
+progressive_sample=63 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3512 submit_to_fence_wall_ms=22.5074 gpu_timestamp_ms=unavailable
+progressive_sample=64 revision=2 width=160 height=90 accumulation_bytes=460800
+frame_revision=2 mode=cache record_cpu_ms=0.3432 submit_to_fence_wall_ms=22.682 gpu_timestamp_ms=unavailable
+capture=64-repeat.bmp frame=64
+Progressive HDR finite readback samples=64 max_channel=1 CPU_center_ray_validation=not_applicable_to_jittered_average
+HDR exported=64-repeat-hdr
+fixed_capture width=160 height=90 revision=2 pending=0
+shutdown=clean lifecycle_test=0

@@ -1,0 +1,5 @@
+cut-skip-1 linear_RGB_max=0 mean=0 T_max=0
+empty-skip-1 linear_RGB_max=0 mean=0 T_max=0
+homogeneous-skip-1 linear_RGB_max=0 mean=0 T_max=0
+low-sun-skip-1 linear_RGB_max=0 mean=0 T_max=0
+thick-skip-1 linear_RGB_max=0 mean=0 T_max=0

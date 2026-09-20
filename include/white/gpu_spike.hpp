@@ -69,6 +69,11 @@ public:
     bool bake_pending()const;
     bool cache_current()const;
     bool rendered_from_cache()const{return rendered_cache_;}
+    int rendered_view_steps()const{return rendered_steps_;}
+    int rendered_shadow_steps()const{return rendered_shadows_;}
+    unsigned rendered_sun_resolution()const{return rendered_sun_?unsigned(sun_extent_):0;}
+    bool rendered_empty_skip()const{return rendered_skip_&&diagnostic_mode!=11;}
+    std::array<unsigned,3> rendered_density_extent()const{return rendered_cache_?extent:std::array<unsigned,3>{0,0,0};}
     void set_test_delay(unsigned milliseconds);
     std::uint64_t rendered_revision=0;
     void resize(Uint32 w, Uint32 h);
@@ -99,7 +104,7 @@ private:
     std::chrono::steady_clock::time_point accepted_{};
     std::vector<double> latency_samples_;
     bool interacting_=false,rendered_cache_=false;
-    int rendered_steps_=64;
+    int rendered_steps_=64,rendered_shadows_=8;
     void queue_bake(std::array<Uint32,3>);
     std::vector<float> cache_reference_;
     std::vector<Uint8> shader(const char* name);

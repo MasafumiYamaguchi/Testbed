@@ -1,0 +1,32 @@
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+GPU optical_contract case=0 T=1 L=6 T_abs_error=0 L_abs_error=0 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=1 T=1 L=5e-09 T_abs_error=9.60465e-09 L_abs_error=9.46126e-17 L_absolute_tolerance=1e-14 relative_tolerance=2e-5
+GPU optical_contract case=2 T=0.496585 L=0.672666 T_abs_error=5.71405e-09 L_abs_error=2.64492e-08 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=3 T=0.496585 L=0.487224 T_abs_error=5.71405e-09 L_abs_error=1.18421e-10 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=4 T=0.367879 L=1.26424 T_abs_error=9.14976e-09 L_abs_error=1.82995e-08 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=5 T=0.367879 L=1.51709 T_abs_error=5.86897e-07 L_abs_error=1.33703e-06 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_convergence steps=16 T_abs_error=0.000294456
+GPU optical_convergence steps=32 T_abs_error=7.37696e-05
+GPU optical_convergence steps=64 T_abs_error=1.89631e-05
+GPU HG samples=104 cosine_max_error=1.57724e-05 pdf_max_relative_error=0.000123273 RNG_exact=true
+GPU ray/box six cases max_abs_error=4.76837e-07
+GPU homogeneous optics max_abs_error=9.99995e-06 tolerance=0.001
+bake=1 extent=65x67x69 texture_bytes=1201980 peak_requested_gpu_bytes=3568956 cpu_reference_bytes=1201980 record_cpu_ms=0.4667 submit_to_fence_wall_ms=39.7598 gpu_timestamp_ms=unavailable
+density_reference max_abs_error=4.52995e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+density_publish producer_revision=2 consumer_revision=2 matching_density_hash=11373084762167754699 peak_requested_gpu_bytes=87031808
+density_job_revision=2 input_hash=6003970262520038363 publish=1 coalesced=0 discarded=1 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=0.2802 generation_submit_and_fence_wall_ms=53.3352
+fixed_recipe=cut.white.json density_hash=11373084762167754699 internal_width=160 view_steps=64 shadow_steps=8 cache=128 camera_sun=from_saved_recipe
+sun_cache_build revision=2 key=12547007292556670316 resolution=32 bytes=131072 record_cpu_ms=0.0383 gpu_time=included_in_frame_fence_wall
+majorant_build key=6003970262520038363 bytes=16384 record_cpu_ms=0.014 execution=in_frame_fence_wall
+edit_to_present_submission revision=2 ms=85.3296 samples=1 p50_ms=85.3296 p95_ms=85.3296
+frame_revision=2 mode=cache record_cpu_ms=2.587 submit_to_fence_wall_ms=977.31 gpu_timestamp_ms=unavailable
+capture=cut-mode-7.bmp frame=60
+Diagnostic HDR mode=7 name=brick occupancy slice revision=2 max=1 raw_values=true
+density_reference max_abs_error=1.54972e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=128x128x128 row_bytes=512 max_abs_error=1.54972e-06 interpolation_error=0 PASS
+majorant_verified bricks=4096 empty=3366 CPU_GPU_exact=1 hierarchy_levels=5
+sun_cache_verified voxels=32768 tau_max_error=0.000255414 T_max_error=0.000212803 same_snapshot=true
+HDR exported=cut-mode-7-hdr
+fixed_capture width=160 height=90 revision=2 pending=0
+shutdown=clean lifecycle_test=0

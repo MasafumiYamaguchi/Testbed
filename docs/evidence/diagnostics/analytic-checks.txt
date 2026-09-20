@@ -1,0 +1,6 @@
+Verified 14400 pixels, expected raw RGB=0
+Verified 14400 pixels, expected raw RGB=0
+Verified 14400 pixels, expected raw RGB=1
+Verified 14400 pixels, expected raw RGB=0
+Verified 14400 pixels, expected raw RGB=0
+Verified 14400 pixels, expected raw RGB=0

@@ -9,7 +9,7 @@ cbuffer SunCache : register(b0,space2) {float4 localSunSigma;float4 dimensionsSt
 void main(uint3 id:SV_DispatchThreadID){
     if(any(id>=uint3(dimensionsSteps.xyz)))return;
     float3 p=lerp(envelopeMin.xyz,envelopeMax.xyz,(float3(id)+.5)/dimensionsSteps.xyz);
-    float entry=0,exit=farUnused.x,tau=0;
+    float entry=0,exit=3.402823466e38,tau=0;
     if(intersectBox(p,localSunSigma.xyz,envelopeMin.xyz,envelopeMax.xyz,entry,exit)){
         float dt=(exit-entry)/dimensionsSteps.w;
         for(uint i=0;i<(uint)dimensionsSteps.w;++i){float3 q=p+localSunSigma.xyz*(entry+(i+.5)*dt);

@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include "white/preview_approx.hpp"
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -91,11 +92,12 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=3,algorithm_version=2;
+    std::uint32_t schema_version=4,algorithm_version=2;
     CloudRecipe cloud{};
     Camera camera{};
     Sun sun{};
     double exposure_ev=0;
+    PreviewApproxSettings preview_approx{};
     bool operator==(const Scene&) const = default;
 };
 enum class Dirty : std::uint32_t {none=0,density=1,optics=2,sun=4,camera=8,display=16};

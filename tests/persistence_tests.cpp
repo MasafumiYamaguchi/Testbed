@@ -14,10 +14,11 @@ int main() {
         Scene scene;scene.cloud.detail_seed=std::numeric_limits<std::uint64_t>::max();
         scene.cloud.cells[0].structure_seed=9007199254740993ULL;
         scene.cloud.cuts.push_back({3,{2,3,4},{5,6,7},0.5});
+        scene.preview_approx.enabled=true;scene.preview_approx.strength=0.625;
         scene.camera.position={44,50,66};scene.sun.direction_to_light={1,0,0};scene.exposure_ev=-1.5;
         auto json=scene_json(scene);check(parse_scene_json(json)==scene,"exact round-trip including uint64 seeds");
         rejects([&]{parse_scene_json("{");},"truncated JSON rejected");
-        auto future=json;auto pos=future.find("\"schema_version\": 3");future.replace(pos,19,"\"schema_version\": 4");
+        auto future=json;auto pos=future.find("\"schema_version\": 4");future.replace(pos,19,"\"schema_version\": 5");
         rejects([&]{parse_scene_json(future);},"future version rejected");
         rejects([&]{parse_scene_json(std::string(max_scene_bytes+1,' '));},"input size cap");
         rejects([&]{parse_scene_json(std::string(40,'[')+"0"+std::string(40,']'));},"nesting cap");
