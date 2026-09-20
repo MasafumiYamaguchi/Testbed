@@ -1,0 +1,755 @@
+{
+  "algorithm_version": 3,
+  "camera": {
+    "far_plane": 10000.0,
+    "near_plane": 0.1,
+    "position": [
+      40.0,
+      90.0,
+      390.0
+    ],
+    "target": [
+      40.0,
+      65.0,
+      0.0
+    ],
+    "up": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "vertical_fov_degrees": 45.0
+  },
+  "cloud": {
+    "finishing": {
+      "contract_version": 1,
+      "layers": [],
+      "space": "object_local"
+    },
+    "kind": "frozen",
+    "source": {
+      "anvil": {
+        "along_radius": 89.64990778296405,
+        "center": [
+          57.87509115058046,
+          109.6992,
+          18.99688428095778
+        ],
+        "cross_radius": 51.17034592626309,
+        "density_scale": 0.6193900773782431,
+        "direction": [
+          0.9500524308962266,
+          0.0,
+          0.3120903371592438
+        ],
+        "edge_fade": 1.0,
+        "half_thickness": 11.2512,
+        "shear": 0.4823628719868499,
+        "start_height": 98.44800000000001
+      },
+      "content_hash": "6008072607280429293",
+      "contract_version": 2,
+      "curves": [
+        {
+          "base": 0.0,
+          "development_id": "7",
+          "growth_direction": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "height": 140.64000000000001,
+          "points": [
+            {
+              "id": "1",
+              "offset": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "t": 0.0
+            },
+            {
+              "id": "2",
+              "offset": [
+                2.2502400000000002,
+                0.0,
+                0.7500800000000001
+              ],
+              "t": 0.5
+            },
+            {
+              "id": "3",
+              "offset": [
+                39.70688000000001,
+                0.0,
+                13.002240000000004
+              ],
+              "t": 1.0
+            }
+          ],
+          "profile": [
+            {
+              "density_scale": 0.9584,
+              "id": "1",
+              "radius_scale": 0.9909,
+              "t": 0.0
+            },
+            {
+              "density_scale": 0.9584,
+              "id": "2",
+              "radius_scale": 0.9636,
+              "t": 1.0
+            }
+          ]
+        }
+      ],
+      "fields": [
+        {
+          "clipping_envelope": null,
+          "development_id": "7",
+          "layers": {
+            "base": true,
+            "macro": true,
+            "medium": true,
+            "micro": true
+          },
+          "recipe": {
+            "altitude_density": {
+              "base": 0.0,
+              "enabled": true,
+              "height": 140.64000000000001,
+              "knots": [
+                {
+                  "scale": 0.9584,
+                  "t": 0.0
+                },
+                {
+                  "scale": 0.9584,
+                  "t": 1.0
+                }
+              ]
+            },
+            "base": {
+              "enabled": true,
+              "height": 0.0,
+              "transition": 2.0
+            },
+            "blend_width": 4.0,
+            "cells": [
+              {
+                "center": [
+                  -0.6499934208000002,
+                  25.3152,
+                  -0.20698546176000013
+                ],
+                "id": "2",
+                "radii": [
+                  39.932433,
+                  33.280577049600005,
+                  33.72072120000001
+                ],
+                "structure_seed": "0"
+              },
+              {
+                "center": [
+                  -0.09712926720000062,
+                  59.0688,
+                  -0.01920221184000009
+                ],
+                "id": "3",
+                "radii": [
+                  28.2076992,
+                  44.0792312832,
+                  26.444718
+                ],
+                "structure_seed": "1"
+              },
+              {
+                "center": [
+                  14.6980352,
+                  98.44800000000001,
+                  4.82279424
+                ],
+                "id": "4",
+                "radii": [
+                  34.98444,
+                  41.00176368,
+                  31.485996
+                ],
+                "structure_seed": "2"
+              },
+              {
+                "center": [
+                  -3.4977983488,
+                  101.2608,
+                  12.547478896640001
+                ],
+                "id": "5",
+                "radii": [
+                  22.727109600000002,
+                  28.6851087936,
+                  20.978870399999998
+                ],
+                "structure_seed": "3"
+              },
+              {
+                "center": [
+                  39.41868861440001,
+                  106.88640000000001,
+                  -0.7678174003199976
+                ],
+                "id": "6",
+                "radii": [
+                  22.701556800000002,
+                  27.288435456000006,
+                  20.955283199999997
+                ],
+                "structure_seed": "4"
+              }
+            ],
+            "cuts": [],
+            "density": 1.0,
+            "detail_seed": "17",
+            "envelope": {
+              "max": [
+                69.70357874773335,
+                148.56531923555556,
+                43.30879024
+              ],
+              "min": [
+                -48.981530516363144,
+                -14.965377049600004,
+                -41.02028345356888
+              ]
+            },
+            "id": "7",
+            "noise": {
+              "medium_frequency": 0.12,
+              "medium_strength": 0.2,
+              "micro_erosion": 0.5,
+              "micro_frequency": 0.6,
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "warp_amplitude": 1.0,
+              "warp_frequency": 0.035
+            },
+            "optics": {
+              "albedo": 0.9,
+              "extinction_scale": 0.02,
+              "g": 0.0
+            },
+            "overlap": 0.15,
+            "structure_seed": "42",
+            "transform": {
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "translation": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "clipping_envelope": null,
+          "development_id": "8",
+          "layers": {
+            "base": true,
+            "macro": true,
+            "medium": true,
+            "micro": true
+          },
+          "recipe": {
+            "altitude_density": {
+              "base": 0.0,
+              "enabled": true,
+              "height": 140.64000000000001,
+              "knots": [
+                {
+                  "scale": 0.9584,
+                  "t": 0.0
+                },
+                {
+                  "scale": 0.9584,
+                  "t": 1.0
+                }
+              ]
+            },
+            "base": {
+              "enabled": true,
+              "height": 91.41600000000001,
+              "transition": 6.0
+            },
+            "blend_width": 4.0,
+            "cells": [
+              {
+                "center": [
+                  29.26873957145533,
+                  125.15842535556172,
+                  9.9531160193153
+                ],
+                "id": "9",
+                "radii": [
+                  15.960543367426641,
+                  17.640600563997868,
+                  16.800571965712255
+                ],
+                "structure_seed": "4717743753551222770"
+              },
+              {
+                "center": [
+                  25.892167145303326,
+                  136.41381097785307,
+                  12.823348056992206
+                ],
+                "id": "10",
+                "radii": [
+                  9.95751963920197,
+                  10.509612848772584,
+                  9.45964365724187
+                ],
+                "structure_seed": "1524433409327453074"
+              },
+              {
+                "center": [
+                  40.40799193050415,
+                  126.99570756503961,
+                  14.296459175203498
+                ],
+                "id": "11",
+                "radii": [
+                  8.896350786089007,
+                  9.405560606716756,
+                  8.451533246784557
+                ],
+                "structure_seed": "3678655272201291255"
+              }
+            ],
+            "cuts": [],
+            "density": 0.75,
+            "detail_seed": "17",
+            "envelope": {
+              "max": [
+                54.567500611330004,
+                152.47839673552954,
+                32.016845879764396
+              ],
+              "min": [
+                8.30819620402869,
+                101.99150900209017,
+                -12.110613841133798
+              ]
+            },
+            "id": "8",
+            "noise": {
+              "medium_frequency": 0.12,
+              "medium_strength": 0.2,
+              "micro_erosion": 0.5,
+              "micro_frequency": 0.6,
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "warp_amplitude": 1.0,
+              "warp_frequency": 0.035
+            },
+            "optics": {
+              "albedo": 0.9,
+              "extinction_scale": 0.02,
+              "g": 0.0
+            },
+            "overlap": 0.0,
+            "structure_seed": "42",
+            "transform": {
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "translation": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "fusion_width": 4.0,
+      "generation_input_hash": "9019824153703904496",
+      "generation_version": 1,
+      "hierarchy": [
+        {
+          "depth": 1,
+          "id": "9",
+          "parent_id": "0"
+        },
+        {
+          "depth": 2,
+          "id": "10",
+          "parent_id": "9"
+        },
+        {
+          "depth": 2,
+          "id": "11",
+          "parent_id": "9"
+        }
+      ],
+      "id": "1",
+      "optics": {
+        "albedo": 0.9,
+        "extinction_scale": 0.02,
+        "g": 0.0
+      },
+      "overlap": 0.0,
+      "payload_hash": "16970085329579494637",
+      "provenance": {
+        "initial": {
+          "kind": "anvil",
+          "source": {
+            "cloud": {
+              "contract_version": 1,
+              "field_id": "8",
+              "lobe_ids": [
+                "9",
+                "10",
+                "11"
+              ],
+              "settings": {
+                "child_limit": 2,
+                "child_radius_ratio": 0.55,
+                "density_scale": 0.75,
+                "depth_limit": 2,
+                "fusion_width": 4.0,
+                "growth_direction": [
+                  0.0,
+                  1.0,
+                  0.0
+                ],
+                "hierarchy_density": 1.0,
+                "mask_transition": 6.0,
+                "mode": "children",
+                "parent_radius": 18.0,
+                "top_start": 0.65
+              },
+              "target_cell": "7",
+              "trunk": {
+                "cells": [
+                  {
+                    "id": "7",
+                    "roles": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4
+                    ],
+                    "shape": {
+                      "contract_version": 1,
+                      "points": [
+                        {
+                          "id": "1",
+                          "offset": [
+                            0.0,
+                            0.0,
+                            0.0
+                          ],
+                          "t": 0.0
+                        },
+                        {
+                          "id": "2",
+                          "offset": [
+                            0.0,
+                            0.0,
+                            0.0
+                          ],
+                          "t": 0.5
+                        },
+                        {
+                          "id": "3",
+                          "offset": [
+                            0.0,
+                            0.0,
+                            0.0
+                          ],
+                          "t": 1.0
+                        }
+                      ],
+                      "profile": [
+                        {
+                          "density_scale": 1.0,
+                          "id": "1",
+                          "radius_scale": 1.0,
+                          "t": 0.0
+                        },
+                        {
+                          "density_scale": 1.0,
+                          "id": "2",
+                          "radius_scale": 1.0,
+                          "t": 1.0
+                        }
+                      ],
+                      "source": {
+                        "cell_adjustments": [],
+                        "cell_ids": [
+                          "2",
+                          "3",
+                          "4",
+                          "5",
+                          "6"
+                        ],
+                        "cloud_id": "7",
+                        "contract_version": 1,
+                        "modifiers": {
+                          "base_enabled": true,
+                          "base_transition": 2.0,
+                          "blend_width": 4.0,
+                          "cuts": [],
+                          "manual_cells": [],
+                          "noise": {
+                            "medium_frequency": 0.12,
+                            "medium_strength": 0.2,
+                            "micro_erosion": 0.5,
+                            "micro_frequency": 0.6,
+                            "origin": [
+                              0.0,
+                              0.0,
+                              0.0
+                            ],
+                            "warp_amplitude": 1.0,
+                            "warp_frequency": 0.035
+                          },
+                          "optics": {
+                            "albedo": 0.9,
+                            "extinction_scale": 0.02,
+                            "g": 0.0
+                          },
+                          "overlap": 0.15,
+                          "transform": {
+                            "rotation": [
+                              0.0,
+                              0.0,
+                              0.0,
+                              1.0
+                            ],
+                            "scale": [
+                              1.0,
+                              1.0,
+                              1.0
+                            ],
+                            "translation": [
+                              0.0,
+                              0.0,
+                              0.0
+                            ]
+                          }
+                        },
+                        "parameters": {
+                          "cloud_base": 0.0,
+                          "density": 1.0,
+                          "detail_seed": "17",
+                          "growth_direction": [
+                            0.0,
+                            1.0,
+                            0.0
+                          ],
+                          "height": 150.0,
+                          "structure_seed": "42",
+                          "width": 90.0
+                        }
+                      }
+                    },
+                    "translation": [
+                      0.0,
+                      0.0,
+                      0.0
+                    ]
+                  }
+                ],
+                "contract_version": 1,
+                "fusion_width": 4.0,
+                "id": "1",
+                "optics": {
+                  "albedo": 0.9,
+                  "extinction_scale": 0.02,
+                  "g": 0.0
+                },
+                "overlap": 0.15,
+                "transform": {
+                  "rotation": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                  ],
+                  "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                  ],
+                  "translation": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                }
+              }
+            },
+            "contract_version": 1,
+            "settings": {
+              "density_scale": 0.8,
+              "direction": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "edge_fade": 1.0,
+              "enabled": true,
+              "extension": 90.0,
+              "follow_wind": true,
+              "shear": 0.0,
+              "start_height": 105.0,
+              "thickness": 24.0,
+              "width": 112.5
+            }
+          }
+        },
+        "settings": {
+          "algorithm_version": 1,
+          "cells": [
+            {
+              "amount": 1.0,
+              "cell_id": "7",
+              "pinned_controls": [],
+              "start_stage": 0.0
+            }
+          ],
+          "enabled": true,
+          "initial_height_fraction": 0.4,
+          "reference_translation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "stage": 0.8,
+          "wind": [
+            {
+              "altitude": 0.0,
+              "displacement": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            {
+              "altitude": 0.5,
+              "displacement": [
+                12.0,
+                0.0,
+                4.0
+              ]
+            },
+            {
+              "altitude": 1.0,
+              "displacement": [
+                55.0,
+                0.0,
+                18.0
+              ]
+            }
+          ],
+          "wind_base": 0.0,
+          "wind_height": 150.0
+        }
+      },
+      "rho_max": 1.5334400000000001,
+      "selection": {
+        "kind": "development_stage",
+        "unit": "dimensionless",
+        "value": 0.8
+      },
+      "support": {
+        "max": [
+          164.17306212104694,
+          153.5893913173103,
+          97.28403031593896
+        ],
+        "min": [
+          -50.18140253001502,
+          -15.965377049600004,
+          -59.2902617540234
+        ]
+      },
+      "top_boundary": 91.41600000000001,
+      "top_enabled": true,
+      "top_mode": 2,
+      "transform": {
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "exposure_ev": 1.0,
+  "preview_approx": {
+    "enabled": false,
+    "strength": 0.5
+  },
+  "schema_version": 11,
+  "sun": {
+    "direction_to_light": [
+      0.0,
+      0.8,
+      0.6
+    ],
+    "irradiance": [
+      15.0,
+      15.0,
+      15.0
+    ]
+  }
+}

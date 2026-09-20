@@ -1,0 +1,1 @@
+linear_RGB_max=0.566385 mean=0.0044413 T_max=0.644481

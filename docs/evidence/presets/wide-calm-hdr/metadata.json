@@ -1,0 +1,565 @@
+{
+  "A": "transmittance T; NOT opacity; do not alpha composite RGB",
+  "RGB": "L_scatter + T * background; already composited",
+  "actual_density_extent": [
+    0,
+    0,
+    0
+  ],
+  "background_linear": [
+    0.015,
+    0.022,
+    0.035
+  ],
+  "cached_density": false,
+  "commit": "3d1907231ba4aea3f23af85ecf826d2239a93850",
+  "diagnostic_display_scale": 1.0,
+  "diagnostic_mode": 0,
+  "diagnostic_name": "radiance",
+  "display_transform": "exposure 2^EV -> Reinhard x/(1+x) -> sRGB",
+  "empty_space_skipping": false,
+  "format_version": 1,
+  "frame": "60",
+  "height": 108,
+  "jitter": "fixed or single jittered sample",
+  "jitter_seed": 42,
+  "revision": "2",
+  "row_order": "top to bottom",
+  "samples_per_pixel": 1,
+  "scene": {
+    "algorithm_version": 3,
+    "camera": {
+      "far_plane": 10000.0,
+      "near_plane": 0.1,
+      "position": [
+        40.0,
+        90.0,
+        390.0
+      ],
+      "target": [
+        40.0,
+        65.0,
+        0.0
+      ],
+      "up": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "vertical_fov_degrees": 45.0
+    },
+    "cloud": {
+      "finishing": {
+        "contract_version": 1,
+        "layers": [],
+        "space": "object_local"
+      },
+      "kind": "frozen",
+      "source": {
+        "anvil": null,
+        "content_hash": "12858202817239951433",
+        "contract_version": 2,
+        "curves": [
+          {
+            "base": 0.0,
+            "development_id": "7",
+            "growth_direction": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "height": 70.32000000000001,
+            "points": [
+              {
+                "id": "1",
+                "offset": [
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "t": 0.0
+              },
+              {
+                "id": "2",
+                "offset": [
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "t": 0.5
+              },
+              {
+                "id": "3",
+                "offset": [
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "t": 1.0
+              }
+            ],
+            "profile": [
+              {
+                "density_scale": 0.9584,
+                "id": "1",
+                "radius_scale": 0.9909,
+                "t": 0.0
+              },
+              {
+                "density_scale": 0.9584,
+                "id": "2",
+                "radius_scale": 0.9636,
+                "t": 1.0
+              }
+            ]
+          }
+        ],
+        "fields": [
+          {
+            "clipping_envelope": null,
+            "development_id": "7",
+            "layers": {
+              "base": true,
+              "macro": true,
+              "medium": true,
+              "micro": true
+            },
+            "recipe": {
+              "altitude_density": {
+                "base": 0.0,
+                "enabled": true,
+                "height": 70.32000000000001,
+                "knots": [
+                  {
+                    "scale": 0.9584,
+                    "t": 0.0
+                  },
+                  {
+                    "scale": 0.9584,
+                    "t": 1.0
+                  }
+                ]
+              },
+              "base": {
+                "enabled": true,
+                "height": 0.0,
+                "transition": 2.0
+              },
+              "blend_width": 4.0,
+              "cells": [
+                {
+                  "center": [
+                    0.0,
+                    12.6576,
+                    0.0
+                  ],
+                  "id": "2",
+                  "radii": [
+                    66.554055,
+                    16.640288524800003,
+                    56.201202
+                  ],
+                  "structure_seed": "0"
+                },
+                {
+                  "center": [
+                    0.0,
+                    29.5344,
+                    0.0
+                  ],
+                  "id": "3",
+                  "radii": [
+                    47.012832,
+                    22.0396156416,
+                    44.07453
+                  ],
+                  "structure_seed": "1"
+                },
+                {
+                  "center": [
+                    0.0,
+                    49.224000000000004,
+                    0.0
+                  ],
+                  "id": "4",
+                  "radii": [
+                    58.3074,
+                    20.50088184,
+                    52.47666
+                  ],
+                  "structure_seed": "2"
+                },
+                {
+                  "center": [
+                    -33.0,
+                    50.6304,
+                    12.0
+                  ],
+                  "id": "5",
+                  "radii": [
+                    37.878516,
+                    14.3425543968,
+                    34.964784
+                  ],
+                  "structure_seed": "3"
+                },
+                {
+                  "center": [
+                    33.0,
+                    53.443200000000004,
+                    -12.0
+                  ],
+                  "id": "6",
+                  "radii": [
+                    37.835928,
+                    13.644217728000003,
+                    34.925472
+                  ],
+                  "structure_seed": "4"
+                }
+              ],
+              "cuts": [],
+              "density": 1.0,
+              "detail_seed": "17",
+              "envelope": {
+                "max": [
+                  94.55106865187713,
+                  76.72488184000001,
+                  79.84312463936291
+                ],
+                "min": [
+                  -94.55106865187713,
+                  -10.982688524800002,
+                  -79.84312463936291
+                ]
+              },
+              "id": "7",
+              "noise": {
+                "medium_frequency": 0.12,
+                "medium_strength": 0.2,
+                "micro_erosion": 0.5,
+                "micro_frequency": 0.6,
+                "origin": [
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "warp_amplitude": 1.0,
+                "warp_frequency": 0.035
+              },
+              "optics": {
+                "albedo": 0.9,
+                "extinction_scale": 0.02,
+                "g": 0.0
+              },
+              "overlap": 0.15,
+              "structure_seed": "42",
+              "transform": {
+                "rotation": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0
+                ],
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "translation": [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "translation": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "fusion_width": 4.0,
+        "generation_input_hash": "17190274940572433008",
+        "generation_version": 1,
+        "hierarchy": [],
+        "id": "1",
+        "optics": {
+          "albedo": 0.9,
+          "extinction_scale": 0.02,
+          "g": 0.0
+        },
+        "overlap": 0.15,
+        "payload_hash": "5878132285400055732",
+        "provenance": {
+          "initial": {
+            "kind": "developed",
+            "source": {
+              "cells": [
+                {
+                  "id": "7",
+                  "roles": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4
+                  ],
+                  "shape": {
+                    "contract_version": 1,
+                    "points": [
+                      {
+                        "id": "1",
+                        "offset": [
+                          0.0,
+                          0.0,
+                          0.0
+                        ],
+                        "t": 0.0
+                      },
+                      {
+                        "id": "2",
+                        "offset": [
+                          0.0,
+                          0.0,
+                          0.0
+                        ],
+                        "t": 0.5
+                      },
+                      {
+                        "id": "3",
+                        "offset": [
+                          0.0,
+                          0.0,
+                          0.0
+                        ],
+                        "t": 1.0
+                      }
+                    ],
+                    "profile": [
+                      {
+                        "density_scale": 1.0,
+                        "id": "1",
+                        "radius_scale": 1.0,
+                        "t": 0.0
+                      },
+                      {
+                        "density_scale": 1.0,
+                        "id": "2",
+                        "radius_scale": 1.0,
+                        "t": 1.0
+                      }
+                    ],
+                    "source": {
+                      "cell_adjustments": [],
+                      "cell_ids": [
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6"
+                      ],
+                      "cloud_id": "7",
+                      "contract_version": 1,
+                      "modifiers": {
+                        "base_enabled": true,
+                        "base_transition": 2.0,
+                        "blend_width": 4.0,
+                        "cuts": [],
+                        "manual_cells": [],
+                        "noise": {
+                          "medium_frequency": 0.12,
+                          "medium_strength": 0.2,
+                          "micro_erosion": 0.5,
+                          "micro_frequency": 0.6,
+                          "origin": [
+                            0.0,
+                            0.0,
+                            0.0
+                          ],
+                          "warp_amplitude": 1.0,
+                          "warp_frequency": 0.035
+                        },
+                        "optics": {
+                          "albedo": 0.9,
+                          "extinction_scale": 0.02,
+                          "g": 0.0
+                        },
+                        "overlap": 0.15,
+                        "transform": {
+                          "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                          ],
+                          "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                          ],
+                          "translation": [
+                            0.0,
+                            0.0,
+                            0.0
+                          ]
+                        }
+                      },
+                      "parameters": {
+                        "cloud_base": 0.0,
+                        "density": 1.0,
+                        "detail_seed": "17",
+                        "growth_direction": [
+                          0.0,
+                          1.0,
+                          0.0
+                        ],
+                        "height": 75.0,
+                        "structure_seed": "42",
+                        "width": 150.0
+                      }
+                    }
+                  },
+                  "translation": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                }
+              ],
+              "contract_version": 1,
+              "fusion_width": 4.0,
+              "id": "1",
+              "optics": {
+                "albedo": 0.9,
+                "extinction_scale": 0.02,
+                "g": 0.0
+              },
+              "overlap": 0.15,
+              "transform": {
+                "rotation": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0
+                ],
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "translation": [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            }
+          },
+          "settings": {
+            "algorithm_version": 1,
+            "cells": [
+              {
+                "amount": 1.0,
+                "cell_id": "7",
+                "pinned_controls": [],
+                "start_stage": 0.0
+              }
+            ],
+            "enabled": true,
+            "initial_height_fraction": 0.4,
+            "reference_translation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "stage": 0.8,
+            "wind": [
+              {
+                "altitude": 0.0,
+                "displacement": [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              {
+                "altitude": 1.0,
+                "displacement": [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            ],
+            "wind_base": 0.0,
+            "wind_height": 75.0
+          }
+        },
+        "rho_max": 1.5334400000000001,
+        "selection": {
+          "kind": "development_stage",
+          "unit": "dimensionless",
+          "value": 0.8
+        },
+        "support": {
+          "max": [
+            94.55106865187713,
+            76.72488184000001,
+            79.84312463936291
+          ],
+          "min": [
+            -94.55106865187713,
+            -10.982688524800002,
+            -79.84312463936291
+          ]
+        },
+        "top_boundary": 0.0,
+        "top_enabled": false,
+        "top_mode": 0,
+        "transform": {
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "exposure_ev": 1.0,
+    "preview_approx": {
+      "enabled": false,
+      "strength": 0.5
+    },
+    "schema_version": 11,
+    "sun": {
+      "direction_to_light": [
+        0.0,
+        0.8,
+        0.6
+      ],
+      "irradiance": [
+        15.0,
+        15.0,
+        15.0
+      ]
+    }
+  },
+  "shadow_steps": 8,
+  "sun_tau_cache_resolution": 0,
+  "view_steps": 80,
+  "width": 192,
+  "working_space": "linear Rec.709 / D65"
+}

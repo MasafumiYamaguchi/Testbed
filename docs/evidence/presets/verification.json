@@ -1,0 +1,225 @@
+{
+  "status": "PASS",
+  "native_markers": 20,
+  "native_states": 7,
+  "presets": 8,
+  "growth_jobs": 5,
+  "strict_comparisons": [
+    {
+      "name": "native-reload-candidate",
+      "rgb_max": 0.0,
+      "rgb_mean": 0.0,
+      "t_max": 0.0
+    },
+    {
+      "name": "native-reload-current",
+      "rgb_max": 0.0,
+      "rgb_mean": 0.0,
+      "t_max": 0.0
+    },
+    {
+      "name": "native-reload-detail",
+      "rgb_max": 0.0,
+      "rgb_mean": 0.0,
+      "t_max": 0.0
+    },
+    {
+      "name": "native-reload-scoped",
+      "rgb_max": 0.0,
+      "rgb_mean": 0.0,
+      "t_max": 0.0
+    },
+    {
+      "name": "native-reload-adopted",
+      "rgb_max": 0.0,
+      "rgb_mean": 0.0,
+      "t_max": 0.0
+    },
+    {
+      "name": "native-reload-clone",
+      "rgb_max": 0.0,
+      "rgb_mean": 0.0,
+      "t_max": 0.0
+    },
+    {
+      "name": "native-reload-clone-adopted",
+      "rgb_max": 0.0,
+      "rgb_mean": 0.0,
+      "t_max": 0.0
+    },
+    {
+      "name": "adopted-clone-same-appearance",
+      "rgb_max": 0.0,
+      "rgb_mean": 0.0,
+      "t_max": 0.0
+    },
+    {
+      "name": "clone-adoption-same-appearance",
+      "rgb_max": 0.0,
+      "rgb_mean": 0.0,
+      "t_max": 0.0
+    }
+  ],
+  "density_checks": [
+    {
+      "name": "reopened-candidate",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "reopened-candidate",
+      "error": 8.16584e-06,
+      "tolerance": 0.000160768
+    },
+    {
+      "name": "reopened-current",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "reopened-current",
+      "error": 1.38283e-05,
+      "tolerance": 0.000160768
+    },
+    {
+      "name": "reopened-detail",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "reopened-detail",
+      "error": 9.95398e-06,
+      "tolerance": 0.00074101
+    },
+    {
+      "name": "reopened-scoped",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "reopened-scoped",
+      "error": 7.33137e-06,
+      "tolerance": 0.000645817
+    },
+    {
+      "name": "reopened-adopted",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "reopened-adopted",
+      "error": 7.33137e-06,
+      "tolerance": 0.000645817
+    },
+    {
+      "name": "reopened-clone",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "reopened-clone",
+      "error": 7.33137e-06,
+      "tolerance": 0.000645817
+    },
+    {
+      "name": "reopened-clone-adopted",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "reopened-clone-adopted",
+      "error": 7.33137e-06,
+      "tolerance": 0.000645817
+    },
+    {
+      "name": "reopened-stage-preserved",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "reopened-stage-preserved",
+      "error": 6.49691e-06,
+      "tolerance": 0.000646961
+    },
+    {
+      "name": "cumulonimbus-calm",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "cumulonimbus-calm",
+      "error": 1.38283e-05,
+      "tolerance": 0.000160768
+    },
+    {
+      "name": "cumulonimbus-wind",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "cumulonimbus-wind",
+      "error": 8.16584e-06,
+      "tolerance": 0.000160768
+    },
+    {
+      "name": "wide-calm",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "wide-calm",
+      "error": 6.4075e-06,
+      "tolerance": 0.000153344
+    },
+    {
+      "name": "wide-wind",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "wide-wind",
+      "error": 7.98702e-06,
+      "tolerance": 0.000153344
+    },
+    {
+      "name": "multiple-calm",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "multiple-calm",
+      "error": 8.43406e-06,
+      "tolerance": 0.000143281
+    },
+    {
+      "name": "multiple-wind",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "multiple-wind",
+      "error": 6.82473e-06,
+      "tolerance": 0.000143281
+    },
+    {
+      "name": "anvil-calm",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "anvil-calm",
+      "error": 1.10269e-05,
+      "tolerance": 0.00034141
+    },
+    {
+      "name": "anvil-wind",
+      "error": 4.52995e-06,
+      "tolerance": 2e-05
+    },
+    {
+      "name": "anvil-wind",
+      "error": 1.00136e-05,
+      "tolerance": 0.000386709
+    }
+  ]
+}

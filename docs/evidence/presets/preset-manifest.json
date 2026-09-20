@@ -1,0 +1,84 @@
+{
+  "algorithm_version": 1,
+  "detail_seed": "17",
+  "fixtures": [
+    {
+      "content_hash": "3370322609300951541",
+      "initial_hash": "1380373945456915393",
+      "name": "cumulonimbus-calm",
+      "payload_hash": "7115496221847512955",
+      "preset": "cumulonimbus",
+      "recipe": "cumulonimbus-calm.white.json",
+      "wind": "calm"
+    },
+    {
+      "content_hash": "5957931744133730354",
+      "initial_hash": "1380373945456915393",
+      "name": "cumulonimbus-wind",
+      "payload_hash": "12810584409820951585",
+      "preset": "cumulonimbus",
+      "recipe": "cumulonimbus-wind.white.json",
+      "wind": "upper_shear"
+    },
+    {
+      "content_hash": "12858202817239951433",
+      "initial_hash": "10862777601276930022",
+      "name": "wide-calm",
+      "payload_hash": "5878132285400055732",
+      "preset": "wide",
+      "recipe": "wide-calm.white.json",
+      "wind": "calm"
+    },
+    {
+      "content_hash": "16670933732431182420",
+      "initial_hash": "10862777601276930022",
+      "name": "wide-wind",
+      "payload_hash": "13630511399803498707",
+      "preset": "wide",
+      "recipe": "wide-wind.white.json",
+      "wind": "upper_shear"
+    },
+    {
+      "content_hash": "15535542533602563107",
+      "initial_hash": "446739115068052112",
+      "name": "multiple-calm",
+      "payload_hash": "7025997225049687921",
+      "preset": "multiple",
+      "recipe": "multiple-calm.white.json",
+      "wind": "calm"
+    },
+    {
+      "content_hash": "1430441081966836397",
+      "initial_hash": "446739115068052112",
+      "name": "multiple-wind",
+      "payload_hash": "4251250054297059348",
+      "preset": "multiple",
+      "recipe": "multiple-wind.white.json",
+      "wind": "upper_shear"
+    },
+    {
+      "content_hash": "8705042698828690421",
+      "initial_hash": "7761147677382682141",
+      "name": "anvil-calm",
+      "payload_hash": "12286194486471407493",
+      "preset": "anvil",
+      "recipe": "anvil-calm.white.json",
+      "wind": "calm"
+    },
+    {
+      "content_hash": "6008072607280429293",
+      "initial_hash": "7761147677382682141",
+      "name": "anvil-wind",
+      "payload_hash": "16970085329579494637",
+      "preset": "anvil",
+      "recipe": "anvil-wind.white.json",
+      "wind": "upper_shear"
+    }
+  ],
+  "initial_hash_format": "FNV-1a-64 of canonical scene_json(initial) bytes",
+  "preset_version": 1,
+  "stage": 0.8,
+  "stage_unit": "dimensionless",
+  "structure_seed": "42",
+  "wind_unit": "object-local metres at stage 1; not metres/second"
+}

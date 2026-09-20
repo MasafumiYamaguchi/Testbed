@@ -1,0 +1,56 @@
+capture_stage=sdl_initialize_begin elapsed_ms=0.4545
+capture_stage=sdl_initialize_complete elapsed_ms=7.3173
+capture_stage=gpu_initialize_begin elapsed_ms=7.7538
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+capture_stage=gpu_initialize_complete elapsed_ms=137.68
+capture_stage=optics_validation_begin elapsed_ms=138.079
+GPU optical_contract case=0 T=1 L=6 T_abs_error=0 L_abs_error=0 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=1 T=1 L=5e-09 T_abs_error=9.60465e-09 L_abs_error=9.46126e-17 L_absolute_tolerance=1e-14 relative_tolerance=2e-5
+GPU optical_contract case=2 T=0.496585 L=0.672666 T_abs_error=5.71405e-09 L_abs_error=2.64492e-08 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=3 T=0.496585 L=0.487224 T_abs_error=5.71405e-09 L_abs_error=1.18421e-10 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=4 T=0.367879 L=1.26424 T_abs_error=9.14976e-09 L_abs_error=1.82995e-08 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=5 T=0.367879 L=1.51709 T_abs_error=5.86897e-07 L_abs_error=1.33703e-06 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_convergence steps=16 T_abs_error=0.000294456
+GPU optical_convergence steps=32 T_abs_error=7.37696e-05
+GPU optical_convergence steps=64 T_abs_error=1.89631e-05
+GPU HG samples=104 cosine_max_error=1.57724e-05 pdf_max_relative_error=0.000123273 RNG_exact=true
+GPU ray/box six cases max_abs_error=4.76837e-07
+GPU homogeneous optics max_abs_error=9.99995e-06 tolerance=0.001
+capture_stage=optics_validation_complete elapsed_ms=153.238
+capture_stage=initial_field_begin elapsed_ms=153.608
+bake=1 extent=65x67x69 texture_bytes=1201980 peak_requested_gpu_bytes=3568956 cpu_reference_bytes=1201980 record_cpu_ms=0.3372 submit_to_fence_wall_ms=387.796 gpu_timestamp_ms=unavailable
+density_reference max_abs_error=4.52995e-06 tolerance=2e-05 detailed=0 profile_scale_error_bound=0 profile_density_tolerance=0 anvil_coverage_error_bound=0 anvil_density_tolerance=0 modifier_density_tolerance=0
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+capture_stage=initial_field_complete elapsed_ms=585.21
+capture_stage=editor_initialize_begin elapsed_ms=585.599
+capture_stage=editor_initialize_complete elapsed_ms=587.32
+capture_stage=scene_request_begin elapsed_ms=587.729
+capture_stage=scene_request_complete elapsed_ms=603.851
+capture_stage=density_wait_begin elapsed_ms=650.704
+density_publish producer_revision=2 consumer_revision=2 matching_density_hash=17543412427097046684 peak_requested_gpu_bytes=73823548
+density_job_revision=2 input_hash=1661405921506625339 publish=1 coalesced=0 discarded=0 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=1.4003 generation_submit_and_fence_wall_ms=60.9099
+capture_stage=density_wait_complete elapsed_ms=654.159
+capture_stage=density_validation_begin elapsed_ms=654.5
+density_reference max_abs_error=6.4075e-06 tolerance=0.000153344 detailed=1 profile_scale_error_bound=0 profile_density_tolerance=0 anvil_coverage_error_bound=0 anvil_density_tolerance=0 modifier_density_tolerance=0
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=6.4075e-06 interpolation_error=0 PASS
+capture_stage=density_validation_complete elapsed_ms=893.63
+capture_stage=sample_validation_begin elapsed_ms=893.986
+dense_sample_comparison samples=256 max_abs=0.0946883 mean_abs=0.00291746 raw_base_leak=0.0105269 raw_cut_leak=0 hard_constraints_preserved=1
+capture_stage=sample_validation_complete elapsed_ms=4060.93
+frozen_reload_generation_jobs=0 content_hash=12858202817239951433 PASS
+fixed_recipe=wide-calm.white.json density_hash=17543412427097046684 internal_width=192 view_steps=80 shadow_steps=8 cache=0 camera_sun=from_saved_recipe
+capture_stage=first_frame_acquire_begin elapsed_ms=4064.85
+capture_stage=first_frame_acquire_complete elapsed_ms=4066.17
+capture_stage=first_frame_record_begin elapsed_ms=4066.57
+capture_stage=first_frame_record_complete elapsed_ms=4068.63
+capture_stage=first_frame_submit_begin elapsed_ms=4069.05
+capture_stage=first_frame_submit_complete elapsed_ms=4157.83
+capture_stage=first_frame_fence_begin elapsed_ms=4158.07
+capture_stage=first_frame_fence_complete elapsed_ms=22502.4
+edit_to_present_submission revision=2 ms=3568.82 samples=1 p50_ms=3568.82 p95_ms=3568.82
+frame_revision=2 mode=direct record_cpu_ms=4.6089 submit_to_fence_wall_ms=18435 gpu_timestamp_ms=unavailable
+capture=wide-calm.bmp frame=60
+HDR verified 192x108 view_steps=80 shadow_steps=8 max_channel=1 min_T=0.157868 CPU_T_max_error=2.94635e-06
+HDR exported=wide-calm-hdr
+fixed_capture width=192 height=108 revision=2 pending=0
+shutdown=clean lifecycle_test=0

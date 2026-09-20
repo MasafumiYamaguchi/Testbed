@@ -1,0 +1,2 @@
+preset_finish_integration scoped_detail=true whole_detail=true scoped_structure=true whole_structure=true exact_stack=true single_undo=true no_implicit_growth=true PASS
+Versioned presets, calm/wind inputs, selected scope, detail-only no-growth, draft value copies and comparison view PASS
