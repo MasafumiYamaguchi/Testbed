@@ -44,7 +44,7 @@ void EditorUi::draw_generation_ui(){
         ImGui::TextWrapped("Wind uses this fixed altitude frame. The cloud base stays anchored; increasing the cloud bounds does not move the wind profile.");ImGui::TreePop();
     }
     if(ImGui::TreeNode("Individual growth and guides")){
-        const auto initial=generation_initial_->top_lobes||generation_initial_->developed?*generation_initial_:new_developed_scene(*generation_initial_);
+        const auto initial=editable_developed_source(*generation_initial_)?*generation_initial_:new_developed_scene(*generation_initial_);
         const auto* source=editable_developed_source(initial);
         for(auto& cell:generation_settings_.cells){ImGui::PushID(std::to_string(cell.cell_id).c_str());
             ImGui::Text("Development %llu",static_cast<unsigned long long>(cell.cell_id));

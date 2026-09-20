@@ -1,10 +1,11 @@
 #include "noise.hlsli"
-#include "top_lobes.hlsli"
+#include "anvil.hlsli"
 #ifndef DENSITY_SPACE
 #define DENSITY_SPACE space2
 #endif
-cbuffer Cloud : register(b1,DENSITY_SPACE){TopLobePacket topLobePacket;};
+cbuffer Cloud : register(b1,DENSITY_SPACE){AnvilPacket cloudPacket;};
+#define topLobePacket cloudPacket.cloud
 #define densityPacket topLobePacket.fields
-#define envelopeMin densityPacket.envelopeMin
-#define envelopeMax densityPacket.envelopeMax
-float densityAt(float3 p){return topLobeDensityAt(p,topLobePacket);}
+#define envelopeMin cloudPacket.envelopeMin
+#define envelopeMax cloudPacket.envelopeMax
+float densityAt(float3 p){return anvilDensityAt(p,cloudPacket);}

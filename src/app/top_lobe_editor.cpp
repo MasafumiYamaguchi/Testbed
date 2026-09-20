@@ -13,7 +13,7 @@ void EditorUi::top_lobe_item(bool changed,const TopLobeSettings& settings){
 }
 void EditorUi::draw_top_lobes_ui(){
     const auto& initial=session.document().scene();
-    if(!initial.top_lobes){
+    if(!editable_top_lobe_source(initial)){
         const auto* source=editable_developed_source(initial);
         if(source&&!source->cells.empty()){
             ImGui::BeginDisabled(gizmo_drag_||inspector_drag_||orbit_drag_);
@@ -23,9 +23,9 @@ void EditorUi::draw_top_lobes_ui(){
         return;
     }
     if(!ImGui::CollapsingHeader("Top lobe hierarchy",ImGuiTreeNodeFlags_DefaultOpen))return;
-    auto settings=session.document().scene().top_lobes->settings;
+    auto settings=editable_top_lobe_source(session.document().scene())->settings;
     int mode=int(settings.mode);bool changed=ImGui::Combo("Lobes",&mode,"OFF\0Large parent\0Parent and children\0");settings.mode=TopLobeMode(mode);top_lobe_item(changed,settings);
-    auto number=[&](const char* label,double TopLobeSettings::*member){auto p=session.document().scene().top_lobes->settings;ImGui::SetNextItemWidth(105);bool edit=ImGui::InputDouble(label,&(p.*member),0,0,"%.3f");top_lobe_item(edit,p);};
+    auto number=[&](const char* label,double TopLobeSettings::*member){auto p=editable_top_lobe_source(session.document().scene())->settings;ImGui::SetNextItemWidth(105);bool edit=ImGui::InputDouble(label,&(p.*member),0,0,"%.3f");top_lobe_item(edit,p);};
     number("Top start 0.5..0.9",&TopLobeSettings::top_start);
     number("Parent radius m",&TopLobeSettings::parent_radius);
     number("Child radius ratio",&TopLobeSettings::child_radius_ratio);
@@ -33,11 +33,11 @@ void EditorUi::draw_top_lobes_ui(){
     number("Fusion m",&TopLobeSettings::fusion_width);
     number("Mask transition m",&TopLobeSettings::mask_transition);
     number("Top density 0..1",&TopLobeSettings::density_scale);
-    settings=session.document().scene().top_lobes->settings;int depth=int(settings.depth_limit);changed=ImGui::InputInt("Depth limit 1..2",&depth);settings.depth_limit=unsigned(depth);top_lobe_item(changed,settings);
-    settings=session.document().scene().top_lobes->settings;int children=int(settings.child_limit);changed=ImGui::InputInt("Children limit 1..2",&children);settings.child_limit=unsigned(children);top_lobe_item(changed,settings);
-    settings=session.document().scene().top_lobes->settings;ImGui::SetNextItemWidth(-1);changed=ImGui::InputScalarN("##TopGrowth",ImGuiDataType_Double,&settings.growth_direction.x,3,nullptr,nullptr,"%.3f");const double length=std::sqrt(dot(settings.growth_direction,settings.growth_direction));if(changed&&length>0)settings.growth_direction=settings.growth_direction*(1/length);top_lobe_item(changed,settings);
+    settings=editable_top_lobe_source(session.document().scene())->settings;int depth=int(settings.depth_limit);changed=ImGui::InputInt("Depth limit 1..2",&depth);settings.depth_limit=unsigned(depth);top_lobe_item(changed,settings);
+    settings=editable_top_lobe_source(session.document().scene())->settings;int children=int(settings.child_limit);changed=ImGui::InputInt("Children limit 1..2",&children);settings.child_limit=unsigned(children);top_lobe_item(changed,settings);
+    settings=editable_top_lobe_source(session.document().scene())->settings;ImGui::SetNextItemWidth(-1);changed=ImGui::InputScalarN("##TopGrowth",ImGuiDataType_Double,&settings.growth_direction.x,3,nullptr,nullptr,"%.3f");const double length=std::sqrt(dot(settings.growth_direction,settings.growth_direction));if(changed&&length>0)settings.growth_direction=settings.growth_direction*(1/length);top_lobe_item(changed,settings);
     ImGui::TextUnformatted("Top growth direction (y >= 0.2)");
-    const TopLobeEvaluationPlan plan(*session.document().scene().top_lobes);
+    const TopLobeEvaluationPlan plan(*editable_top_lobe_source(session.document().scene()));
     ImGui::Text("Generated: %zu / 3; depth <= 2",plan.hierarchy().size());
     ImGui::Text("Density bound: %.3f",plan.maximum());
     ImGui::TextWrapped("Active lobes support one developed cell and render Direct. Below the top mask, the original density stays exact. OFF preserves multiple cells. Structure seed changes hierarchy; detail seed changes noise only.");

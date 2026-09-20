@@ -1,4 +1,5 @@
 #include "white/persistence.hpp"
+#include "white/anvil_scene.hpp"
 #include "white/cumulonimbus.hpp"
 #include "white/centerline.hpp"
 #include "white/developed_scene.hpp"
@@ -202,6 +203,14 @@ TopLobeSource top_lobe_from_json(const Json& j) {
     settings.top_start=number(s.at("top_start"));settings.parent_radius=number(s.at("parent_radius"));settings.child_radius_ratio=number(s.at("child_radius_ratio"));
     settings.hierarchy_density=number(s.at("hierarchy_density"));settings.mask_transition=number(s.at("mask_transition"));settings.fusion_width=number(s.at("fusion_width"));settings.density_scale=number(s.at("density_scale"));settings.growth_direction=vec(s.at("growth_direction"));return source;
 }
+Json anvil_json(const AnvilSource& source){const auto& s=source.settings;return {{"contract_version",source.contract_version},{"cloud",top_lobe_json(source.cloud)},
+    {"settings",{{"enabled",s.enabled},{"follow_wind",s.follow_wind},{"start_height",s.start_height},{"thickness",s.thickness},{"width",s.width},{"extension",s.extension},{"direction",vec(s.direction)},{"shear",s.shear},{"edge_fade",s.edge_fade},{"density_scale",s.density_scale}}}};}
+AnvilSource anvil_from_json(const Json& j){
+    shape(j,{"contract_version","cloud","settings"});if(!j.at("contract_version").is_number_unsigned()||j.at("contract_version")!=anvil_contract_version)throw std::invalid_argument("Unsupported anvil source version");
+    AnvilSource source;source.cloud=top_lobe_from_json(j.at("cloud"));const auto& s=j.at("settings");shape(s,{"enabled","follow_wind","start_height","thickness","width","extension","direction","shear","edge_fade","density_scale"});
+    if(!s.at("enabled").is_boolean()||!s.at("follow_wind").is_boolean())throw std::invalid_argument("Anvil enabled/follow_wind must be boolean");
+    source.settings={s.at("enabled").get<bool>(),s.at("follow_wind").get<bool>(),number(s.at("start_height")),number(s.at("thickness")),number(s.at("width")),number(s.at("extension")),vec(s.at("direction")),number(s.at("shear")),number(s.at("edge_fade")),number(s.at("density_scale"))};return source;
+}
 void push_bounded(std::vector<Scene>& history,Scene scene) {
     if(history.size()==128)history.erase(history.begin());
     history.push_back(std::move(scene));
@@ -228,7 +237,8 @@ std::string scene_json(const Scene& s) {
             {"vertical_fov_degrees",s.camera.vertical_fov_degrees},{"near_plane",s.camera.near_plane},{"far_plane",s.camera.far_plane}}},
         {"sun",{{"direction_to_light",vec(s.sun.direction_to_light)},{"irradiance",vec(s.sun.irradiance)}}},
         {"exposure_ev",s.exposure_ev},{"preview_approx",{{"enabled",s.preview_approx.enabled},{"strength",s.preview_approx.strength}}}};
-    if(s.top_lobes)j["cloud"]={{"kind","top_lobes"},{"source",top_lobe_json(*s.top_lobes)}};
+    if(s.anvil)j["cloud"]={{"kind","anvil"},{"source",anvil_json(*s.anvil)}};
+    else if(s.top_lobes)j["cloud"]={{"kind","top_lobes"},{"source",top_lobe_json(*s.top_lobes)}};
     else if(s.developed)j["cloud"]={{"kind","developed"},{"source",developed_json(*s.developed)}};
     else if(s.centerline)j["cloud"]={{"kind","centerline"},{"source",centerline_json(*s.centerline)}};
     else if(s.cumulonimbus)j["cloud"]={{"kind","cumulonimbus"},{"source",cumulonimbus_json(*s.cumulonimbus)}};
@@ -240,7 +250,7 @@ Scene parse_scene_json(std::string_view text) {
         if(depth>32)throw std::invalid_argument("Scene nesting exceeds 32 levels");
         return true;
     });
-    if((j.value("schema_version",0u)==4||j.value("schema_version",0u)==5||j.value("schema_version",0u)==6||j.value("schema_version",0u)==7||j.value("schema_version",0u)==8))shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev","preview_approx"});
+    if((j.value("schema_version",0u)==4||j.value("schema_version",0u)==5||j.value("schema_version",0u)==6||j.value("schema_version",0u)==7||j.value("schema_version",0u)==8||j.value("schema_version",0u)==9))shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev","preview_approx"});
     else shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev"});
     if(!j.at("schema_version").is_number_unsigned()||!j.at("algorithm_version").is_number_unsigned())throw std::invalid_argument("Version must be an unsigned integer");
     const bool legacy=j.at("schema_version")==1&&j.at("algorithm_version")==1;
@@ -248,32 +258,35 @@ Scene parse_scene_json(std::string_view text) {
     const bool old_schema=(j.at("schema_version")==3||j.at("schema_version")==4||j.at("schema_version")==5)&&j.at("algorithm_version")==2;
     const bool profile_schema=j.at("schema_version")==6&&j.at("algorithm_version")==3;
     const bool developed_schema=j.at("schema_version")==7&&j.at("algorithm_version")==3;
-    const bool current_schema=j.at("schema_version")==8&&j.at("algorithm_version")==3;
-    if(!legacy&&!version2&&!old_schema&&!profile_schema&&!developed_schema&&!current_schema)throw std::invalid_argument("Unsupported schema/algorithm version");
+    const bool top_schema=j.at("schema_version")==8&&j.at("algorithm_version")==3;
+    const bool current_schema=j.at("schema_version")==9&&j.at("algorithm_version")==3;
+    if(!legacy&&!version2&&!old_schema&&!profile_schema&&!developed_schema&&!top_schema&&!current_schema)throw std::invalid_argument("Unsupported schema/algorithm version");
     if(legacy) {
         shape(j.at("cloud"),{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics"});
         j["cloud"]["noise"]=noise_json(NoiseSettings{}); // exact old shape: all noise amplitudes zero
     }
     if(legacy||version2){shape(j["cloud"]["optics"],{"extinction_scale","albedo"});j["cloud"]["optics"]["g"]=0;}
     Scene s;
-    if(j.at("schema_version")==4||j.at("schema_version")==5||j.at("schema_version")==6||j.at("schema_version")==7||j.at("schema_version")==8){const auto& a=j.at("preview_approx");shape(a,{"enabled","strength"});if(!a.at("enabled").is_boolean())throw std::invalid_argument("Approximation enabled must be boolean");s.preview_approx={a.at("enabled").get<bool>(),number(a.at("strength"))};}
-    if(!current_schema&&!profile_schema&&!developed_schema&&!j.at("cloud").contains("kind")) {
+    if(j.at("schema_version")==4||j.at("schema_version")==5||j.at("schema_version")==6||j.at("schema_version")==7||j.at("schema_version")==8||j.at("schema_version")==9){const auto& a=j.at("preview_approx");shape(a,{"enabled","strength"});if(!a.at("enabled").is_boolean())throw std::invalid_argument("Approximation enabled must be boolean");s.preview_approx={a.at("enabled").get<bool>(),number(a.at("strength"))};}
+    if(!current_schema&&!top_schema&&!profile_schema&&!developed_schema&&!j.at("cloud").contains("kind")) {
         if(j.at("cloud").contains("altitude_density"))throw std::invalid_argument("Legacy schema cannot contain altitude density fields");
         j["cloud"]["altitude_density"]=altitude_density_json(AltitudeDensityProfile{});
     }
     auto& c=s.cloud;const auto& cj=j.at("cloud");
-    if((j.at("schema_version")==5||profile_schema||developed_schema||current_schema)&&cj.is_object()&&cj.contains("kind")) {
+    if((j.at("schema_version")==5||profile_schema||developed_schema||top_schema||current_schema)&&cj.is_object()&&cj.contains("kind")) {
         shape(cj,{"kind","source"});
         if(cj.at("kind")=="cumulonimbus") {
             s.cumulonimbus=cumulonimbus_from_json(cj.at("source"));
             c=derive_cumulonimbus_recipe(*s.cumulonimbus);
-        } else if((profile_schema||developed_schema||current_schema)&&cj.at("kind")=="centerline") {
+        } else if((profile_schema||developed_schema||top_schema||current_schema)&&cj.at("kind")=="centerline") {
             s.centerline=centerline_from_json(cj.at("source"));
             c=lower_centerline_to_recipe(*s.centerline);
-        } else if((developed_schema||current_schema)&&cj.at("kind")=="developed") {
+        } else if((developed_schema||top_schema||current_schema)&&cj.at("kind")=="developed") {
             s.developed=developed_from_json(cj.at("source"));
             c=developed_proxy_recipe(*s.developed);
-        } else if(current_schema&&cj.at("kind")=="top_lobes") {
+        } else if(current_schema&&cj.at("kind")=="anvil") {
+            s.anvil=anvil_from_json(cj.at("source"));c=anvil_proxy_recipe(*s.anvil);
+        } else if((top_schema||current_schema)&&cj.at("kind")=="top_lobes") {
             s.top_lobes=top_lobe_from_json(cj.at("source"));c=top_lobe_proxy_recipe(*s.top_lobes);
         } else throw std::invalid_argument("Unsupported cloud object kind");
     } else {
@@ -380,7 +393,7 @@ bool EditorSession::apply(Scene scene) {
 }
 Id EditorSession::add_cell(Cell cell) {
     auto scene=document_.scene();
-    if(scene.developed||scene.top_lobes)throw std::invalid_argument("Edit developed source cells through development commands");
+    if(scene.developed||scene.top_lobes||scene.anvil)throw std::invalid_argument("Edit developed source cells through development commands");
     cell.id=next_id(scene);
     if(scene.centerline) {
         scene.centerline->source.modifiers.manual_cells.push_back(cell);
@@ -393,7 +406,7 @@ Id EditorSession::add_cell(Cell cell) {
 }
 bool EditorSession::remove_cell(Id id) {
     auto scene=document_.scene();
-    if(scene.developed||scene.top_lobes)throw std::invalid_argument("Remove a developed cell through its development command");
+    if(scene.developed||scene.top_lobes||scene.anvil)throw std::invalid_argument("Remove a developed cell through its development command");
     if(scene.centerline) {
         const auto& ids=scene.centerline->source.cell_ids;
         if(std::find(ids.begin(),ids.end(),id)!=ids.end())

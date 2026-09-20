@@ -35,9 +35,9 @@ DensityAllowance density_allowance(const Scene& scene){
         const double unmodulated_max=recipe.cells.empty()?0:recipe.density*(1+recipe.overlap*double(recipe.cells.size()-1));
         profile_bound=std::max(profile_bound,bound);profile_tolerance+=bound*unmodulated_max;
     };
-    const auto* grouped=scene.top_lobes?&scene.top_lobes->trunk:(scene.developed?&*scene.developed:nullptr);
-    if(scene.top_lobes&&TopLobeEvaluationPlan(*scene.top_lobes).gpu_params().mask.x!=0){
-        const auto& source=*scene.top_lobes;const DevelopedEvaluationPlan trunk(source.trunk);
+    const auto* grouped=editable_developed_source(scene);
+    if(scene_has_active_top_lobes(scene)){
+        const auto& source=*editable_top_lobe_source(scene);const DevelopedEvaluationPlan trunk(source.trunk);
         include_profile(trunk.fields()[0].recipe(),trunk.cloud().cells[0].translation.y);
         // The top group uses object-local coordinates; its inherited profile
         // and mask are shifted once when lowered, matching its GPU packet.
@@ -220,7 +220,7 @@ void GpuSpike::set_scene(const Scene& scene,std::uint64_t revision,std::chrono::
     require_valid(scene);const auto dirty=classify_change(scene_snapshot_,scene);
     const bool density_changed=has(dirty,Dirty::density)||fixture!=2;
     scene_snapshot_=scene;scene_revision=revision;exposure_ev=float(scene.exposure_ev);accepted_=accepted;
-    if(scene_density_requires_direct(scene_snapshot_))std::cout<<"density_mode=grouped_direct groups=2 top_lobes="<<(scene_snapshot_.top_lobes&&gpu_scene_density_params(scene_snapshot_).mask.x!=0)<<" density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints\n";
+    if(scene_density_requires_direct(scene_snapshot_))std::cout<<"density_mode=grouped_direct groups=2 top_lobes="<<scene_has_active_top_lobes(scene_snapshot_)<<" density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints\n";
     const auto invalidate=invalidation(dirty);if(invalidate.hdr)volume_dirty=true;
     if(density_changed)try{const auto n=Uint32(cache_resolution);queue_bake(use_cache&&!scene_density_requires_direct(scene_snapshot_)?std::array<Uint32,3>{n,n,n}:std::array<Uint32,3>{65,67,69});}
     catch(const std::exception& e){report=std::string("Bake failed; direct preview active: ")+e.what();}

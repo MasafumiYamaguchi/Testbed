@@ -47,11 +47,11 @@ int main(int argc,char** argv) {
     unsigned progressive_samples=0,diagnostic_mode=0;
     bool empty_skip=false;
     std::string capture,hdr_output;
-    bool lifecycle=false,self_test=false,prefab_test=false,centerline_test=false,developed_test=false,top_lobes_test=false;
+    bool lifecycle=false,self_test=false,prefab_test=false,centerline_test=false,developed_test=false,top_lobes_test=false,anvil_test=false;
     for(int i=1;i<argc;++i) {
         std::string_view arg(argv[i]);
         if(arg=="--help") {
-            std::cout<<"ProjectWhite --export-hdr NEW_DIRECTORY --frames N --capture output.bmp --self-test --prefab-test --centerline-test --developed-test --top-lobes-test --lifecycle-test --scene 0..4\n"
+            std::cout<<"ProjectWhite --export-hdr NEW_DIRECTORY --frames N --capture output.bmp --self-test --prefab-test --centerline-test --developed-test --top-lobes-test --anvil-test --lifecycle-test --scene 0..4\n"
                 "--recipe FILE --render-width 64..640 --view-steps 8..512 --shadow-steps 1..64 --cache 0|128|256\n"
                 "--benchmark-updates 30..10000 --benchmark-track density|camera|exposure --benchmark-output FILE --no-validation\n"
                 "Windows D3D12 GPU field validation; startup fails if required GPU features are absent.\n"; return 0;
@@ -70,6 +70,7 @@ int main(int argc,char** argv) {
             if(arg=="--cache"){valid=valid&&(number==0||number==128||number==256);cache=number;}
             if(!valid){std::cerr<<"Invalid quality/cache argument: "<<arg<<'\n';return 2;}continue;
         }
+        if(arg=="--anvil-test"){anvil_test=true;continue;}
         if(arg=="--top-lobes-test"){top_lobes_test=true;continue;}
         if(arg=="--developed-test"){developed_test=true;continue;}
         if(arg=="--centerline-test"){centerline_test=true;continue;}
@@ -95,6 +96,7 @@ int main(int argc,char** argv) {
         }
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
+    if(anvil_test&&(self_test||prefab_test||centerline_test||developed_test||top_lobes_test||lifecycle||benchmark_updates||!recipe.empty()||frames<200||progressive_samples)){std::cerr<<"--anvil-test requires --frames >= 200 and excludes other scripted runs\n";return 2;}
     if(top_lobes_test&&(self_test||prefab_test||centerline_test||developed_test||lifecycle||benchmark_updates||!recipe.empty()||frames<195||progressive_samples)){std::cerr<<"--top-lobes-test requires --frames >= 195 and excludes other scripted runs\n";return 2;}
     if(developed_test&&(self_test||prefab_test||centerline_test||lifecycle||benchmark_updates||!recipe.empty()||frames<180||progressive_samples)){std::cerr<<"--developed-test requires --frames >= 180 and excludes other scripted runs\n";return 2;}
     if(centerline_test&&(self_test||prefab_test||lifecycle||benchmark_updates||!recipe.empty()||frames<200||progressive_samples)){std::cerr<<"--centerline-test requires --frames >= 200 and excludes other scripted runs\n";return 2;}
@@ -129,6 +131,7 @@ int main(int argc,char** argv) {
         if(centerline_test)editor.start_centerline_test();
         if(developed_test)editor.start_developed_test();
         if(top_lobes_test)editor.start_top_lobes_test();
+        if(anvil_test)editor.start_anvil_test();
         if(!recipe.empty())editor.session.load(std::filesystem::u8path(recipe),true);
         gpu.internal_width=render_width;gpu.view_steps=view_steps;gpu.shadow_steps=shadow_steps;
         gpu.set_scene(editor.session.document().scene(),editor.session.document().revision());
@@ -136,7 +139,7 @@ int main(int argc,char** argv) {
         if(cache){gpu.set_cache_resolution(cache);gpu.use_cache=true;}
         if(!recipe.empty()){
             gpu.wait_bakes();
-            if(editor.session.document().scene().developed||editor.session.document().scene().top_lobes){gpu.validate();gpu.validate_cache_samples();}
+            if(white::editable_developed_source(editor.session.document().scene())){gpu.validate();gpu.validate_cache_samples();}
             std::cout<<"fixed_recipe="<<recipe<<" density_hash="<<white::density_input_hash(editor.session.document().scene())<<" internal_width="<<render_width<<" view_steps="<<view_steps<<" shadow_steps="<<shadow_steps<<" cache="<<cache<<" camera_sun=from_saved_recipe\n";
         }
         const auto benchmark_base=editor.session.document().scene();
@@ -193,6 +196,7 @@ int main(int argc,char** argv) {
             if(centerline_test)editor.centerline_test_input(frame);
             if(developed_test)editor.developed_test_input(frame);
             if(top_lobes_test)editor.top_lobes_test_step(frame);
+            if(anvil_test)editor.anvil_test_input(frame);
             ImGui::NewFrame();
             editor.draw(gpu);
             gpu.poll_bakes();
@@ -205,6 +209,7 @@ int main(int argc,char** argv) {
             if(prefab_test)editor.verify_prefab_test(frame);
             if(centerline_test)editor.verify_centerline_test(frame);
             if(developed_test)editor.verify_developed_test(frame);
+            if(anvil_test)editor.verify_anvil_test(frame);
             ImGui::Render();
             bool hdr_work=false;
             const auto record_start=std::chrono::steady_clock::now();

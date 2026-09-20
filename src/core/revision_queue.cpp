@@ -2,13 +2,18 @@
 #include "white/persistence.hpp"
 #include "white/developed_scene.hpp"
 #include "white/top_lobe_scene.hpp"
+#include "white/anvil_scene.hpp"
 #include <algorithm>
 namespace white {
 namespace {std::uint64_t hash_byte(std::uint64_t h,unsigned char b){return (h^b)*1099511628211ull;}}
 std::uint64_t density_input_hash(const Scene& scene){
     Scene canonical;canonical.schema_version=scene.schema_version;canonical.algorithm_version=scene.algorithm_version;canonical.cloud=scene.cloud;canonical.cloud.optics={};
-    if(scene_has_active_top_lobes(scene)) {
-        canonical.top_lobes=*scene.top_lobes;
+    if(scene_has_active_anvil(scene)){
+        canonical.anvil=*scene.anvil;auto& source=canonical.anvil->cloud.trunk;
+        source=DevelopedEvaluationPlan(source).cloud();source.optics={};for(auto& cell:source.cells)cell.shape.source.modifiers.optics={};
+        canonical.cloud=anvil_proxy_recipe(*canonical.anvil);
+    }else if(scene_has_active_top_lobes(scene)) {
+        canonical.top_lobes=*editable_top_lobe_source(scene);
         canonical.top_lobes->trunk=DevelopedEvaluationPlan(canonical.top_lobes->trunk).cloud();
         canonical.top_lobes->trunk.optics={};for(auto& cell:canonical.top_lobes->trunk.cells)cell.shape.source.modifiers.optics={};
         canonical.cloud=top_lobe_proxy_recipe(*canonical.top_lobes);

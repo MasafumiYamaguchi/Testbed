@@ -6,6 +6,7 @@
 #include "white/developed_scene.hpp"
 #include "white/top_lobe_scene.hpp"
 #include "white/generation.hpp"
+#include "white/anvil_scene.hpp"
 #include <atomic>
 #include <future>
 namespace white {
@@ -24,6 +25,9 @@ public:
     void verify_prefab_test(int frame);
     void start_top_lobes_test();
     void top_lobes_test_step(int frame);
+    void start_anvil_test();
+    void anvil_test_input(int frame);
+    void verify_anvil_test(int frame);
     void start_developed_test();
     void developed_test_input(int frame);
     void verify_developed_test(int frame);
@@ -47,6 +51,10 @@ private:
     void draw_developed_ui();
     void draw_top_lobes_ui();
     void top_lobe_item(bool,const TopLobeSettings&);
+    int anvil_handle_=0;
+    void draw_anvil_ui();
+    void anvil_item(bool,const AnvilSettings&);
+    void draw_anvil_gizmo(float,float,float,float);
     void developed_item(bool,const DevelopedCommand&);
     Id curve_point_=0;
     bool prefab_group_=true;

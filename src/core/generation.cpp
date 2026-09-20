@@ -1,5 +1,6 @@
 #include "white/generation.hpp"
 #include "white/revision_queue.hpp"
+#include "white/anvil_scene.hpp"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -13,10 +14,10 @@ bool range(double v,double lo,double hi){return std::isfinite(v)&&v>=lo&&v<=hi;}
 double smooth(double t){return t*t*(3-2*t);}
 Scene prepared(Scene scene){
     require_valid(scene);
-    if(!scene.top_lobes&&!scene.developed)scene=new_developed_scene(std::move(scene));
+    if(!editable_developed_source(scene))scene=new_developed_scene(std::move(scene));
     return scene;
 }
-DevelopedCloud& trunk(Scene& s){return s.top_lobes?s.top_lobes->trunk:*s.developed;}
+DevelopedCloud& trunk(Scene& s){return s.anvil?s.anvil->cloud.trunk:s.top_lobes?s.top_lobes->trunk:*s.developed;}
 const DevelopmentGrowth* rule(const GenerationSettings& s,Id id){
     const auto i=std::find_if(s.cells.begin(),s.cells.end(),[&](const auto& c){return c.cell_id==id;});
     return i==s.cells.end()?nullptr:&*i;
@@ -135,14 +136,41 @@ GenerationOutcome generate_cloud_state(const Scene& initial,const GenerationSett
             // The bulk translation is distinct from base-anchored relative wind.
             const auto drift=settings.reference_translation*settings.stage;
             source.transform.translation=local_to_world(source.transform,drift);
-            if(scene.top_lobes){
-                auto& top=*scene.top_lobes;const double stage=development_stage(settings,top.target_cell);
+            if(editable_top_lobe_source(scene)){
+                auto& top=scene.anvil?scene.anvil->cloud:*scene.top_lobes;const double stage=development_stage(settings,top.target_cell);
                 top.settings.parent_radius*=.5+.5*smooth(stage);
                 const auto& cell=*std::find_if(source.cells.begin(),source.cells.end(),[&](const auto& c){return c.id==top.target_cell;});
                 const auto tangent=sample_centerline(cell.shape,std::min(.98,top.settings.top_start+.22)).tangent;
                 auto direction=top.settings.growth_direction+Vec3{tangent.x/tangent.y,0,tangent.z/tangent.y};
                 const double length=std::sqrt(dot(direction,direction));top.settings.growth_direction=direction*(1/length);
-                refresh_top_lobe_scene(scene);
+                if(scene.anvil){
+                    // Use the already bent curve as the attachment. Wind only
+                    // sets orientation/relative extension here, never a second
+                    // bulk displacement of the neck.
+                    const auto& original_cell=*std::find_if(editable_developed_source(initial)->cells.begin(),editable_developed_source(initial)->cells.end(),[&](const auto& c){return c.id==top.target_cell;});
+                    const auto& before=original_cell.shape.source.parameters;const auto& after=cell.shape.source.parameters;
+                    const auto original=initial.anvil->settings;auto& anvil=scene.anvil->settings;
+                    const double ratio=after.height/before.height,age=smooth(std::clamp((stage-.35)/.65,0.,1.));
+                    anvil.start_height=after.cloud_base+(original.start_height-before.cloud_base)*ratio;
+                    anvil.thickness=std::max(1.,original.thickness*ratio);
+                    // A very shallow initial shape cannot accommodate a 1 m
+                    // sheet at its old normalized height. Reject, never clamp
+                    // its start through a protected lower region.
+                    anvil.width=std::max(8.,original.width*(.6+.4*age));
+                    anvil.width=std::max(anvil.width,2*anvil.thickness);
+                    anvil.extension=original.extension*age;
+                    anvil.edge_fade=std::min(original.edge_fade,anvil.thickness*.125);
+                    anvil.density_scale=original.density_scale*age;
+                    const double altitude=anvil.start_height+anvil.thickness*.5+cell.translation.y;
+                    const auto wind=sample_wind_unchecked(settings,altitude);const double speed=std::hypot(wind.x,wind.z);
+                    if(anvil.follow_wind&&speed>1e-9){
+                        anvil.direction=wind*(1/speed);
+                        anvil.extension=std::min(anvil.width*4,anvil.extension+speed*stage*age*.35);
+                        const auto gradient=(sample_wind_unchecked(settings,altitude+anvil.thickness*.5)-sample_wind_unchecked(settings,altitude-anvil.thickness*.5))*(stage/anvil.thickness);
+                        anvil.shear=std::clamp(original.shear+dot(gradient,anvil.direction),-4.,4.);
+                    }
+                    refresh_anvil_scene(scene);
+                }else refresh_top_lobe_scene(scene);
             }else refresh_developed_scene(scene);
             checkpoint(.8);candidate.evaluated=std::move(scene);
         }

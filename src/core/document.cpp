@@ -1,4 +1,5 @@
 #include "white/document.hpp"
+#include "white/anvil_scene.hpp"
 #include "white/cumulonimbus.hpp"
 #include "white/centerline.hpp"
 #include "white/developed_scene.hpp"
@@ -76,7 +77,9 @@ Dirty classify_change(const Scene& a,const Scene& b) {
         auto clear=[](auto& source){if(source){source->trunk.optics={};for(auto& cell:source->trunk.cells)cell.shape.source.modifiers.optics={};}};
         clear(ta);clear(tb);top_density_change=ta!=tb;
     }
-    if(ca!=cb || a.algorithm_version!=b.algorithm_version || developed_density_change || top_density_change) result=result|Dirty::density;
+    bool anvil_density_change=false;
+    if(a.anvil||b.anvil){auto aa=a.anvil,ab=b.anvil;auto clear=[](auto& source){if(source){source->cloud.trunk.optics={};for(auto& cell:source->cloud.trunk.cells)cell.shape.source.modifiers.optics={};}};clear(aa);clear(ab);anvil_density_change=aa!=ab;}
+    if(ca!=cb || a.algorithm_version!=b.algorithm_version || developed_density_change || top_density_change || anvil_density_change) result=result|Dirty::density;
     if(a.cloud.optics!=b.cloud.optics||a.preview_approx!=b.preview_approx) result=result|Dirty::optics;
     if(a.sun!=b.sun) result=result|Dirty::sun;
     if(a.camera!=b.camera) result=result|Dirty::camera;
@@ -86,11 +89,12 @@ Dirty classify_change(const Scene& a,const Scene& b) {
 std::vector<std::string> validate(const Scene& s) {
     std::vector<std::string> errors;
     auto check=[&](bool ok,const std::string& text){if(!ok)errors.push_back(text);};
-    check(s.schema_version==8,"Unsupported scene schema_version");
+    check(s.schema_version==9,"Unsupported scene schema_version");
     check(std::isfinite(s.preview_approx.strength)&&s.preview_approx.strength>=0&&s.preview_approx.strength<=1,"Preview approximation strength outside 0..1");
     check(s.algorithm_version==3,"Unsupported scene algorithm_version");
-    check(unsigned(s.cumulonimbus.has_value())+unsigned(s.centerline.has_value())+unsigned(s.developed.has_value())+unsigned(s.top_lobes.has_value())<=1,
+    check(unsigned(s.cumulonimbus.has_value())+unsigned(s.centerline.has_value())+unsigned(s.developed.has_value())+unsigned(s.top_lobes.has_value())+unsigned(s.anvil.has_value())<=1,
         "Scene cannot contain multiple source authorities");
+    if(s.anvil){const auto source_errors=validate_anvil(*s.anvil);for(const auto& error:source_errors)errors.push_back("Anvil source: "+error);if(source_errors.empty())check(s.cloud==anvil_proxy_recipe(*s.anvil),"Anvil proxy differs from authoritative source");}
     if(s.top_lobes) {
         const auto source_errors=validate_top_lobes(*s.top_lobes);
         for(const auto& error:source_errors)errors.push_back("Top-lobe source: "+error);

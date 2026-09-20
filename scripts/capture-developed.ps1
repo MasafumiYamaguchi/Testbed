@@ -13,7 +13,7 @@ Run-Editor "input" @("--developed-test","--frames","185","--capture","developed-
 $log=Get-Content "$out/input.stdout.log" -Raw
 foreach($marker in @("developed_move_gizmo_command_undo=true PASS","developed_independent_stretch_source_save_reload=true PASS","developed_delete_undo=true PASS","developed_empty_source_undo=true PASS")){if(!$log.Contains($marker)){throw "Missing $marker"}}
 $scene=Get-Content "$out/developed-smoke.white.json" -Raw | ConvertFrom-Json
-if($scene.schema_version -ne 8 -or $scene.algorithm_version -ne 3 -or $scene.cloud.kind -ne "developed"){throw "Developed source schema mismatch"}
+if($scene.schema_version -ne 9 -or $scene.algorithm_version -ne 3 -or $scene.cloud.kind -ne "developed"){throw "Developed source schema mismatch"}
 foreach($cache in @(0,128)){
     $name="two-cells-cache-request-$cache"
     Run-Editor $name @("--recipe","developed-smoke.white.json","--frames","90","--render-width","160","--view-steps","64","--shadow-steps","8","--cache","$cache","--sun-cache","32","--empty-skip","--capture","$name.bmp","--export-hdr","$name-hdr")
