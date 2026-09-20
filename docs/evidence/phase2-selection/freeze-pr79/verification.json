@@ -1,0 +1,237 @@
+{
+  "artifact_sha256": "bbc6fbd0b4c860724c3e88168e17724b3c6cf4c9396df1ab55d4973d0b5ca376",
+  "selected_frozen_pairs": [
+    {
+      "case": "calm-front",
+      "selected_sha256": "4c96f1ae04287840edd0a7a1b095fae92376a5bc46b92ca3945854da17f2a278",
+      "frozen_sha256": "4c96f1ae04287840edd0a7a1b095fae92376a5bc46b92ca3945854da17f2a278",
+      "byte_identical": true,
+      "independent_strict_comparison": "linear_RGB_max=0 mean=0 T_max=0"
+    },
+    {
+      "case": "calm-side",
+      "selected_sha256": "a07e5843db1d7802b9b966910be8d81c3049674f33e8cfea1d580167e20ed7d0",
+      "frozen_sha256": "a07e5843db1d7802b9b966910be8d81c3049674f33e8cfea1d580167e20ed7d0",
+      "byte_identical": true,
+      "independent_strict_comparison": "linear_RGB_max=0 mean=0 T_max=0"
+    },
+    {
+      "case": "wind-front",
+      "selected_sha256": "8a0bdfec4a55fc77ee51bcee7095b4b693ffd79285ae9679b0f12cb81927c835",
+      "frozen_sha256": "8a0bdfec4a55fc77ee51bcee7095b4b693ffd79285ae9679b0f12cb81927c835",
+      "byte_identical": true,
+      "independent_strict_comparison": "linear_RGB_max=0 mean=0 T_max=0"
+    },
+    {
+      "case": "wind-side",
+      "selected_sha256": "3498ec0c3463135d757254b19de3b3582e2ab235c4a0b36a5268306d86a1ba23",
+      "frozen_sha256": "3498ec0c3463135d757254b19de3b3582e2ab235c4a0b36a5268306d86a1ba23",
+      "byte_identical": true,
+      "independent_strict_comparison": "linear_RGB_max=0 mean=0 T_max=0"
+    }
+  ],
+  "exports": [
+    {
+      "case": "calm-front-frozen",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 2.06978e-06,
+      "generation_markers": [
+        "frozen_reload_generation_jobs=0 content_hash=5362464593817520431 PASS"
+      ]
+    },
+    {
+      "case": "calm-front-selected",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 2.06978e-06,
+      "generation_markers": []
+    },
+    {
+      "case": "calm-side-frozen",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 4.12156e-06,
+      "generation_markers": [
+        "frozen_reload_generation_jobs=0 content_hash=5362464593817520431 PASS"
+      ]
+    },
+    {
+      "case": "calm-side-selected",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 4.12156e-06,
+      "generation_markers": []
+    },
+    {
+      "case": "reopened-detail",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 2.49257e-06,
+      "generation_markers": [
+        "frozen_reload_generation_jobs=0 content_hash=8170491388461520691 PASS"
+      ]
+    },
+    {
+      "case": "reopened-first",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 1.56372e-06,
+      "generation_markers": [
+        "frozen_reload_generation_jobs=0 content_hash=8170491388461520691 PASS"
+      ]
+    },
+    {
+      "case": "reopened-smoke",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 1.6772e-06,
+      "generation_markers": [
+        "frozen_reload_generation_jobs=0 content_hash=877277292391849608 PASS"
+      ]
+    },
+    {
+      "case": "wind-front-frozen",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 2.41011e-06,
+      "generation_markers": [
+        "frozen_reload_generation_jobs=0 content_hash=424174369526669012 PASS"
+      ]
+    },
+    {
+      "case": "wind-front-selected",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 2.41011e-06,
+      "generation_markers": []
+    },
+    {
+      "case": "wind-side-frozen",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 4.24602e-06,
+      "generation_markers": [
+        "frozen_reload_generation_jobs=0 content_hash=424174369526669012 PASS"
+      ]
+    },
+    {
+      "case": "wind-side-selected",
+      "size": [
+        192,
+        108
+      ],
+      "view_steps": 80,
+      "shadow_steps": 8,
+      "cached_density": false,
+      "sun_tau_cache_resolution": 0,
+      "empty_space_skipping": false,
+      "cpu_T_max_error": 4.24602e-06,
+      "generation_markers": []
+    }
+  ],
+  "fresh_reopens": [
+    {
+      "case": "first",
+      "scene_exact_after_fresh_process": true,
+      "content_hash": "8170491388461520691",
+      "payload_hash": "2646986549242994782",
+      "contract_version": 1
+    },
+    {
+      "case": "detail",
+      "scene_exact_after_fresh_process": true,
+      "content_hash": "8170491388461520691",
+      "payload_hash": "18166459818266383063",
+      "contract_version": 1
+    },
+    {
+      "case": "smoke",
+      "scene_exact_after_fresh_process": true,
+      "content_hash": "877277292391849608",
+      "payload_hash": "7664931395849510644",
+      "contract_version": 1
+    }
+  ],
+  "lifecycle_markers": [
+    "freeze_native=adopt completed_candidate=true single_undo=true redo=true generation_jobs=1 PASS",
+    "freeze_native=finish content_hash_stable=true detail_camera_light_generation_jobs=0 single_undo=true PASS",
+    "freeze_native=cancel fixed_cloud_preserved=true retry_started=true PASS",
+    "freeze_native=replace single_undo=true previous_success_retained=true save_reload=true reload_generation_jobs=0 PASS"
+  ],
+  "lifecycle_bmp_artifact_bytes": {
+    "100": 2160138,
+    "140": 2160138,
+    "200": 2160138
+  }
+}

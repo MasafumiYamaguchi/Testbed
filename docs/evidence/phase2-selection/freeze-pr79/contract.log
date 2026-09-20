@@ -1,0 +1,6 @@
+freeze_equality top=0 anvil=0 max_error=0 history_free=true PASS
+freeze_equality top=0 anvil=1 max_error=0 history_free=true PASS
+freeze_equality top=1 anvil=0 max_error=0 history_free=true PASS
+freeze_equality top=1 anvil=1 max_error=0 history_free=true PASS
+freeze_lifecycle detail_seed_and_layers_geometry_stable=true no_finish_growth=true explicit_replace_undo=true cancel_preserved=true PASS
+FrozenCloudState contract PASS

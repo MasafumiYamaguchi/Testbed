@@ -1,0 +1,208 @@
+{
+  "repository": "MasafumiYamaguchi/Testbed",
+  "pull_request": 79,
+  "run_url": "https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35535097045",
+  "job_url": "https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35535097045/job/106142588957",
+  "artifact_api_snapshot": {
+    "id": 10612767943,
+    "name": "windows-Release-selected-state-evidence",
+    "size_in_bytes": 2164112,
+    "url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10612767943",
+    "archive_download_url": "https://api.github.com/repos/MasafumiYamaguchi/Testbed/actions/artifacts/10612767943/zip",
+    "expired": false,
+    "created_at": "2026-09-20T20:46:53Z",
+    "expires_at": "2026-12-19T20:18:04Z",
+    "updated_at": "2026-09-20T20:46:53Z",
+    "digest": "sha256:bbc6fbd0b4c860724c3e88168e17724b3c6cf4c9396df1ab55d4973d0b5ca376",
+    "workflow_run": {
+      "id": 35535097045,
+      "repository_id": 1363007241,
+      "head_repository_id": 1363007241,
+      "head_branch": "codex/phase2-frozen-state",
+      "head_sha": "99b585adb1bf84b8f6f27b818895570e5a54f1e0"
+    }
+  },
+  "release_job_snapshot": {
+    "id": 106142588957,
+    "name": "windows (Release)",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 35535097045,
+    "logs_url": null,
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1
+      },
+      {
+        "name": "Run actions/checkout@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2
+      },
+      {
+        "name": "Configure",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3
+      },
+      {
+        "name": "Configure CMake",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4
+      },
+      {
+        "name": "Build",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5
+      },
+      {
+        "name": "CPU and command-line tests",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6
+      },
+      {
+        "name": "Capture actual Windows app",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      },
+      {
+        "name": "Selected growth stage and altitude wind comparisons",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8
+      },
+      {
+        "name": "Frozen selected field and lifecycle comparisons",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9
+      },
+      {
+        "name": "Publish selected-state evidence checkpoint",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10
+      },
+      {
+        "name": "Anvil growth wind and handle comparisons",
+        "status": "in_progress",
+        "conclusion": null,
+        "number": 11
+      },
+      {
+        "name": "Top lobe hierarchy comparisons",
+        "status": "pending",
+        "conclusion": null,
+        "number": 12
+      },
+      {
+        "name": "Independent developed cells and direct fallback",
+        "status": "pending",
+        "conclusion": null,
+        "number": 13
+      },
+      {
+        "name": "Cumulonimbus creation and parameter gizmos",
+        "status": "pending",
+        "conclusion": null,
+        "number": 14
+      },
+      {
+        "name": "Centerline point gizmo and profile captures",
+        "status": "pending",
+        "conclusion": null,
+        "number": 15
+      },
+      {
+        "name": "Fixed Phase-0 recipe comparisons",
+        "status": "pending",
+        "conclusion": null,
+        "number": 16
+      },
+      {
+        "name": "HG phase comparison captures",
+        "status": "pending",
+        "conclusion": null,
+        "number": 17
+      },
+      {
+        "name": "Sun cache comparisons",
+        "status": "pending",
+        "conclusion": null,
+        "number": 18
+      },
+      {
+        "name": "Conservative empty-space comparisons",
+        "status": "pending",
+        "conclusion": null,
+        "number": 19
+      },
+      {
+        "name": "Settled progressive comparisons",
+        "status": "pending",
+        "conclusion": null,
+        "number": 20
+      },
+      {
+        "name": "Diagnostic view comparisons",
+        "status": "pending",
+        "conclusion": null,
+        "number": 21
+      },
+      {
+        "name": "Preview approximation comparison",
+        "status": "pending",
+        "conclusion": null,
+        "number": 22
+      },
+      {
+        "name": "Bounded edit benchmark",
+        "status": "pending",
+        "conclusion": null,
+        "number": 23
+      },
+      {
+        "name": "Dependency notices",
+        "status": "pending",
+        "conclusion": null,
+        "number": 24
+      },
+      {
+        "name": "Run actions/upload-artifact@v4",
+        "status": "pending",
+        "conclusion": null,
+        "number": 25
+      },
+      {
+        "name": "Post Run actions/checkout@v4",
+        "status": "pending",
+        "conclusion": null,
+        "number": 50
+      }
+    ]
+  },
+  "tested_commit": {
+    "sha": "5cdcad3bb1de6d0c8be23c4e7a2d3071a3c33cdf",
+    "message": "Merge 99b585adb1bf84b8f6f27b818895570e5a54f1e0 into ff6ed399700f8925a0929bdec3f0a6f9291f1881",
+    "url": "https://github.com/MasafumiYamaguchi/Testbed/commit/5cdcad3bb1de6d0c8be23c4e7a2d3071a3c33cdf"
+  },
+  "download_verification": {
+    "size_bytes": 2164112,
+    "sha256": "bbc6fbd0b4c860724c3e88168e17724b3c6cf4c9396df1ab55d4973d0b5ca376",
+    "matches_github_artifact_digest": true
+  },
+  "sources": [
+    "GitHub fetch_workflow_run_artifacts",
+    "GitHub fetch_workflow_run_jobs",
+    "GitHub fetch_commit",
+    "downloaded ZIP bytes and extracted original files"
+  ],
+  "scope": "Frozen selected field and lifecycle steps passed; the Release job was still in progress when the selected-state artifact was inspected."
+}

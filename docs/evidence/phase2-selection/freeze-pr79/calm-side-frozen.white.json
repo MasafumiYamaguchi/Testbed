@@ -1,0 +1,740 @@
+{
+  "algorithm_version": 3,
+  "camera": {
+    "far_plane": 10000.0,
+    "near_plane": 0.1,
+    "position": [
+      385.0,
+      80.0,
+      0.0
+    ],
+    "target": [
+      35.0,
+      65.0,
+      0.0
+    ],
+    "up": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "vertical_fov_degrees": 45.0
+  },
+  "cloud": {
+    "kind": "frozen",
+    "source": {
+      "anvil": {
+        "along_radius": 76.45425580336823,
+        "center": [
+          30.969503868912156,
+          90.0096,
+          0.0
+        ],
+        "cross_radius": 45.48475193445608,
+        "density_scale": 0.6193900773782431,
+        "direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "edge_fade": 1.0,
+        "half_thickness": 11.2512,
+        "shear": 0.0,
+        "start_height": 78.75840000000001
+      },
+      "content_hash": "5362464593817520431",
+      "contract_version": 1,
+      "curves": [
+        {
+          "base": 0.0,
+          "development_id": "7",
+          "growth_direction": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "height": 112.51200000000001,
+          "points": [
+            {
+              "id": "1",
+              "offset": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "t": 0.0
+            },
+            {
+              "id": "2",
+              "offset": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "t": 0.5
+            },
+            {
+              "id": "3",
+              "offset": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "t": 1.0
+            }
+          ],
+          "profile": [
+            {
+              "density_scale": 0.9584,
+              "id": "1",
+              "radius_scale": 0.9909,
+              "t": 0.0
+            },
+            {
+              "density_scale": 0.9584,
+              "id": "2",
+              "radius_scale": 0.9636,
+              "t": 1.0
+            }
+          ]
+        }
+      ],
+      "fields": [
+        {
+          "development_id": "7",
+          "layers": {
+            "base": true,
+            "macro": true,
+            "medium": true,
+            "micro": true
+          },
+          "recipe": {
+            "altitude_density": {
+              "base": 0.0,
+              "enabled": true,
+              "height": 112.51200000000001,
+              "knots": [
+                {
+                  "scale": 0.9584,
+                  "t": 0.0
+                },
+                {
+                  "scale": 0.9584,
+                  "t": 1.0
+                }
+              ]
+            },
+            "base": {
+              "enabled": true,
+              "height": 0.0,
+              "transition": 2.0
+            },
+            "blend_width": 4.0,
+            "cells": [
+              {
+                "center": [
+                  0.0,
+                  20.252160000000003,
+                  0.0
+                ],
+                "id": "2",
+                "radii": [
+                  35.495496,
+                  26.624461639680003,
+                  29.9739744
+                ],
+                "structure_seed": "0"
+              },
+              {
+                "center": [
+                  0.0,
+                  47.25504,
+                  0.0
+                ],
+                "id": "3",
+                "radii": [
+                  25.073510400000004,
+                  35.26338502656,
+                  23.506416
+                ],
+                "structure_seed": "1"
+              },
+              {
+                "center": [
+                  0.0,
+                  78.75840000000001,
+                  0.0
+                ],
+                "id": "4",
+                "radii": [
+                  31.09728,
+                  32.801410944000004,
+                  27.987551999999997
+                ],
+                "structure_seed": "2"
+              },
+              {
+                "center": [
+                  -17.6,
+                  81.00864000000001,
+                  6.4
+                ],
+                "id": "5",
+                "radii": [
+                  20.2018752,
+                  22.94808703488,
+                  18.6478848
+                ],
+                "structure_seed": "3"
+              },
+              {
+                "center": [
+                  17.6,
+                  85.50912000000001,
+                  -6.4
+                ],
+                "id": "6",
+                "radii": [
+                  20.1791616,
+                  21.830748364800005,
+                  18.6269184
+                ],
+                "structure_seed": "4"
+              }
+            ],
+            "cuts": [],
+            "density": 1.0,
+            "detail_seed": "17",
+            "envelope": {
+              "max": [
+                45.36249493333334,
+                119.76381094400001,
+                37.85461527978764
+              ],
+              "min": [
+                -45.38520853333334,
+                -13.372301639679996,
+                -37.85461527978764
+              ]
+            },
+            "id": "7",
+            "noise": {
+              "medium_frequency": 0.12,
+              "medium_strength": 0.2,
+              "micro_erosion": 0.5,
+              "micro_frequency": 0.6,
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "warp_amplitude": 1.0,
+              "warp_frequency": 0.035
+            },
+            "optics": {
+              "albedo": 0.9,
+              "extinction_scale": 0.02,
+              "g": 0.0
+            },
+            "overlap": 0.15,
+            "structure_seed": "42",
+            "transform": {
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "translation": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "development_id": "8",
+          "layers": {
+            "base": true,
+            "macro": true,
+            "medium": true,
+            "micro": true
+          },
+          "recipe": {
+            "altitude_density": {
+              "base": 0.0,
+              "enabled": true,
+              "height": 112.51200000000001,
+              "knots": [
+                {
+                  "scale": 0.9584,
+                  "t": 0.0
+                },
+                {
+                  "scale": 0.9584,
+                  "t": 1.0
+                }
+              ]
+            },
+            "base": {
+              "enabled": true,
+              "height": 73.13280000000002,
+              "transition": 6.0
+            },
+            "blend_width": 4.0,
+            "cells": [
+              {
+                "center": [
+                  -1.3080437625587211,
+                  100.40552579485686,
+                  0.0
+                ],
+                "id": "9",
+                "radii": [
+                  15.960543367426641,
+                  17.640600563997868,
+                  16.800571965712255
+                ],
+                "structure_seed": "4717743753551222770"
+              },
+              {
+                "center": [
+                  -10.06377259841592,
+                  108.61402157847297,
+                  1.5102941200093343
+                ],
+                "id": "10",
+                "radii": [
+                  9.95751963920197,
+                  10.509612848772584,
+                  9.45964365724187
+                ],
+                "structure_seed": "1524433409327453074"
+              },
+              {
+                "center": [
+                  7.2337069837418735,
+                  108.41341711951367,
+                  3.0389717876609454
+                ],
+                "id": "11",
+                "radii": [
+                  8.896350786089007,
+                  9.405560606716756,
+                  8.451533246784557
+                ],
+                "structure_seed": "3678655272201291255"
+              }
+            ],
+            "cuts": [],
+            "density": 0.75,
+            "detail_seed": "17",
+            "envelope": {
+              "max": [
+                21.393215664567723,
+                124.67860733614943,
+                22.063729860449097
+              ],
+              "min": [
+                -25.284450132354735,
+                77.23860944138531,
+                -22.063729860449097
+              ]
+            },
+            "id": "8",
+            "noise": {
+              "medium_frequency": 0.12,
+              "medium_strength": 0.2,
+              "micro_erosion": 0.5,
+              "micro_frequency": 0.6,
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "warp_amplitude": 1.0,
+              "warp_frequency": 0.035
+            },
+            "optics": {
+              "albedo": 0.9,
+              "extinction_scale": 0.02,
+              "g": 0.0
+            },
+            "overlap": 0.0,
+            "structure_seed": "42",
+            "transform": {
+              "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "translation": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "fusion_width": 4.0,
+      "generation_input_hash": "9447466590761414877",
+      "generation_version": 1,
+      "hierarchy": [
+        {
+          "depth": 1,
+          "id": "9",
+          "parent_id": "0"
+        },
+        {
+          "depth": 2,
+          "id": "10",
+          "parent_id": "9"
+        },
+        {
+          "depth": 2,
+          "id": "11",
+          "parent_id": "9"
+        }
+      ],
+      "id": "1",
+      "optics": {
+        "albedo": 0.9,
+        "extinction_scale": 0.02,
+        "g": 0.0
+      },
+      "overlap": 0.0,
+      "payload_hash": "9779156202027906164",
+      "provenance": {
+        "initial": {
+          "kind": "anvil",
+          "source": {
+            "cloud": {
+              "contract_version": 1,
+              "field_id": "8",
+              "lobe_ids": [
+                "9",
+                "10",
+                "11"
+              ],
+              "settings": {
+                "child_limit": 2,
+                "child_radius_ratio": 0.55,
+                "density_scale": 0.75,
+                "depth_limit": 2,
+                "fusion_width": 4.0,
+                "growth_direction": [
+                  0.0,
+                  1.0,
+                  0.0
+                ],
+                "hierarchy_density": 1.0,
+                "mask_transition": 6.0,
+                "mode": "children",
+                "parent_radius": 18.0,
+                "top_start": 0.65
+              },
+              "target_cell": "7",
+              "trunk": {
+                "cells": [
+                  {
+                    "id": "7",
+                    "roles": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4
+                    ],
+                    "shape": {
+                      "contract_version": 1,
+                      "points": [
+                        {
+                          "id": "1",
+                          "offset": [
+                            0.0,
+                            0.0,
+                            0.0
+                          ],
+                          "t": 0.0
+                        },
+                        {
+                          "id": "2",
+                          "offset": [
+                            0.0,
+                            0.0,
+                            0.0
+                          ],
+                          "t": 0.5
+                        },
+                        {
+                          "id": "3",
+                          "offset": [
+                            0.0,
+                            0.0,
+                            0.0
+                          ],
+                          "t": 1.0
+                        }
+                      ],
+                      "profile": [
+                        {
+                          "density_scale": 1.0,
+                          "id": "1",
+                          "radius_scale": 1.0,
+                          "t": 0.0
+                        },
+                        {
+                          "density_scale": 1.0,
+                          "id": "2",
+                          "radius_scale": 1.0,
+                          "t": 1.0
+                        }
+                      ],
+                      "source": {
+                        "cell_adjustments": [],
+                        "cell_ids": [
+                          "2",
+                          "3",
+                          "4",
+                          "5",
+                          "6"
+                        ],
+                        "cloud_id": "7",
+                        "contract_version": 1,
+                        "modifiers": {
+                          "base_enabled": true,
+                          "base_transition": 2.0,
+                          "blend_width": 4.0,
+                          "cuts": [],
+                          "manual_cells": [],
+                          "noise": {
+                            "medium_frequency": 0.12,
+                            "medium_strength": 0.2,
+                            "micro_erosion": 0.5,
+                            "micro_frequency": 0.6,
+                            "origin": [
+                              0.0,
+                              0.0,
+                              0.0
+                            ],
+                            "warp_amplitude": 1.0,
+                            "warp_frequency": 0.035
+                          },
+                          "optics": {
+                            "albedo": 0.9,
+                            "extinction_scale": 0.02,
+                            "g": 0.0
+                          },
+                          "overlap": 0.15,
+                          "transform": {
+                            "rotation": [
+                              0.0,
+                              0.0,
+                              0.0,
+                              1.0
+                            ],
+                            "scale": [
+                              1.0,
+                              1.0,
+                              1.0
+                            ],
+                            "translation": [
+                              0.0,
+                              0.0,
+                              0.0
+                            ]
+                          }
+                        },
+                        "parameters": {
+                          "cloud_base": 0.0,
+                          "density": 1.0,
+                          "detail_seed": "17",
+                          "growth_direction": [
+                            0.0,
+                            1.0,
+                            0.0
+                          ],
+                          "height": 120.0,
+                          "structure_seed": "42",
+                          "width": 80.0
+                        }
+                      }
+                    },
+                    "translation": [
+                      0.0,
+                      0.0,
+                      0.0
+                    ]
+                  }
+                ],
+                "contract_version": 1,
+                "fusion_width": 4.0,
+                "id": "1",
+                "optics": {
+                  "albedo": 0.9,
+                  "extinction_scale": 0.02,
+                  "g": 0.0
+                },
+                "overlap": 0.15,
+                "transform": {
+                  "rotation": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                  ],
+                  "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                  ],
+                  "translation": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                }
+              }
+            },
+            "contract_version": 1,
+            "settings": {
+              "density_scale": 0.8,
+              "direction": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "edge_fade": 1.0,
+              "enabled": true,
+              "extension": 80.0,
+              "follow_wind": true,
+              "shear": 0.0,
+              "start_height": 84.0,
+              "thickness": 24.0,
+              "width": 100.0
+            }
+          }
+        },
+        "settings": {
+          "algorithm_version": 1,
+          "cells": [
+            {
+              "amount": 1.0,
+              "cell_id": "7",
+              "pinned_controls": [],
+              "start_stage": 0.0
+            }
+          ],
+          "enabled": true,
+          "initial_height_fraction": 0.4,
+          "reference_translation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "stage": 0.8,
+          "wind": [
+            {
+              "altitude": 0.0,
+              "displacement": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            {
+              "altitude": 1.0,
+              "displacement": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          ],
+          "wind_base": 0.0,
+          "wind_height": 120.0
+        }
+      },
+      "rho_max": 1.5334400000000001,
+      "selection": {
+        "kind": "development_stage",
+        "unit": "dimensionless",
+        "value": 0.8
+      },
+      "support": {
+        "max": [
+          107.42375967228038,
+          125.7896019179302,
+          45.48475193445608
+        ],
+        "min": [
+          -46.46854186666667,
+          -14.372301639680003,
+          -45.48475193445608
+        ]
+      },
+      "top_boundary": 73.13280000000002,
+      "top_enabled": true,
+      "top_mode": 2,
+      "transform": {
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "exposure_ev": 1.0,
+  "preview_approx": {
+    "enabled": false,
+    "strength": 0.5
+  },
+  "schema_version": 10,
+  "sun": {
+    "direction_to_light": [
+      0.0,
+      0.8,
+      0.6
+    ],
+    "irradiance": [
+      15.0,
+      15.0,
+      15.0
+    ]
+  }
+}
