@@ -48,6 +48,15 @@ public class WindowCapture {
     $memory | Export-Csv "$out/process-memory.csv" -NoTypeInformation
     if (!$process.HasExited) { throw "App did not exit within thirty seconds" }
     if ($process.ExitCode -ne 0) { throw "App failed with exit code $($process.ExitCode)" }
+    # Independent launches cover shutdown/reinitialization and preserve all five
+    # shape cases; each PNG comes from the GPU target, not a generated mockup.
+    foreach ($scene in 0..4) {
+        $p = Start-Process -FilePath $exe -ArgumentList @("--frames", "90", "--scene", "$scene", "--capture", "scene-$scene.bmp") -WorkingDirectory $out -PassThru -RedirectStandardOutput "$out/scene-$scene.stdout.log" -RedirectStandardError "$out/scene-$scene.stderr.log"
+        if (!$p.WaitForExit(60000)) { Stop-Process -Id $p.Id -Force; throw "Scene $scene timed out" }
+        if ($p.ExitCode -ne 0) { throw "Scene $scene failed: $($p.ExitCode)" }
+        $img = [System.Drawing.Image]::FromFile("$out/scene-$scene.bmp")
+        try { $img.Save("$out/scene-$scene.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $img.Dispose() }
+    }
 } finally {
     if (!$process.HasExited) { Stop-Process -Id $process.Id -Force }
 }

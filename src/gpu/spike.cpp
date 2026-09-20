@@ -86,7 +86,7 @@ void GpuSpike::initialize() {
         const auto bytes=shader(name);
         SDL_GPUComputePipelineCreateInfo ci{};
         ci.code=bytes.data(); ci.code_size=bytes.size(); ci.entrypoint="main";
-        ci.format=SDL_GPU_SHADERFORMAT_DXIL; ci.num_uniform_buffers=1;
+        ci.format=SDL_GPU_SHADERFORMAT_DXIL; ci.num_uniform_buffers=sampling?1:2;
         ci.num_readwrite_storage_textures=sampling?0:1;
         ci.num_readwrite_storage_buffers=sampling?1:0;
         ci.num_samplers=sampling?1:0;
@@ -122,7 +122,7 @@ void GpuSpike::initialize() {
     SDL_ReleaseGPUShader(device,vs); SDL_ReleaseGPUShader(device,fs);
 }
 void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
-    if (kind>1) throw std::invalid_argument("Unknown field fixture");
+    if (kind>2) throw std::invalid_argument("Unknown field fixture");
     if (checked_volume_bytes(dims[0],dims[1],dims[2],4)>64*1024*1024)
         throw std::invalid_argument("GPU spike field exceeds 64 MiB budget");
     auto* replacement=texture(device,SDL_GPU_TEXTURETYPE_3D,SDL_GPU_TEXTUREFORMAT_R32_FLOAT,
@@ -133,11 +133,17 @@ void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
     auto* cmd=SDL_AcquireGPUCommandBuffer(device); gpu_check(cmd != nullptr,"Acquire generation command buffer");
     const std::array<Uint32,4> params{dims[0],dims[1],dims[2],kind};
     SDL_PushGPUComputeUniformData(cmd,0,params.data(),sizeof(params));
+    const auto cloud=gpu_density_params(DensityField(density_fixture(cloud_preset)));
+    SDL_PushGPUComputeUniformData(cmd,1,&cloud,sizeof(cloud));
     SDL_GPUStorageTextureReadWriteBinding binding{}; binding.texture=field;
     auto* pass=SDL_BeginGPUComputePass(cmd,&binding,1,nullptr,0);
     SDL_BindGPUComputePipeline(pass,generate);
     SDL_DispatchGPUCompute(pass,(dims[0]+3)/4,(dims[1]+3)/4,(dims[2]+3)/4);
     SDL_EndGPUComputePass(pass); submit_wait(device,cmd);
+}
+void GpuSpike::create_cloud(int preset) {
+    (void)density_fixture(preset);cloud_preset=preset;
+    create_field({65,67,69},2);validate();
 }
 void GpuSpike::validate() {
     // D3D12 texture row pitch is 256 bytes; explicitly pad the 17-wide fixture.
@@ -153,13 +159,16 @@ void GpuSpike::validate() {
     auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));
     gpu_check(values != nullptr,"Map density readback");
     max_error=0; interpolation_error=0; bool finite=true;
+    const DensityField reference_field(density_fixture(cloud_preset));
+    const GridLayout layout{reference_field.local_support(),extent};
     for(Uint32 z=0;z<extent[2];++z) for(Uint32 y=0;y<extent[1];++y) for(Uint32 x=0;x<extent[0];++x) {
         const float value=values[(z*extent[1]+y)*pitch+x];
         finite=finite && std::isfinite(value);
-        max_error=std::max(max_error,std::abs(value-reference(x,y,z,extent,fixture)));
+        const float expected=fixture==2?float(reference_field.at(index_to_local(layout,{double(x),double(y),double(z)}))):reference(x,y,z,extent,fixture);
+        max_error=std::max(max_error,std::abs(value-expected));
     }
     SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
-    if(!finite || max_error>1e-6f) throw std::runtime_error("3D field readback differs from CPU fixture");
+    if(!finite || max_error>(fixture==2?2e-5f:1e-6f)) throw std::runtime_error("3D field readback differs from CPU fixture");
     if(fixture==0) {
         SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,5*sizeof(float),0};
         SDL_GPUBuffer* result=SDL_CreateGPUBuffer(device,&bi); gpu_check(result != nullptr,"Create sampling results");
@@ -191,7 +200,7 @@ void GpuSpike::validate() {
         } catch(...) { SDL_ReleaseGPUBuffer(device,result); throw; }
         SDL_ReleaseGPUBuffer(device,result);
     }
-    report="PASS: all voxels / finite values / axis and pitch";
+    report="PASS: all voxels / finite values / CPU reference";
     std::cout << "fixture=" << fixture << " extent=" << extent[0] << 'x' << extent[1] << 'x' << extent[2]
               << " row_bytes=" << pitch*4 << " max_abs_error=" << max_error
               << " interpolation_error=" << interpolation_error << " PASS\n";

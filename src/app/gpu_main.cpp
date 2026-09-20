@@ -34,7 +34,7 @@ struct Ui {
 };
 }
 int main(int argc,char** argv) {
-    int frames=0;
+    int frames=0,preset=2;
     std::string capture;
     bool lifecycle=false,self_test=false;
     for(int i=1;i<argc;++i) {
@@ -44,6 +44,11 @@ int main(int argc,char** argv) {
                 "Windows D3D12 GPU field validation; startup fails if required GPU features are absent.\n"; return 0;
         }
         if(arg=="--self-test") {self_test=true;continue;}
+        if(arg=="--scene" && i+1<argc) {
+            std::string_view value(argv[++i]);auto r=std::from_chars(value.data(),value.data()+value.size(),preset);
+            if(r.ec==std::errc{}&&r.ptr==value.data()+value.size()&&preset>=0&&preset<=4)continue;
+            std::cerr<<"--scene requires 0..4\n";return 2;
+        }
         if(arg=="--lifecycle-test") {lifecycle=true;continue;}
         if(arg=="--capture" && i+1<argc) {capture=argv[++i];continue;}
         if(arg=="--frames" && i+1<argc) {
@@ -68,9 +73,10 @@ int main(int argc,char** argv) {
                 gpu.create_field({17,19,23},Uint32(repeat%2));gpu.validate();
             }
         }
-        gpu.create_field({17,19,23},0);gpu.validate();
+        if(self_test)for(int test=0;test<5;++test)gpu.create_cloud(test);
+        gpu.create_cloud(preset);
         Ui ui;ui.init(gpu);
-        float slice=0.5f;int axis=2,kind=0;
+        float slice=0.5f;int axis=2,kind=preset+2;
         bool running=true,captured=false;
         for(int frame=0;running && (frames==0 || frame<frames);++frame) {
             if(lifecycle) {
@@ -91,11 +97,14 @@ int main(int argc,char** argv) {
             ImGui::Begin("Field laboratory",nullptr,ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoCollapse);
             ImGui::Text("PROJECT WHITE / PHASE 0");
             ImGui::Separator(); ImGui::TextWrapped("GPU-generated 3D scalar field");
-            ImGui::Text("17 x 19 x 23 / R32 float");
+            ImGui::Text("%u x %u x %u / R32 float",gpu.extent[0],gpu.extent[1],gpu.extent[2]);
             ImGui::Text("Backend: %s",SDL_GetGPUDeviceDriver(gpu.device));
             ImGui::Spacing();
             ImGui::PushItemWidth(135);
-            if(ImGui::Combo("Fixture",&kind,"XYZ ramp\0Center impulse\0")) {gpu.create_field({17,19,23},Uint32(kind));gpu.validate();}
+            if(ImGui::Combo("Fixture",&kind,"XYZ ramp\0Center impulse\0Tall cell\0Wide cell\0Fused cells\0Flat base\0Ellipsoid cut\0")) {
+                if(kind<2){gpu.create_field({17,19,23},Uint32(kind));gpu.validate();}
+                else gpu.create_cloud(kind-2);
+            }
             ImGui::Combo("Slice axis",&axis,"X (YZ)\0Y (XZ)\0Z (XY)\0");
             ImGui::SliderFloat("Position",&slice,0,1,"%.3f");
             ImGui::PopItemWidth();
@@ -105,15 +114,17 @@ int main(int argc,char** argv) {
             ImGui::TextWrapped("%s",gpu.report.c_str());
             ImGui::Text("Max error: %.8f",gpu.max_error);
             if(kind==0) ImGui::Text("Filter error: %.8f",gpu.interpolation_error);
-            ImGui::TextWrapped("Row pitch: 256 bytes\nCoordinate: voxel centers\nSampling: linear / clamp");
+            ImGui::Text("Row pitch: %u bytes",((gpu.extent[0]+63)/64)*256);
+            ImGui::TextWrapped("Coordinate: voxel centers\nSampling: linear / clamp");
             ImGui::Spacing();ImGui::Separator();
-            ImGui::TextWrapped("This is a technical fixture. Cloud shapes and editing arrive in later issues.");
+            ImGui::TextWrapped("Shape constraints: ellipsoids, smooth union, flat base, subtractive cuts. This is a density slice; lighting comes next.");
             ImGui::TextWrapped("Hosted CI results do not establish RTX performance.");
             ImGui::End();
             ImGui::SetNextWindowPos({290,15},ImGuiCond_Always);
             ImGui::SetNextWindowSize({580,40},ImGuiCond_Always);
             ImGui::Begin("Slice label",nullptr,ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoBackground|ImGuiWindowFlags_NoInputs);
-            ImGui::Text("%s / %s plane / %.3f",kind==0?"XYZ RAMP":"IMPULSE",axis==0?"YZ":axis==1?"XZ":"XY",slice);
+            const char* names[]={"XYZ RAMP","IMPULSE","TALL CELL","WIDE CELL","FUSED CELLS","FLAT BASE","ELLIPSOID CUT"};
+            ImGui::Text("%s / %s plane / %.3f",names[kind],axis==0?"YZ":axis==1?"XZ":"XY",slice);
             ImGui::End(); ImGui::Render();
             auto* cmd=SDL_AcquireGPUCommandBuffer(gpu.device);white::gpu_check(cmd != nullptr,"Acquire frame commands");
             SDL_GPUTexture* swap=nullptr;Uint32 w=0,h=0;

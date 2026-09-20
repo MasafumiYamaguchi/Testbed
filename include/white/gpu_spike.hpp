@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include "white/density.hpp"
 
 namespace white {
 class GpuSpike {
@@ -21,12 +22,14 @@ public:
     float max_error = 0, interpolation_error = 0;
     std::string report;
     bool claimed = false;
+    int cloud_preset = 2;
     GpuSpike() = default;
     GpuSpike(const GpuSpike&) = delete;
     GpuSpike& operator=(const GpuSpike&) = delete;
     ~GpuSpike();
     void initialize();
     void create_field(std::array<Uint32,3> dims, Uint32 kind);
+    void create_cloud(int preset);
     void validate();
     void resize(Uint32 w, Uint32 h);
     void draw(SDL_GPUCommandBuffer* cmd, float slice, Uint32 axis);
