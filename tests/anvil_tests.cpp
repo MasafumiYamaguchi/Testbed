@@ -57,7 +57,7 @@ void persistence_and_commands(){
     check(turned.anvil->settings.direction==Vec3{0,0,1}&&!turned.anvil->settings.follow_wind&&turned.anvil->cloud==scene.anvil->cloud,"Direction override changed trunk or did not disable following");
     check(density_input_hash(scene)!=density_input_hash(wide)&&has(classify_change(scene,wide),Dirty::density),"Anvil edit omitted density invalidation/hash");
     auto optics=scene;optics.anvil->cloud.trunk.optics.g=.7;refresh_anvil_scene(optics);check(classify_change(scene,optics)==Dirty::optics&&density_input_hash(scene)==density_input_hash(optics),"Optics changed anvil density identity");
-    const auto bytes=scene_json(scene);const auto json=Json::parse(bytes);check(json.at("schema_version")==9&&json.at("cloud").at("kind")=="anvil"&&json.at("cloud").size()==2&&parse_scene_json(bytes)==scene,"Anvil source roundtrip lost authority");
+    const auto bytes=scene_json(scene);const auto json=Json::parse(bytes);check(json.at("schema_version")==10&&json.at("cloud").at("kind")=="anvil"&&json.at("cloud").size()==2&&parse_scene_json(bytes)==scene,"Anvil source roundtrip lost authority");
     auto bad=json;bad["schema_version"]=8;reject([&]{parse_scene_json(bad.dump());},"Old schema accepted new anvil type");
     bad=json;bad["cloud"]["source"]["contract_version"]=99;reject([&]{parse_scene_json(bad.dump());},"Future anvil version accepted");
     bad=json;bad["cloud"]["source"]["settings"]["enabled"]=1;reject([&]{parse_scene_json(bad.dump());},"Malformed enabled value accepted");
@@ -109,6 +109,9 @@ void precision_domain(){
     settings.enabled=true;settings.thickness=2;settings.width=100;settings.extension=360;settings.edge_fade=.2;
     refresh_anvil_scene(thin);const AnvilEvaluationPlan precise(source);const TopLobeEvaluationPlan trunk(source.cloud);
     const auto gpu=precise.gpu_params();const double allowance=anvil_edge_error_bound(source)*settings.density_scale;
+    const auto center=precise.connection_point()+settings.direction*(settings.extension*.5);
+    const auto& source_cell=source.cloud.trunk.cells.front();
+    check(anvil_edge_error_bound(settings,center,precise.local_support(),source_cell.shape.source.modifiers.noise,source_cell.translation)==anvil_edge_error_bound(source),"Evaluated edge allowance differs from source allowance");
     double maximum_error=0;
     // Differential precision regression: points through the sheet's steepest
     // edge compare the double evaluator with the packed float shader formula.

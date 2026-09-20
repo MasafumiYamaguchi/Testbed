@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <variant>
 
 namespace white {
 using Id = std::uint64_t;
@@ -206,6 +207,92 @@ struct AnvilSource {
     AnvilSettings settings{};
     bool operator==(const AnvilSource&)const=default;
 };
+inline constexpr std::uint32_t generation_algorithm_version=1;
+inline constexpr std::size_t max_wind_knots=6;
+struct WindKnot {
+    double altitude=0; // Normalized fixed reference altitude, not current bounds.
+    Vec3 displacement{}; // Horizontal object-local metres at stage 1, not m/s.
+    bool operator==(const WindKnot&)const=default;
+};
+struct DevelopmentGrowth {
+    Id cell_id=0;
+    double start_stage=0,amount=1;
+    std::vector<Id> pinned_controls; // Preserve guide X/Z in the initial frame.
+    bool operator==(const DevelopmentGrowth&)const=default;
+};
+struct GenerationSettings {
+    std::uint32_t algorithm_version=generation_algorithm_version;
+    bool enabled=true;
+    double stage=1,initial_height_fraction=.4;
+    double wind_base=0,wind_height=120;
+    std::vector<WindKnot> wind{{0,{}},{1,{}}};
+    Vec3 reference_translation{}; // Bulk motion, separately applied at stage 1.
+    std::vector<DevelopmentGrowth> cells;
+    bool operator==(const GenerationSettings&)const=default;
+};
+// A provenance recipe is an immutable input for an explicit future job. It is
+// never a second editable authority for the fixed field.
+using GenerationRecipe=std::variant<CloudRecipe,CumulonimbusGroup,CenterlineShape,
+    DevelopedCloud,TopLobeSource,AnvilSource>;
+struct GenerationProvenance {
+    GenerationRecipe initial;
+    GenerationSettings settings;
+    bool operator==(const GenerationProvenance&)const=default;
+};
+inline constexpr std::uint32_t frozen_cloud_contract_version=1;
+struct FrozenDetailLayers {
+    bool base=true,macro=true,medium=true,micro=true;
+    bool operator==(const FrozenDetailLayers&)const=default;
+};
+struct FrozenField {
+    Id development_id=0;
+    CloudRecipe recipe; // Evaluated primitives; no seed-driven structure generator.
+    Vec3 translation{};
+    FrozenDetailLayers layers;
+    bool operator==(const FrozenField&)const=default;
+};
+struct FrozenCurve {
+    Id development_id=0;
+    double base=0,height=120;
+    Vec3 growth_direction{0,1,0};
+    std::vector<CenterlinePoint> points;
+    std::vector<CenterlineProfilePoint> profile;
+    bool operator==(const FrozenCurve&)const=default;
+};
+struct FrozenHierarchyNode {
+    Id id=0,parent_id=0;
+    unsigned depth=0;
+    // Geometry lives only in the corresponding field Recipe Cell.
+    bool operator==(const FrozenHierarchyNode&)const=default;
+};
+struct FrozenAnvil {
+    Vec3 center{},direction{1,0,0};
+    double along_radius=50,cross_radius=50,half_thickness=12;
+    double shear=0,edge_fade=1,density_scale=.8,start_height=84;
+    bool operator==(const FrozenAnvil&)const=default;
+};
+struct FrozenCloudState {
+    std::uint32_t contract_version=frozen_cloud_contract_version;
+    Id id=1;
+    std::string selection_kind="development_stage",selection_unit="dimensionless";
+    double selection_value=1;
+    std::uint32_t generation_version=generation_algorithm_version;
+    std::uint64_t generation_input_hash=0,content_hash=0,payload_hash=0;
+    Transform transform{};
+    Optics optics{};
+    std::vector<FrozenField> fields;
+    std::vector<FrozenCurve> curves;
+    double fusion_width=0,overlap=0;
+    bool top_enabled=false;
+    double top_boundary=0;
+    unsigned top_mode=0;
+    std::vector<FrozenHierarchyNode> hierarchy;
+    std::optional<FrozenAnvil> anvil;
+    Bounds support{{-1,-1,-1},{1,1,1}};
+    double rho_max=0;
+    std::optional<GenerationProvenance> provenance;
+    bool operator==(const FrozenCloudState&)const=default;
+};
 struct Camera {
     Vec3 position{120,70,120},target{0,20,0},up{0,1,0};
     double vertical_fov_degrees=45,near_plane=0.1,far_plane=10000;
@@ -217,13 +304,14 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=9,algorithm_version=3;
+    std::uint32_t schema_version=10,algorithm_version=3;
     CloudRecipe cloud{}; // Derived render snapshot when cumulonimbus is present.
     std::optional<CumulonimbusGroup> cumulonimbus{};
     std::optional<CenterlineShape> centerline{}; // Exclusive source alternative.
     std::optional<TopLobeSource> top_lobes{};
     std::optional<AnvilSource> anvil{};
     std::optional<DevelopedCloud> developed{}; // Complete source; cloud is a validated metadata proxy for >1 group.
+    std::optional<FrozenCloudState> frozen{}; // Exclusive, authoritative evaluated field.
     Camera camera{};
     Sun sun{};
     double exposure_ev=0;

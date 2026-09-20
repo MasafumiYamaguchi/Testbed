@@ -6,6 +6,7 @@
 #include "white/developed_scene.hpp"
 #include "white/top_lobe_scene.hpp"
 #include "white/generation.hpp"
+#include "white/frozen_cloud.hpp"
 #include "white/anvil_scene.hpp"
 #include <atomic>
 #include <future>
@@ -23,6 +24,8 @@ public:
     void start_prefab_test();
     void prefab_test_input(int frame);
     void verify_prefab_test(int frame);
+    void start_freeze_test();
+    void freeze_test_step(int frame);
     void start_top_lobes_test();
     void top_lobes_test_step(int frame);
     void start_anvil_test();
@@ -45,6 +48,12 @@ private:
     std::string generation_message_;
     std::uint64_t generation_runs_=0;
     void draw_generation_ui();
+    void draw_frozen_ui();
+    void launch_generation(bool cancel_before_start=false);
+    void adopt_generation_candidate();
+    std::optional<GenerationCandidate> generation_discarded_;
+    std::optional<Scene> generation_discarded_guard_;
+    std::uint64_t freeze_test_jobs_=0;
     void poll_generation();
     Id development_=0;
     bool duplicate_regenerate_=false;

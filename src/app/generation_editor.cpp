@@ -7,15 +7,37 @@ void EditorUi::poll_generation(){
     auto outcome=generation_job_.get();generation_message_=outcome.message;
     if(outcome.status==GenerationStatus::completed){generation_candidate_=std::move(outcome.candidate);generation_guard_=std::move(generation_job_guard_);}
 }
+void EditorUi::launch_generation(bool cancel_before_start){
+    if(generation_job_.valid()||!generation_initial_)throw std::logic_error("Generation already running or no initial recipe");
+    generation_job_guard_=session.document().scene();generation_stop_=std::stop_source{};generation_progress_=std::make_shared<std::atomic<double>>(0);
+    if(cancel_before_start)generation_stop_.request_stop();
+    auto source=*generation_initial_;source.camera=generation_job_guard_->camera;source.sun=generation_job_guard_->sun;source.exposure_ev=generation_job_guard_->exposure_ev;source.preview_approx=generation_job_guard_->preview_approx;
+    const auto settings=generation_settings_;const auto stop=generation_stop_.get_token();const auto progress=generation_progress_;
+    generation_job_=std::async(std::launch::async,[source,settings,stop,progress]{return generate_cloud_state(source,settings,stop,[progress](double value){progress->store(value);});});
+    ++generation_runs_;generation_message_="Generating selected state...";
+}
+void EditorUi::adopt_generation_candidate(){
+    if(generation_job_.valid()||!generation_candidate_||!generation_guard_||session.document().scene()!=*generation_guard_)throw std::logic_error("Generate a current completed candidate before Freeze");
+    const auto fixed=freeze_candidate(*generation_candidate_);apply(fixed);
+    if(session.document().scene()!=fixed)throw std::runtime_error("Freeze adoption failed");
+    generation_guard_=session.document().scene();generation_message_="Selected state frozen. Detail edits keep the evaluated structure; Undo restores the previous cloud.";
+}
 void EditorUi::draw_generation_ui(){
-    if(!prefab_source(session.document().scene())&&!editable_developed_source(session.document().scene())&&!generation_initial_)return;
+    if(!prefab_source(session.document().scene())&&!editable_developed_source(session.document().scene())&&!generation_initial_&&!session.document().scene().frozen)return;
     if(!ImGui::CollapsingHeader("Growth and wind"))return;
     const bool running=generation_job_.valid();
     ImGui::BeginDisabled(running||gizmo_drag_||inspector_drag_||orbit_drag_);
-    if(ImGui::Button("Use current shape as start"))try{
+    const auto& current=session.document().scene();
+    if(!current.frozen&&ImGui::Button("Use current shape as start"))try{
         auto initial=session.document().scene();auto settings=default_generation_settings(initial);
         generation_initial_=std::move(initial);generation_settings_=std::move(settings);generation_candidate_.reset();generation_message_="Initial shape captured. Set a stage, then generate a candidate.";
     }catch(const std::exception& e){generation_message_=e.what();}
+    if(current.frozen){
+        ImGui::BeginDisabled(!frozen_can_regenerate(*current.frozen));
+        if(ImGui::Button("Use saved generation recipe"))try{generation_initial_=generation_initial_scene(*current.frozen);generation_settings_=current.frozen->provenance->settings;generation_candidate_.reset();generation_message_="Saved inputs loaded; generate a separate candidate to change stage or wind.";}catch(const std::exception& e){generation_message_=e.what();}
+        ImGui::EndDisabled();
+        if(!frozen_can_regenerate(*current.frozen))ImGui::TextWrapped("The fixed result is usable; this saved generation version is unavailable.");
+    }
     ImGui::EndDisabled();
     if(!generation_initial_){ImGui::TextWrapped("Capture a starting shape to compare growth and wind without changing the current cloud.");return;}
     ImGui::BeginDisabled(running);
@@ -43,7 +65,7 @@ void EditorUi::draw_generation_ui(){
         ImGui::SameLine();if(ImGui::SmallButton("Upper shear"))generation_settings_.wind={{0,{}},{.5,{20,0,5}},{1,{70,0,25}}};
         ImGui::TextWrapped("Wind uses this fixed altitude frame. The cloud base stays anchored; increasing the cloud bounds does not move the wind profile.");ImGui::TreePop();
     }
-    if(ImGui::TreeNode("Individual growth and guides")){
+    if(generation_settings_.enabled&&ImGui::TreeNode("Individual growth and guides")){
         const auto initial=editable_developed_source(*generation_initial_)?*generation_initial_:new_developed_scene(*generation_initial_);
         const auto* source=editable_developed_source(initial);
         for(auto& cell:generation_settings_.cells){ImGui::PushID(std::to_string(cell.cell_id).c_str());
@@ -64,13 +86,7 @@ void EditorUi::draw_generation_ui(){
         ImGui::SetNextItemWidth(100);ImGui::InputDouble("Translation Z m",&generation_settings_.reference_translation.z,0,0,"%.1f");
         ImGui::TextWrapped("Optional bulk motion is separate from the relative wind deformation.");ImGui::TreePop();
     }
-    if(ImGui::Button("Generate candidate")){
-        generation_job_guard_=session.document().scene();generation_stop_=std::stop_source{};generation_progress_=std::make_shared<std::atomic<double>>(0);
-        auto source=*generation_initial_;source.camera=generation_job_guard_->camera;source.sun=generation_job_guard_->sun;source.exposure_ev=generation_job_guard_->exposure_ev;source.preview_approx=generation_job_guard_->preview_approx;
-        const auto settings=generation_settings_;const auto stop=generation_stop_.get_token();const auto progress=generation_progress_;
-        generation_job_=std::async(std::launch::async,[source,settings,stop,progress]{return generate_cloud_state(source,settings,stop,[progress](double value){progress->store(value);});});
-        ++generation_runs_;generation_message_="Generating selected state...";
-    }
+    if(ImGui::Button("Generate candidate"))try{launch_generation();}catch(const std::exception& e){generation_message_=e.what();}
     ImGui::EndDisabled();
     if(generation_job_.valid()){
         ImGui::ProgressBar(float(generation_progress_->load()),{-1,0});if(ImGui::Button("Cancel generation"))generation_stop_.request_stop();
@@ -79,11 +95,12 @@ void EditorUi::draw_generation_ui(){
         ImGui::Text("Candidate stage %.3f / %.2f ms",generation_candidate_->settings.stage,generation_candidate_->elapsed_ms);
         const bool scene_unchanged=generation_guard_&&session.document().scene()==*generation_guard_;
         ImGui::BeginDisabled(generation_job_.valid()||!scene_unchanged||gizmo_drag_||inspector_drag_||orbit_drag_);
-        if(ImGui::Button("Adopt selected state")){apply(generation_candidate_->evaluated);generation_guard_=session.document().scene();generation_message_="Selected state adopted. Undo restores the previous cloud.";}
+        if(ImGui::Button("Freeze and adopt candidate"))try{adopt_generation_candidate();}catch(const std::exception& e){generation_message_=e.what();}
         ImGui::EndDisabled();
         if(!scene_unchanged)ImGui::TextWrapped("The scene changed after generation. Generate again before adopting so newer edits cannot be overwritten.");
-        ImGui::BeginDisabled(generation_job_.valid());if(ImGui::SmallButton("Discard candidate")){generation_candidate_.reset();generation_message_="Candidate discarded; current cloud retained.";}ImGui::EndDisabled();
+        ImGui::BeginDisabled(generation_job_.valid());if(ImGui::SmallButton("Discard candidate")){generation_discarded_=std::move(generation_candidate_);generation_discarded_guard_=generation_guard_;generation_candidate_.reset();generation_message_="Candidate discarded; current cloud retained. This discard can be undone.";}ImGui::EndDisabled();
     }
+    if(generation_discarded_&&!generation_job_.valid()&&ImGui::SmallButton("Undo candidate discard")){generation_candidate_=std::move(generation_discarded_);generation_guard_=std::move(generation_discarded_guard_);generation_discarded_.reset();}
     if(!generation_message_.empty())ImGui::TextWrapped("%s",generation_message_.c_str());
 }
 }

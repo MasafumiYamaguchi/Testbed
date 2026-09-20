@@ -37,7 +37,7 @@ int main(){try {
     added.shape.source.parameters.structure_seed=9007199254740993ULL;added.shape.source.parameters.detail_seed=77;
     added.shape.points[1].offset={5,0,-3};added.shape.profile={{1,0,1,.8},{2,.5,1.2,.5},{3,1,.9,.7}};
     auto scene=scene_with_developed_command(single,DevelopedAdd{added});
-    check(scene.schema_version==9&&scene.algorithm_version==3&&scene_density_requires_direct(scene),"Two developments lack schema7/direct evaluation contract");
+    check(scene.schema_version==10&&scene.algorithm_version==3&&scene_density_requires_direct(scene),"Two developments lack schema7/direct evaluation contract");
     check(scene.developed->cells[0]==single.developed->cells[0],"Add replaced first development");
     const SceneDensityEvaluator full(scene);const DevelopedEvaluationPlan reference(*scene.developed);
     check(full.local_support()==reference.local_support()&&scene.cloud.envelope==full.local_support(),"Proxy does not carry full union support");

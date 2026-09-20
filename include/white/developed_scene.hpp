@@ -1,6 +1,7 @@
 #pragma once
 #include "white/top_lobes.hpp"
 #include "white/anvil.hpp"
+#include "white/frozen_cloud.hpp"
 
 namespace white {
 // Exact zero/one-group Recipe, or first group's metadata carrier with the full
@@ -30,6 +31,7 @@ private:
     std::optional<DevelopedEvaluationPlan> developed_;
     std::optional<TopLobeEvaluationPlan> top_;
     std::optional<AnvilEvaluationPlan> anvil_;
+    std::optional<FrozenEvaluationPlan> frozen_;
 };
 GpuAnvilParams gpu_scene_density_params(const Scene&);
 }

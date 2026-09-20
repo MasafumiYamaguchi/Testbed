@@ -36,7 +36,13 @@ DensityAllowance density_allowance(const Scene& scene){
         profile_bound=std::max(profile_bound,bound);profile_tolerance+=bound*unmodulated_max;
     };
     const auto* grouped=editable_developed_source(scene);
-    if(scene_has_active_top_lobes(scene)){
+    if(scene.frozen){
+        for(const auto& field:scene.frozen->fields)include_profile(frozen_effective_recipe(field),field.translation.y);
+        if(scene.frozen->top_enabled){const auto& top=scene.frozen->fields[1].recipe;
+            const AltitudeDensityProfile ramp{true,top.base.height,top.base.transition,{{0,0},{1,1}}};
+            const double bound=1.5*altitude_density_error_bound(ramp);profile_bound=std::max(profile_bound,bound);profile_tolerance+=bound*top.density;
+        }
+    }else if(scene_has_active_top_lobes(scene)){
         const auto& source=*editable_top_lobe_source(scene);const DevelopedEvaluationPlan trunk(source.trunk);
         include_profile(trunk.fields()[0].recipe(),trunk.cloud().cells[0].translation.y);
         // The top group uses object-local coordinates; its inherited profile

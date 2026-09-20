@@ -25,7 +25,7 @@ int main(){try {
     auto parent=scene_with_top_lobe_settings(off,parent_settings);check(scene_has_active_top_lobes(parent)&&scene_density_requires_direct(parent),"Active hierarchy did not require complete direct evaluation");
     auto children_settings=parent_settings;children_settings.mode=TopLobeMode::children;
     auto scene=scene_with_top_lobe_settings(parent,children_settings);scene.top_lobes->lobe_ids[2]=std::numeric_limits<Id>::max();refresh_top_lobe_scene(scene);
-    check(scene.schema_version==9&&scene.algorithm_version==3,"Wrong source/evaluation version");
+    check(scene.schema_version==10&&scene.algorithm_version==3,"Wrong source/evaluation version");
     const SceneDensityEvaluator full(scene);const TopLobeEvaluationPlan expected(*scene.top_lobes);const auto gpu=full.gpu_params();const auto reference_gpu=expected.gpu_params();
     check(full.maximum()==expected.maximum()&&full.local_support()==expected.local_support()&&scene.cloud.envelope==full.local_support(),"Scene wrapper/proxy omitted hierarchy bounds");
     check(std::memcmp(&gpu.cloud,&reference_gpu,sizeof(reference_gpu))==0,"Scene wrapper omitted hierarchy mask/GPU data");
