@@ -37,6 +37,7 @@ std::uint64_t id(const Json& j) {
     if(str.empty()||parsed.ec!=std::errc{}||parsed.ptr!=str.data()+str.size())throw std::invalid_argument("Invalid uint64 ID/seed");
     return result;
 }
+Json noise_json(const NoiseSettings& n) {return {{"origin",vec(n.origin)},{"medium_frequency",n.medium_frequency},{"medium_strength",n.medium_strength},{"micro_frequency",n.micro_frequency},{"micro_erosion",n.micro_erosion},{"warp_frequency",n.warp_frequency},{"warp_amplitude",n.warp_amplitude}};}
 double number(const Json& j) {if(!j.is_number())throw std::invalid_argument("Expected numeric parameter");return j.get<double>();}
 void shape(const Json& j,std::initializer_list<const char*> keys) {
     if(!j.is_object()||j.size()!=keys.size())throw std::invalid_argument("Unexpected object members");
@@ -62,6 +63,7 @@ std::string scene_json(const Scene& s) {
             {"base",{{"enabled",c.base.enabled},{"height",c.base.height},{"transition",c.base.transition}}},
             {"density",c.density},{"blend_width",c.blend_width},{"overlap",c.overlap},
             {"structure_seed",std::to_string(c.structure_seed)},{"detail_seed",std::to_string(c.detail_seed)},
+            {"noise",noise_json(c.noise)},
             {"optics",{{"extinction_scale",c.optics.extinction_scale},{"albedo",c.optics.albedo}}}}},
         {"camera",{{"position",vec(s.camera.position)},{"target",vec(s.camera.target)},{"up",vec(s.camera.up)},
             {"vertical_fov_degrees",s.camera.vertical_fov_degrees},{"near_plane",s.camera.near_plane},{"far_plane",s.camera.far_plane}}},
@@ -76,11 +78,17 @@ Scene parse_scene_json(std::string_view text) {
         return true;
     });
     shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev"});
-    if(!j.at("schema_version").is_number_unsigned()||j.at("schema_version")!=1||
-       !j.at("algorithm_version").is_number_unsigned()||j.at("algorithm_version")!=1)
-        throw std::invalid_argument("Unsupported schema/algorithm version");
+    if(!j.at("schema_version").is_number_unsigned()||!j.at("algorithm_version").is_number_unsigned())throw std::invalid_argument("Version must be an unsigned integer");
+    const bool legacy=j.at("schema_version")==1&&j.at("algorithm_version")==1;
+    if(!legacy&&(j.at("schema_version")!=2||j.at("algorithm_version")!=2))throw std::invalid_argument("Unsupported schema/algorithm version");
+    if(legacy) {
+        shape(j.at("cloud"),{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics"});
+        j["cloud"]["noise"]=noise_json(NoiseSettings{}); // exact old shape: all noise amplitudes zero
+    }
     Scene s;auto& c=s.cloud;const auto& cj=j.at("cloud");
-    shape(cj,{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics"});
+    shape(cj,{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics","noise"});
+    const auto& noise=cj.at("noise");shape(noise,{"origin","medium_frequency","medium_strength","micro_frequency","micro_erosion","warp_frequency","warp_amplitude"});
+    c.noise={vec(noise.at("origin")),number(noise.at("medium_frequency")),number(noise.at("medium_strength")),number(noise.at("micro_frequency")),number(noise.at("micro_erosion")),number(noise.at("warp_frequency")),number(noise.at("warp_amplitude"))};
     c.id=id(cj.at("id"));c.structure_seed=id(cj.at("structure_seed"));c.detail_seed=id(cj.at("detail_seed"));
     const auto& cells=cj.at("cells");const auto& cuts=cj.at("cuts");
     if(!cells.is_array()||cells.size()>8||!cuts.is_array()||cuts.size()>8)throw std::invalid_argument("Scene exceeds 8 cells/cuts or has invalid collections");

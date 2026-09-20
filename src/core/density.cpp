@@ -1,4 +1,5 @@
 #include "white/density.hpp"
+#include "white/noise.hpp"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -34,10 +35,15 @@ double DensityField::at(Vec3 p) const {
     if(r.base.enabled&&p.y<=r.base.height)return 0;
     double merged=0,sum=0;
     for(size_t i=0;i<r.cells.size();++i) {
-        const auto& c=r.cells[i];const double d=implicit(p,c.center,c.radii);
+        const auto& c=r.cells[i];auto q=p;
+        if(r.noise.warp_amplitude>0)q=q+domain_displacement((p-r.noise.origin)*r.noise.warp_frequency,noise_seed(cell_random_key(r,c)),r.noise.warp_amplitude);
+        const double d=implicit(q,c.center,c.radii);
         merged=i==0?d:smooth_min(merged,d,r.blend_width);sum+=coverage(d);
     }
+    const auto n=p-r.noise.origin;const auto seed=noise_seed(r.detail_seed);
+    if(r.noise.micro_erosion>0)merged+=r.noise.micro_erosion*detail_noise(n*r.noise.micro_frequency,seed^0x6c8e9cf5u);
     double value=r.density*coverage(merged)*(1+r.overlap*std::max(0.0,sum-1));
+    if(r.noise.medium_strength>0)value*=1-r.noise.medium_strength*detail_noise(n*r.noise.medium_frequency,seed);
     if(r.base.enabled&&r.base.transition>0)value*=smooth((p.y-r.base.height)/r.base.transition);
     for(const auto& cut:r.cuts) {
         const double d=implicit(p,cut.center,cut.radii);
@@ -81,6 +87,9 @@ GpuDensityParams gpu_density_params(const DensityField& field) {
     out.envelope_min=pack(r.envelope.min);out.envelope_max=pack(r.envelope.max);
     out.settings={float(r.base.height),float(r.base.transition),float(r.density),float(r.blend_width)};
     out.config={float(r.overlap),r.base.enabled?1.0f:0.0f,float(r.cells.size()),float(r.cuts.size())};
+    for(size_t i=0;i<r.cells.size();++i)out.cell_keys[i].x=noise_seed(cell_random_key(r,r.cells[i]));
+    out.noise_origin=pack(r.noise.origin);out.noise_bands={float(r.noise.medium_frequency),float(r.noise.medium_strength),float(r.noise.micro_frequency),float(r.noise.micro_erosion)};
+    out.noise_warp={float(r.noise.warp_frequency),float(r.noise.warp_amplitude),0,0};out.noise_seeds.x=noise_seed(r.detail_seed);
     return out;
 }
 Scene fixture_scene(int preset) {

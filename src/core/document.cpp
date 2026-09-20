@@ -71,8 +71,8 @@ Dirty classify_change(const Scene& a,const Scene& b) {
 std::vector<std::string> validate(const Scene& s) {
     std::vector<std::string> errors;
     auto check=[&](bool ok,const std::string& text){if(!ok)errors.push_back(text);};
-    check(s.schema_version==1,"Unsupported scene schema_version");
-    check(s.algorithm_version==1,"Unsupported scene algorithm_version");
+    check(s.schema_version==2,"Unsupported scene schema_version");
+    check(s.algorithm_version==2,"Unsupported scene algorithm_version");
     const auto& c=s.cloud;
     check(c.id!=0,"Cloud ID must be nonzero");
     check(valid_transform(c.transform),"Cloud transform requires finite translation, positive scale and unit quaternion");
@@ -93,6 +93,9 @@ std::vector<std::string> validate(const Scene& s) {
     }
     check(range(c.base.height,-1e6,1e6)&&range(c.base.transition,0,1e4),"Cloud base height/transition invalid");
     check(range(c.density,0,1000)&&range(c.blend_width,0,1e4)&&range(c.overlap,0,1),"Density/blend/overlap invalid");
+    const auto& n=c.noise;
+    check(bounded(n.origin)&&range(n.medium_frequency,0.0001,2)&&range(n.micro_frequency,0.0001,2)&&range(n.warp_frequency,0.0001,2),"Noise origin/frequencies invalid (0.0001 .. 2 cycles/metre)");
+    check(range(n.medium_strength,0,1)&&range(n.micro_erosion,0,20)&&range(n.warp_amplitude,0,20),"Noise strength invalid (medium 0..1; erosion/warp 0..20 metres)");
     check(range(c.optics.extinction_scale,0,1000)&&range(c.optics.albedo,0,1),"Optical coefficients invalid");
     const auto& camera=s.camera;const auto forward=camera.target-camera.position;
     check(bounded(camera.position)&&bounded(camera.target)&&finite(camera.up)&&

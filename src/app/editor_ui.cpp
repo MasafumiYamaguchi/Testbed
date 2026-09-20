@@ -117,6 +117,30 @@ void EditorUi::draw(GpuSpike& gpu) {
     ImGui::Separator();
     ImGui::TextUnformatted("Camera");if(ImGui::Button("Front"))camera_preset(0);ImGui::SameLine();if(ImGui::Button("Side"))camera_preset(1);ImGui::SameLine();if(ImGui::Button("Top"))camera_preset(2);
     ImGui::Checkbox("Lit volume",&gpu.show_volume);
+    if(focus_noise_)ImGui::SetNextItemOpen(true);
+    if(ImGui::CollapsingHeader("Shape details")) {
+        ImGui::PushItemWidth(110);
+        s=session.document().scene();float medium=float(s.cloud.noise.medium_strength);
+        bool changed=ImGui::SliderFloat("Medium",&medium,0,1);s.cloud.noise.medium_strength=medium;inspector_item(changed,s);
+        s=session.document().scene();float erosion=float(s.cloud.noise.micro_erosion);
+        changed=ImGui::SliderFloat("Edge erosion m",&erosion,0,20);s.cloud.noise.micro_erosion=erosion;inspector_item(changed,s);
+        s=session.document().scene();float warp=float(s.cloud.noise.warp_amplitude);
+        changed=ImGui::SliderFloat("Warp bound m",&warp,0,20);s.cloud.noise.warp_amplitude=warp;inspector_item(changed,s);
+        s=session.document().scene();float medium_freq=float(s.cloud.noise.medium_frequency);
+        changed=ImGui::SliderFloat("Medium freq",&medium_freq,0.0001f,2,"%.4f",ImGuiSliderFlags_Logarithmic);s.cloud.noise.medium_frequency=medium_freq;inspector_item(changed,s);
+        s=session.document().scene();float micro_freq=float(s.cloud.noise.micro_frequency);
+        changed=ImGui::SliderFloat("Edge freq",&micro_freq,0.0001f,2,"%.4f",ImGuiSliderFlags_Logarithmic);s.cloud.noise.micro_frequency=micro_freq;inspector_item(changed,s);
+        s=session.document().scene();float warp_freq=float(s.cloud.noise.warp_frequency);
+        changed=ImGui::SliderFloat("Warp freq",&warp_freq,0.0001f,2,"%.4f",ImGuiSliderFlags_Logarithmic);s.cloud.noise.warp_frequency=warp_freq;inspector_item(changed,s);
+        ImGui::BeginDisabled(gizmo_drag_||inspector_drag_||orbit_drag_);
+        if(ImGui::Button("Regenerate detail only")){s=session.document().scene();++s.cloud.detail_seed;apply(std::move(s));}
+        if(ImGui::Button("Noise off")){s=session.document().scene();s.cloud.noise.medium_strength=s.cloud.noise.micro_erosion=s.cloud.noise.warp_amplitude=0;apply(std::move(s));}
+        ImGui::EndDisabled();
+        ImGui::Text("Detail seed: %llu",static_cast<unsigned long long>(session.document().scene().cloud.detail_seed));
+        ImGui::TextWrapped("Frequencies: cycles/local metre. Base, envelope and full cuts stay protected.");
+        ImGui::PopItemWidth();
+        if(focus_noise_){ImGui::SetScrollHereY(1);focus_noise_=false;}
+    }
     if(ImGui::CollapsingHeader("View settings")) {
         ImGui::PushItemWidth(120);
         if(ImGui::SliderInt("View steps",&gpu.view_steps,8,256))gpu.volume_dirty=true;
@@ -235,6 +259,17 @@ void EditorUi::scripted_edit(int step) {
     }
     if(step==9){auto sun=session.document().scene();sun.camera=smoke_original_.camera;sun.sun.direction_to_light.x*=-1;sun.sun.direction_to_light.z*=-1;apply(std::move(sun));}
     if(step==10){auto empty=session.document().scene();empty.cloud.cells.clear();apply(std::move(empty));}
+    if(step==11){session.apply(fixture_scene(4));select_cuts_=true;selected_=3;focus_noise_=true;}
+    if(step>=12&&step<=16){
+        auto noise=session.document().scene();const auto cells=noise.cloud.cells;const auto structure=noise.cloud.structure_seed;
+        if(step==12)noise.cloud.noise.medium_strength=0.8;
+        if(step==13)noise.cloud.noise.micro_erosion=8;
+        if(step==14)noise.cloud.noise.warp_amplitude=8;
+        if(step==15)++noise.cloud.detail_seed;
+        if(step==16){noise.cloud.noise.medium_strength=1;noise.cloud.noise.micro_erosion=20;noise.cloud.noise.warp_amplitude=20;}
+        session.apply(noise);
+        if(session.document().scene().cloud.cells!=cells||session.document().scene().cloud.structure_seed!=structure)throw std::runtime_error("Noise edit changed macro parameters");
+    }
     std::cout<<"editor_smoke_step="<<step<<" revision="<<session.document().revision()<<" PASS\n";
 }
 }

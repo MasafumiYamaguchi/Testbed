@@ -58,6 +58,13 @@ struct Optics {
     double albedo=0.9;
     bool operator==(const Optics&) const = default;
 };
+struct NoiseSettings {
+    Vec3 origin{}; // saved cloud-local metres; never normalized by current bounds
+    double medium_frequency=0.12,medium_strength=0;
+    double micro_frequency=0.6,micro_erosion=0; // erosion is local metres
+    double warp_frequency=0.035,warp_amplitude=0; // bounded displacement magnitude
+    bool operator==(const NoiseSettings&) const = default;
+};
 struct CloudRecipe {
     Id id=1;
     Transform transform{};
@@ -68,6 +75,7 @@ struct CloudRecipe {
     double density=1,blend_width=2,overlap=0;
     std::uint64_t structure_seed=42,detail_seed=17;
     Optics optics{};
+    NoiseSettings noise{};
     bool operator==(const CloudRecipe&) const = default;
 };
 struct Camera {
@@ -81,7 +89,7 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=1,algorithm_version=1;
+    std::uint32_t schema_version=2,algorithm_version=2;
     CloudRecipe cloud{};
     Camera camera{};
     Sun sun{};

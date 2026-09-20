@@ -56,7 +56,7 @@ public class WindowCapture {
         $img = [System.Drawing.Image]::FromFile("$out/$name.bmp")
         try { $img.Save("$out/$name.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $img.Dispose() }
     }
-    foreach ($step in 0..10) {
+    foreach ($step in 0..16) {
         $img = [System.Drawing.Image]::FromFile("$out/editor-step-$step.bmp")
         try { $img.Save("$out/editor-step-$step.png", [System.Drawing.Imaging.ImageFormat]::Png) } finally { $img.Dispose() }
     }

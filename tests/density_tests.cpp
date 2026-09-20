@@ -36,6 +36,6 @@ int main() {
     check(bounds.min==Vec3{-90,-40,-170}&&bounds.max==Vec3{110,320,230},"world support contains transformed envelope");
     try {tall.at({std::numeric_limits<double>::quiet_NaN(),0,0});check(false,"non-finite sample rejected");}
     catch(const std::invalid_argument&){check(true,"non-finite sample rejected");}
-    check(sizeof(GpuDensityParams)==576,"uniform layout exact size");
+    check(sizeof(GpuDensityParams)==768,"uniform layout exact size");
     return failures?1:0;
 }
