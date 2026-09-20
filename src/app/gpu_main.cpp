@@ -44,7 +44,7 @@ int main(int argc,char** argv) {
     int frames=0,preset=2,render_width=160,view_steps=64,shadow_steps=8,cache=0,sun_cache=0;
     std::string recipe,benchmark_output="benchmark.csv",benchmark_track="density";
     int benchmark_updates=0;bool validation=true;
-    unsigned progressive_samples=0;
+    unsigned progressive_samples=0,diagnostic_mode=0;
     bool empty_skip=false;
     std::string capture,hdr_output;
     bool lifecycle=false,self_test=false;
@@ -77,6 +77,7 @@ int main(int argc,char** argv) {
             std::cerr<<"--scene requires 0..4\n";return 2;
         }
         if(arg=="--lifecycle-test") {lifecycle=true;continue;}
+        if(arg=="--diagnostic"&&i+1<argc){std::string v=argv[++i];auto r=std::from_chars(v.data(),v.data()+v.size(),diagnostic_mode);if(r.ec==std::errc{}&&r.ptr==v.data()+v.size()&&diagnostic_mode<=11)continue;std::cerr<<"--diagnostic requires 0..11\n";return 2;}
         if(arg=="--progressive"&&i+1<argc){std::string v=argv[++i];auto r=std::from_chars(v.data(),v.data()+v.size(),progressive_samples);if(r.ec==std::errc{}&&r.ptr==v.data()+v.size()&&progressive_samples>=1&&progressive_samples<=256)continue;std::cerr<<"--progressive requires 1..256\n";return 2;}
         if(arg=="--empty-skip"){empty_skip=true;continue;}
         if(arg=="--sun-cache"&&i+1<argc){std::string v=argv[++i];if(v=="0"||v=="32"||v=="64"){sun_cache=std::stoi(v);continue;}std::cerr<<"--sun-cache requires 0/32/64\n";return 2;}
@@ -101,7 +102,7 @@ int main(int argc,char** argv) {
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
     int exit_code=0;
     try {
-        white::GpuSpike gpu; gpu.initialize(validation);gpu.progressive=progressive_samples>0;if(progressive_samples)gpu.progressive_budget=progressive_samples;gpu.empty_skip=empty_skip;gpu.sun_cache_resolution=sun_cache;gpu.validate_optics();
+        white::GpuSpike gpu; gpu.initialize(validation);gpu.diagnostic_mode=diagnostic_mode;gpu.progressive=progressive_samples>0;if(progressive_samples)gpu.progressive_budget=progressive_samples;gpu.empty_skip=empty_skip;gpu.sun_cache_resolution=sun_cache;gpu.validate_optics();
         if(self_test) {
             for(auto dims:{std::array<Uint32,3>{1,1,1},{17,19,23},{32,32,32}}) {
                 for(Uint32 fixture=0;fixture<2;++fixture) {gpu.create_field(dims,fixture);gpu.validate();}
@@ -225,7 +226,7 @@ int main(int argc,char** argv) {
                     baseline_hdr=gpu.read_hdr();if(empty_skip)gpu.validate_majorant();if(sun_cache)gpu.validate_sun_cache();
                     if(!hdr_output.empty()){
                         if(gpu.rendered_revision!=editor.session.document().revision())throw std::runtime_error("Export frame revision mismatch");
-                        white::export_hdr({gpu.hdr_width,gpu.hdr_height,baseline_hdr},{editor.session.document().scene(),std::uint64_t(frame),gpu.rendered_revision,unsigned(gpu.view_steps),unsigned(gpu.shadow_steps),gpu.rendered_from_cache(),unsigned(gpu.sun_cache_resolution),gpu.empty_skip,gpu.progressive?gpu.preview_state.samples():1},std::filesystem::u8path(hdr_output));
+                        white::export_hdr({gpu.hdr_width,gpu.hdr_height,baseline_hdr},{editor.session.document().scene(),std::uint64_t(frame),gpu.rendered_revision,unsigned(gpu.view_steps),unsigned(gpu.shadow_steps),gpu.rendered_from_cache(),unsigned(gpu.sun_cache_resolution),gpu.empty_skip,gpu.progressive?gpu.preview_state.samples():1,gpu.diagnostic_mode},std::filesystem::u8path(hdr_output));
                         hdr_exported=true;std::cout<<"HDR exported="<<hdr_output<<'\n';
                     }
                     if(!recipe.empty())std::cout<<"fixed_capture width="<<gpu.hdr_width<<" height="<<gpu.hdr_height<<" revision="<<gpu.rendered_revision<<" pending="<<gpu.bake_pending()<<'\n';

@@ -194,6 +194,14 @@ void EditorUi::draw(GpuSpike& gpu) {
         ImGui::Combo("Slice axis",&axis,"X (YZ)\0Y (XZ)\0Z (XY)\0");ImGui::SliderFloat("Slice",&slice,0,1);
         ImGui::PopItemWidth();
     }
+    if(ImGui::CollapsingHeader("Diagnostics")) {
+        int mode=int(gpu.diagnostic_mode);
+        if(ImGui::Combo("View",&mode,"Radiance\0Density slice\0View tau\0Sun T\0Single scatter\0AABB support\0Brick max\0Occupancy\0View evals\0Total evals\0Skip intervals\0Invalid/majorant\0")){gpu.diagnostic_mode=unsigned(mode);gpu.volume_dirty=true;}
+        ImGui::Text("Document %llu | rendered %llu",(unsigned long long)session.document().revision(),(unsigned long long)gpu.rendered_revision);
+        ImGui::Text("Density producer %llu | %s",(unsigned long long)gpu.density_producer_revision,gpu.cache_current()?"current inputs":"pending / direct");
+        ImGui::Text("Sun producer %llu | bounds %llu",(unsigned long long)gpu.sun_producer_revision,(unsigned long long)gpu.majorant_producer_revision);
+        ImGui::TextWrapped("Debug EXR stores raw values. Statistics have no automatic readback. GPU timestamps unavailable; frame fence wall timings are in logs.");
+    }
     if(ImGui::CollapsingHeader("Validation")) {
         if(ImGui::Button("Retry preview"))last_scene_attempt_=0;
         if(ImGui::Button("Check density"))try{gpu.validate();status_=gpu.report;}catch(const std::exception& e){status_=e.what();}

@@ -3,6 +3,7 @@
 #include "white/phase.hpp"
 #include "white/sun_cache.hpp"
 #include "white/majorant.hpp"
+#include "white/diagnostics.hpp"
 #include "white/build_info.hpp"
 #include "white/optics.hpp"
 #include "white/dense_cache.hpp"
@@ -170,7 +171,7 @@ void GpuSpike::create_field(std::array<Uint32,3> dims, Uint32 kind) {
     // Publish only a complete replacement. SDL defers release of used resources;
     // the bake fence has already completed. Failed preparation preserves old data.
     if(field)SDL_ReleaseGPUTexture(device,field);
-    field=replacement;extent=dims;fixture=kind;field_density_hash_=density_input_hash(scene_snapshot_);volume_dirty=true;cache_reference_.clear();++bake_count;estimated_gpu_bytes=budget.peak_gpu_buffer_bytes;
+    field=replacement;extent=dims;fixture=kind;field_density_hash_=density_input_hash(scene_snapshot_);volume_dirty=true;cache_reference_.clear();++bake_count;density_producer_revision=scene_revision;estimated_gpu_bytes=budget.peak_gpu_buffer_bytes;
     std::cout<<"bake="<<bake_count<<" extent="<<dims[0]<<'x'<<dims[1]<<'x'<<dims[2]<<" texture_bytes="<<budget.texture_bytes<<" peak_requested_gpu_bytes="<<estimated_gpu_bytes<<" cpu_reference_bytes="<<budget.cpu_reference_bytes<<" record_cpu_ms="<<bake_record_ms<<" submit_to_fence_wall_ms="<<bake_wait_ms<<" gpu_timestamp_ms=unavailable\n";
 }
 void GpuSpike::set_cache_resolution(int resolution) {
@@ -203,7 +204,7 @@ void GpuSpike::poll_bakes() {
         if(density_input_hash(ready->source.scene)==density_input_hash(scene_snapshot_)) {
             if(field)SDL_ReleaseGPUTexture(device,field);
             field=ready->texture;extent=ready->source.extent;fixture=2;
-            field_density_hash_=density_input_hash(ready->source.scene);cache_reference_.clear();++bake_count;
+            field_density_hash_=density_input_hash(ready->source.scene);cache_reference_.clear();++bake_count;density_producer_revision=ready->source.revision;
             bake_record_ms=ready->record_ms;bake_wait_ms=ready->wait_ms;estimated_gpu_bytes=ready->estimated_gpu_bytes;
             volume_dirty=true;report="Latest density ready";
             std::cout<<"density_publish producer_revision="<<ready->source.revision<<" consumer_revision="<<scene_revision<<" matching_density_hash="<<field_density_hash_<<" peak_requested_gpu_bytes="<<estimated_gpu_bytes<<'\n';
@@ -317,7 +318,7 @@ void GpuSpike::draw(SDL_GPUCommandBuffer* cmd,float slice,Uint32 axis) {
     SDL_BindGPUGraphicsPipeline(pass,lit?tonemap_pipeline:display);
     SDL_GPUTextureSamplerBinding input{lit?displayed_hdr():field,lit?point_sampler:sampler}; SDL_BindGPUFragmentSamplers(pass,0,&input,1);
     struct View {float slice; Uint32 axis,fixture; float padding;} view{slice,axis,fixture,0};
-    if(lit) {const Float4 display_params{exposure_ev,0,0,0};SDL_PushGPUFragmentUniformData(cmd,0,&display_params,sizeof(display_params));}
+    if(lit) {const Float4 display_params{exposure_ev,float(diagnostic_mode),diagnostic_scale(diagnostic_mode),0};SDL_PushGPUFragmentUniformData(cmd,0,&display_params,sizeof(display_params));}
     else SDL_PushGPUFragmentUniformData(cmd,0,&view,sizeof(view));
     // Leave room for controls on the left; the remaining rectangle is a slice.
     SDL_GPUViewport viewport{290,60,std::max(1.0f,float(width)-310),std::max(1.0f,float(height)-90),0,1};
@@ -377,7 +378,7 @@ SDL_GPUTexture* GpuSpike::displayed_hdr()const{return progressive&&preview_state
 void GpuSpike::prepare_preview(){
     if(!progressive)return;
     if(progressive_budget<1||progressive_budget>256)throw std::invalid_argument("Progressive budget 1..256");
-    const std::array<unsigned,10> settings{width,height,unsigned(internal_width),unsigned(view_steps),unsigned(shadow_steps),unsigned(use_cache&&cache_current()),unsigned(cache_resolution),unsigned(sun_cache_resolution),unsigned(empty_skip),progressive_budget};
+    const std::array<unsigned,11> settings{width,height,unsigned(internal_width),unsigned(view_steps),unsigned(shadow_steps),unsigned(use_cache&&cache_current()),unsigned(cache_resolution),unsigned(sun_cache_resolution),unsigned(empty_skip),progressive_budget,diagnostic_mode};
     const double now=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now().time_since_epoch()).count();
     if(preview_state.update(preview_key(scene_snapshot_,settings),interacting_,now)){volume_dirty=true;accumulation_next_=0;}
     if(!preview_state.editing()&&!progressive_paused&&preview_state.samples()<progressive_budget)volume_dirty=true;
@@ -425,11 +426,11 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
             auto* compute=SDL_BeginGPUComputePass(cmd,&output,1,nullptr,0);SDL_BindGPUComputePipeline(compute,sun_generate_);
             const SDL_GPUTextureSamplerBinding input{field,sampler};SDL_BindGPUComputeSamplers(compute,0,&input,1);
             SDL_DispatchGPUCompute(compute,(sun_extent_+3)/4,(sun_extent_+3)/4,(sun_extent_+3)/4);SDL_EndGPUComputePass(compute);
-            sun_key_=key;++sun_cache_builds;
+            sun_key_=key;++sun_cache_builds;sun_producer_revision=scene_revision;
             std::cout<<"sun_cache_build revision="<<scene_revision<<" key="<<key<<" resolution="<<sun_extent_<<" bytes="<<std::uint64_t(sun_extent_)*sun_extent_*sun_extent_*4<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count()<<" gpu_time=included_in_frame_fence_wall\n";
         }
     }
-    rendered_skip_=empty_skip&&rendered_cache_;
+    rendered_skip_=(empty_skip||diagnostic_mode==6||diagnostic_mode==7||diagnostic_mode==11)&&rendered_cache_;
     if(rendered_skip_){
         const std::array<Uint32,3> dims{(extent[0]+7)/8,(extent[1]+7)/8,(extent[2]+7)/8};
         if(!majorant_texture_||majorant_extent_!=dims){
@@ -442,16 +443,16 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
             SDL_GPUStorageTextureReadWriteBinding output{};output.texture=majorant_texture_;
             auto* compute=SDL_BeginGPUComputePass(cmd,&output,1,nullptr,0);SDL_BindGPUComputePipeline(compute,majorant_generate_);
             const SDL_GPUTextureSamplerBinding input{field,sampler};SDL_BindGPUComputeSamplers(compute,0,&input,1);
-            SDL_DispatchGPUCompute(compute,(dims[0]+3)/4,(dims[1]+3)/4,(dims[2]+3)/4);SDL_EndGPUComputePass(compute);majorant_key_=key;
+            SDL_DispatchGPUCompute(compute,(dims[0]+3)/4,(dims[1]+3)/4,(dims[2]+3)/4);SDL_EndGPUComputePass(compute);majorant_key_=key;majorant_producer_revision=scene_revision;
             std::cout<<"majorant_build key="<<key<<" bytes="<<std::uint64_t(dims[0])*dims[1]*dims[2]*4<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count()<<" execution=in_frame_fence_wall\n";
         }
     }
     const bool accumulate=progressive&&!preview_state.editing()&&!progressive_paused;
-    const std::array<Float4,13> view{
+    const std::array<Float4,14> view{
         pack(eye,float(camera.near_plane)),pack(right,float(std::tan(camera.vertical_fov_degrees*3.141592653589793/360))),pack(up,float(recipe.optics.g)),pack(forward,float(recipe.optics.extinction_scale)),
         pack(sun,float(recipe.optics.albedo)),pack(scene_snapshot_.sun.irradiance,float(camera.far_plane)),
         Float4{float(x.x),float(y.x),float(z.x),float(origin.x)},Float4{float(x.y),float(y.y),float(z.y),float(origin.y)},Float4{float(x.z),float(y.z),float(z.z),float(origin.z)},
-        Float4{float(rendered_steps_),float(render_shadows),float(w)/float(h),rendered_cache_?1.0f:0.0f},Float4{rendered_sun_?1.0f:0.0f,0,0,0},Float4{float(extent[0]),float(extent[1]),float(extent[2]),rendered_skip_?1.f:0.f},Float4{float(preview_state.samples()),accumulate?1.f:0.f,1.f/w,1.f/h}};
+        Float4{float(rendered_steps_),float(render_shadows),float(w)/float(h),rendered_cache_?1.0f:0.0f},Float4{rendered_sun_?1.0f:0.0f,0,0,0},Float4{float(extent[0]),float(extent[1]),float(extent[2]),rendered_skip_?1.f:0.f},Float4{float(preview_state.samples()),accumulate?1.f:0.f,1.f/w,1.f/h},Float4{float(diagnostic_mode),0,0,0}};
     SDL_PushGPUFragmentUniformData(cmd,0,view.data(),sizeof(view));
     SDL_PushGPUFragmentUniformData(cmd,1,&field_params,sizeof(field_params));
     SDL_GPUColorTargetInfo color{};color.texture=hdr;color.load_op=SDL_GPU_LOADOP_CLEAR;color.store_op=SDL_GPU_STOREOP_STORE;
@@ -577,6 +578,7 @@ std::vector<float> GpuSpike::read_hdr() {
     for(Uint32 y=0;y<hdr_height;++y)for(Uint32 x=0;x<hdr_width;++x)for(Uint32 c=0;c<4;++c){float value=values[(y*pitch+x)*4+c];result[(y*hdr_width+x)*4+c]=value;valid=valid&&std::isfinite(value)&&value>=0&&(c!=3||value<=1);maximum=std::max(maximum,value);}
     SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
     if(!valid)throw std::runtime_error("HDR contains NaN/Inf/negative radiance or invalid transmittance");
+    if(diagnostic_mode){std::cout<<"Diagnostic HDR mode="<<diagnostic_mode<<" name="<<diagnostic_name(diagnostic_mode)<<" revision="<<rendered_revision<<" max="<<maximum<<" raw_values=true\n";return result;}
     if(progressive&&preview_state.samples()){std::cout<<"Progressive HDR finite readback samples="<<preview_state.samples()<<" max_channel="<<maximum<<" CPU_center_ray_validation=not_applicable_to_jittered_average\n";return result;}
     // Independently integrate the CPU field along every pixel ray. This catches
     // blank images, wrong camera uniforms and mismatched volume coordinates,

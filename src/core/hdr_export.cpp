@@ -1,7 +1,9 @@
 #include "white/hdr_export.hpp"
 #include "white/persistence.hpp"
+#include "white/diagnostics.hpp"
 #include <nlohmann/json.hpp>
 #include <atomic>
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <fstream>
@@ -28,10 +30,10 @@ void export_hdr(const HdrImage& image,const HdrMetadata& meta,const std::filesys
         // PPM deliberately uses the same exposure -> Reinhard -> sRGB sequence
         // as the shader. Top-to-bottom rows, RGB channels, no second gamma.
         std::ofstream display(temporary/"display.ppm",std::ios::binary);display<<"P6\n"<<image.width<<' '<<image.height<<"\n255\n";
-        for(size_t i=0;i<image.rgba.size();++i)if(i%4!=3){double x=double(image.rgba[i])*std::exp2(meta.scene.exposure_ev);x=x/(1+x);x=x<=.0031308?12.92*x:1.055*std::pow(x,1/2.4)-.055;display.put(char(std::lround(x*255)));}
+        for(size_t i=0;i<image.rgba.size();++i)if(i%4!=3){double x=double(image.rgba[i]);if(meta.diagnostic_mode&&meta.diagnostic_mode!=4)x=std::min(1.,x/diagnostic_scale(meta.diagnostic_mode));else{x*=std::exp2(meta.scene.exposure_ev);x=x/(1+x);}x=x<=.0031308?12.92*x:1.055*std::pow(x,1/2.4)-.055;display.put(char(std::lround(x*255)));}
         display.close();if(!display)throw std::runtime_error("Display image write failed");
-        nlohmann::json metadata={{"format_version",1},{"commit",WHITE_COMMIT},{"frame",std::to_string(meta.frame)},{"revision",std::to_string(meta.revision)},{"width",image.width},{"height",image.height},{"view_steps",meta.view_steps},{"shadow_steps",meta.shadow_steps},{"samples_per_pixel",meta.samples_per_pixel},{"jitter_seed",42},{"jitter",meta.samples_per_pixel>1?"pixel footprint; no ray-step jitter":"fixed or single jittered sample"},{"cached_density",meta.cached},{"sun_tau_cache_resolution",meta.sun_cache_resolution},{"empty_space_skipping",meta.empty_skip},{"working_space","linear Rec.709 / D65"},{"row_order","top to bottom"},{"RGB","L_scatter + T * background; already composited"},{"A","transmittance T; NOT opacity; do not alpha composite RGB"},{"background_linear",{.015,.022,.035}},{"display_transform","exposure 2^EV -> Reinhard x/(1+x) -> sRGB"},{"scene",scene}};
-        std::ofstream sidecar(temporary/"metadata.json",std::ios::binary);sidecar<<metadata.dump(2)<<'\n';sidecar.close();if(!sidecar)throw std::runtime_error("Metadata write failed");
+        nlohmann::json metadata={{"format_version",1},{"diagnostic_mode",meta.diagnostic_mode},{"diagnostic_name",diagnostic_name(meta.diagnostic_mode)},{"diagnostic_display_scale",diagnostic_scale(meta.diagnostic_mode)},{"commit",WHITE_COMMIT},{"frame",std::to_string(meta.frame)},{"revision",std::to_string(meta.revision)},{"width",image.width},{"height",image.height},{"view_steps",meta.view_steps},{"shadow_steps",meta.shadow_steps},{"samples_per_pixel",meta.samples_per_pixel},{"jitter_seed",42},{"jitter",meta.samples_per_pixel>1?"pixel footprint; no ray-step jitter":"fixed or single jittered sample"},{"cached_density",meta.cached},{"sun_tau_cache_resolution",meta.sun_cache_resolution},{"empty_space_skipping",meta.empty_skip},{"working_space","linear Rec.709 / D65"},{"row_order","top to bottom"},{"RGB","L_scatter + T * background; already composited"},{"A","transmittance T; NOT opacity; do not alpha composite RGB"},{"background_linear",{.015,.022,.035}},{"display_transform","exposure 2^EV -> Reinhard x/(1+x) -> sRGB"},{"scene",scene}};
+        std::ofstream sidecar(temporary/"metadata.json",std::ios::binary);if(meta.diagnostic_mode){metadata["RGB"]="Raw diagnostic values; see diagnostic_name. Not composited radiance.";metadata["display_transform"]="diagnostic raw / scale clamped then sRGB; scattering uses exposure/Reinhard";}sidecar<<metadata.dump(2)<<'\n';sidecar.close();if(!sidecar)throw std::runtime_error("Metadata write failed");
         if(fault==ExportFault::before_publish)throw std::runtime_error("Injected export failure");
 #ifdef _WIN32
         if(!MoveFileExW(temporary.c_str(),destination.c_str(),MOVEFILE_WRITE_THROUGH))throw std::runtime_error("Export publication failed");

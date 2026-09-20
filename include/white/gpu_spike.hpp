@@ -32,6 +32,8 @@ public:
     std::uint64_t bake_count=0,estimated_gpu_bytes=0;
     double bake_record_ms=0,bake_wait_ms=0;
     void set_cache_resolution(int resolution);
+    unsigned diagnostic_mode=0;
+    std::uint64_t density_producer_revision=0,sun_producer_revision=0,majorant_producer_revision=0;
     bool progressive=false,progressive_paused=false;
     unsigned progressive_budget=64;
     PreviewState preview_state;
