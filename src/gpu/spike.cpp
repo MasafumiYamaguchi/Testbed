@@ -1,6 +1,7 @@
 #include "white/gpu_spike.hpp"
 #include "white/benchmark.hpp"
 #include "white/phase.hpp"
+#include "white/sun_cache.hpp"
 #include "white/build_info.hpp"
 #include "white/optics.hpp"
 #include "white/dense_cache.hpp"
@@ -57,6 +58,8 @@ GpuSpike::~GpuSpike() {
     bake_worker_.reset();
     if (device) {
         SDL_WaitForGPUIdle(device);
+        if(sun_tau_)SDL_ReleaseGPUTexture(device,sun_tau_);
+        if(sun_generate_)SDL_ReleaseGPUComputePipeline(device,sun_generate_);
         if(volume_pipeline)SDL_ReleaseGPUGraphicsPipeline(device,volume_pipeline);
         if(tonemap_pipeline)SDL_ReleaseGPUGraphicsPipeline(device,tonemap_pipeline);
         if(cache_sample_test)SDL_ReleaseGPUComputePipeline(device,cache_sample_test);
@@ -184,7 +187,7 @@ void GpuSpike::set_scene(const Scene& scene,std::uint64_t revision,std::chrono::
 }
 void GpuSpike::queue_bake(std::array<Uint32,3> dims) {
     const std::uint64_t old=64ull*1024*1024; // reserve the largest supported published cache
-    const auto other=std::uint64_t(width)*height*4+std::uint64_t(hdr_width)*hdr_height*16;
+    const auto other=std::uint64_t(width)*height*4+std::uint64_t(hdr_width)*hdr_height*16+2*1024*1024;
     (void)cache_budget(dims,old,other);
     bake_worker_->request({scene_revision,density_job_hash(scene_snapshot_,dims),scene_snapshot_,dims,old,other});
     report="Latest density queued; direct preview remains live";
@@ -340,7 +343,7 @@ void GpuSpike::initialize_volume() {
         auto* vs=make_shader("fullscreen.vert.hlsl.dxil",SDL_GPU_SHADERSTAGE_VERTEX,0,0);
         SDL_GPUShader* fs=nullptr;SDL_GPUGraphicsPipeline* p=nullptr;
         try {
-            fs=make_shader(name,SDL_GPU_SHADERSTAGE_FRAGMENT,1,tone?1:2);
+            fs=make_shader(name,SDL_GPU_SHADERSTAGE_FRAGMENT,tone?1:2,tone?1:2);
             SDL_GPUColorTargetDescription color{};color.format=tone?SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
             SDL_GPUGraphicsPipelineCreateInfo ci{};ci.vertex_shader=vs;ci.fragment_shader=fs;ci.primitive_type=SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
             ci.target_info.num_color_targets=1;ci.target_info.color_target_descriptions=&color;
@@ -359,6 +362,8 @@ void GpuSpike::initialize_volume() {
     optical_test=SDL_CreateGPUComputePipeline(device,&ci);gpu_check(optical_test!=nullptr,"Create optical test pipeline");
     bytes=shader("cache_samples.comp.hlsl.dxil");ci.code=bytes.data();ci.code_size=bytes.size();ci.num_uniform_buffers=2;ci.num_samplers=1;
     cache_sample_test=SDL_CreateGPUComputePipeline(device,&ci);gpu_check(cache_sample_test!=nullptr,"Create cache sample test pipeline");
+    bytes=shader("sun_cache.comp.hlsl.dxil");ci.code=bytes.data();ci.code_size=bytes.size();ci.num_readwrite_storage_buffers=0;ci.num_readwrite_storage_textures=1;ci.threadcount_x=ci.threadcount_y=ci.threadcount_z=4;
+    sun_generate_=SDL_CreateGPUComputePipeline(device,&ci);gpu_check(sun_generate_!=nullptr,"Create sun cache pipeline");
 }
 void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     if(!volume_dirty)return;
@@ -386,17 +391,56 @@ void GpuSpike::render_volume(SDL_GPUCommandBuffer* cmd) {
     const auto x=world_to_local(recipe.transform,{1,0,0})-origin,y=world_to_local(recipe.transform,{0,1,0})-origin,z=world_to_local(recipe.transform,{0,0,1})-origin;
     const auto sun=scene_snapshot_.sun.direction_to_light;
     auto pack=[](Vec3 v,float w=0){return Float4{float(v.x),float(v.y),float(v.z),w};};
-    const std::array<Float4,10> view{
+    if(sun_cache_resolution!=0&&sun_cache_resolution!=32&&sun_cache_resolution!=64)throw std::invalid_argument("Sun cache must be 0/32/64");
+    rendered_sun_=sun_cache_resolution!=0&&rendered_cache_&&!interacting_;
+    if(rendered_sun_){
+        const auto key=sun_cache_key(scene_snapshot_,extent,unsigned(sun_cache_resolution),unsigned(render_shadows));
+        if(!sun_tau_||sun_extent_!=sun_cache_resolution){
+            auto* replacement=texture(device,SDL_GPU_TEXTURETYPE_3D,SDL_GPU_TEXTUREFORMAT_R32_FLOAT,SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE|SDL_GPU_TEXTUREUSAGE_SAMPLER,sun_cache_resolution,sun_cache_resolution,sun_cache_resolution);
+            if(sun_tau_)SDL_ReleaseGPUTexture(device,sun_tau_);sun_tau_=replacement;sun_extent_=sun_cache_resolution;sun_key_=0;
+        }
+        if(sun_key_!=key){
+            const auto start=std::chrono::steady_clock::now();const auto direction=world_to_local(recipe.transform,sun)-origin;
+            const std::array<Float4,3> params{pack(direction,float(recipe.optics.extinction_scale)),Float4{float(sun_extent_),float(sun_extent_),float(sun_extent_),float(render_shadows)},Float4{float(camera.far_plane),0,0,0}};
+            SDL_PushGPUComputeUniformData(cmd,0,params.data(),sizeof(params));SDL_PushGPUComputeUniformData(cmd,1,&field_params,sizeof(field_params));
+            SDL_GPUStorageTextureReadWriteBinding output{};output.texture=sun_tau_;
+            auto* compute=SDL_BeginGPUComputePass(cmd,&output,1,nullptr,0);SDL_BindGPUComputePipeline(compute,sun_generate_);
+            const SDL_GPUTextureSamplerBinding input{field,sampler};SDL_BindGPUComputeSamplers(compute,0,&input,1);
+            SDL_DispatchGPUCompute(compute,(sun_extent_+3)/4,(sun_extent_+3)/4,(sun_extent_+3)/4);SDL_EndGPUComputePass(compute);
+            sun_key_=key;++sun_cache_builds;
+            std::cout<<"sun_cache_build revision="<<scene_revision<<" key="<<key<<" resolution="<<sun_extent_<<" bytes="<<std::uint64_t(sun_extent_)*sun_extent_*sun_extent_*4<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count()<<" gpu_time=included_in_frame_fence_wall\n";
+        }
+    }
+    const std::array<Float4,11> view{
         pack(eye,float(camera.near_plane)),pack(right,float(std::tan(camera.vertical_fov_degrees*3.141592653589793/360))),pack(up,float(recipe.optics.g)),pack(forward,float(recipe.optics.extinction_scale)),
         pack(sun,float(recipe.optics.albedo)),pack(scene_snapshot_.sun.irradiance,float(camera.far_plane)),
         Float4{float(x.x),float(y.x),float(z.x),float(origin.x)},Float4{float(x.y),float(y.y),float(z.y),float(origin.y)},Float4{float(x.z),float(y.z),float(z.z),float(origin.z)},
-        Float4{float(rendered_steps_),float(render_shadows),float(w)/float(h),rendered_cache_?1.0f:0.0f}};
+        Float4{float(rendered_steps_),float(render_shadows),float(w)/float(h),rendered_cache_?1.0f:0.0f},Float4{rendered_sun_?1.0f:0.0f,0,0,0}};
     SDL_PushGPUFragmentUniformData(cmd,0,view.data(),sizeof(view));
     SDL_PushGPUFragmentUniformData(cmd,1,&field_params,sizeof(field_params));
     SDL_GPUColorTargetInfo color{};color.texture=hdr;color.load_op=SDL_GPU_LOADOP_CLEAR;color.store_op=SDL_GPU_STOREOP_STORE;
     auto* pass=SDL_BeginGPURenderPass(cmd,&color,1,nullptr);SDL_BindGPUGraphicsPipeline(pass,volume_pipeline);
-    const SDL_GPUTextureSamplerBinding cache{field,sampler};SDL_BindGPUFragmentSamplers(pass,0,&cache,1);
+    const SDL_GPUTextureSamplerBinding inputs[2]{{field,sampler},{rendered_sun_?sun_tau_:field,sampler}};SDL_BindGPUFragmentSamplers(pass,0,inputs,2);
     SDL_DrawGPUPrimitives(pass,3,1,0,0);SDL_EndGPURenderPass(pass);volume_dirty=false;
+}
+void GpuSpike::validate_sun_cache() {
+    if(!rendered_sun_)throw std::runtime_error("Sun cache comparison requested but direct fallback rendered");
+    if(cache_reference_.empty())validate();
+    const Uint32 n=Uint32(sun_extent_),pitch=(n+63)/64*64;Transfer transfer(device,pitch*n*n*4);
+    auto* cmd=SDL_AcquireGPUCommandBuffer(device);gpu_check(cmd!=nullptr,"Acquire sun readback");
+    auto* pass=SDL_BeginGPUCopyPass(cmd);SDL_GPUTextureRegion source{};source.texture=sun_tau_;source.w=source.h=source.d=n;
+    const SDL_GPUTextureTransferInfo target_info{transfer.buffer,0,pitch,n};SDL_DownloadFromGPUTexture(pass,&source,&target_info);SDL_EndGPUCopyPass(pass);submit_wait(device,cmd);
+    const auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map sun cache");
+    const GridLayout density_grid{scene_snapshot_.cloud.envelope,extent},sun_grid{scene_snapshot_.cloud.envelope,{n,n,n}};
+    double error=0,t_error=0;bool valid=true;
+    for(Uint32 z=0;z<n;++z)for(Uint32 y=0;y<n;++y)for(Uint32 x=0;x<n;++x){
+        const double actual=values[(z*n+y)*pitch+x];valid=valid&&std::isfinite(actual)&&actual>=0;
+        const double expected=sun_optical_depth(scene_snapshot_,density_grid,cache_reference_,index_to_local(sun_grid,{double(x),double(y),double(z)}),unsigned(shadow_steps));
+        error=std::max(error,std::abs(actual-expected));t_error=std::max(t_error,std::abs(std::exp(-actual)-std::exp(-expected)));
+    }
+    SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
+    std::cout<<"sun_cache_verified voxels="<<n*n*n<<" tau_max_error="<<error<<" T_max_error="<<t_error<<" same_snapshot=true\n";
+    if(!valid||t_error>.005)throw std::runtime_error("Sun cache GPU/CPU disagreement");
 }
 void GpuSpike::validate_cache_samples() {
     SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,256*4*sizeof(float),0};

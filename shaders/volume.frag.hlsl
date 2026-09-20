@@ -5,9 +5,11 @@
 #include "cache.hlsli"
 Texture3D<float> cachedDensity : register(t0,space2);
 SamplerState cacheLinear : register(s0,space2);
+Texture3D<float> sunTau : register(t1,space2);
+SamplerState sunLinear : register(s1,space2);
 cbuffer View : register(b0,space3) {
     float4 eyeNear, rightTan, upUnused, forwardExtinction, lightAlbedo, irradianceFar;
-    float4 inverse0,inverse1,inverse2,quality;
+    float4 inverse0,inverse1,inverse2,quality,sunSettings;
 };
 float3 localVector(float3 p) {return float3(dot(inverse0.xyz,p),dot(inverse1.xyz,p),dot(inverse2.xyz,p));}
 float3 localPoint(float3 p) {return localVector(p)+float3(inverse0.w,inverse1.w,inverse2.w);}
@@ -16,6 +18,10 @@ float evaluateDensity(float3 p) {
     return constrainCache(p,cachedDensity.SampleLevel(cacheLinear,(p-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz),0));
 }
 float shadowTransmittance(float3 origin) {
+    if(sunSettings.x!=0){
+        if(any(origin<=envelopeMin.xyz)||any(origin>=envelopeMax.xyz))return 1;
+        return exp(-max(0,sunTau.SampleLevel(sunLinear,(origin-envelopeMin.xyz)/(envelopeMax.xyz-envelopeMin.xyz),0)));
+    }
     float3 direction=localVector(lightAlbedo.xyz);float entry=0,exit=irradianceFar.w;
     if(!intersectBox(origin,direction,envelopeMin.xyz,envelopeMax.xyz,entry,exit))return 1;
     float dt=(exit-entry)/quality.y,tau=0;

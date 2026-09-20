@@ -49,6 +49,9 @@ jobs:
       - name: HG phase comparison captures
         if: matrix.config == 'Release'
         run: ./scripts/capture-gate.ps1 -Executable ./build/windows/Release/white_app.exe -RecipeDirectory ./tests/fixtures/phase -OutputDirectory evidence/phase -ExportHdr
+      - name: Sun cache comparisons
+        if: matrix.config == 'Release'
+        run: ./scripts/capture-sun.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
       - name: Bounded edit benchmark
         if: matrix.config == 'Release'
         run: ./scripts/benchmark-editor.ps1 -Executable ./build/windows/Release/white_app.exe -InternalWidth 160 -Updates 60

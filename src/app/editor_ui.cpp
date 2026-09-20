@@ -63,7 +63,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(!io.WantTextInput&&io.KeyCtrl&&ImGui::IsKeyPressed(ImGuiKey_Y))session.redo();
     ImGui::SetNextWindowPos({15,15},ImGuiCond_Always);ImGui::SetNextWindowSize({260,io.DisplaySize.y-30},ImGuiCond_Always);
     ImGui::Begin("Cloud editor",nullptr,ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoCollapse);
-    ImGui::Text("PROJECT WHITE / PHASE 0");ImGui::TextUnformatted(session.modified()?"Unsaved changes":"Saved");
+    ImGui::Text("PROJECT WHITE / PHASE 1");ImGui::TextUnformatted(session.modified()?"Unsaved changes":"Saved");
     const bool dragging=gizmo_drag_||inspector_drag_||orbit_drag_;
     ImGui::BeginDisabled(dragging);
     if(ImGui::Button("Undo"))session.undo();
@@ -152,6 +152,12 @@ void EditorUi::draw(GpuSpike& gpu) {
         ImGui::Text("Bakes: %llu",static_cast<unsigned long long>(gpu.bake_count));
         ImGui::Text("Resource budget: %.1f MiB",gpu.estimated_gpu_bytes/1048576.0);
         ImGui::TextWrapped("Filtering changes fine edges. Base and full cuts remain clipped.");
+    }
+    if(ImGui::CollapsingHeader("Sun shadow cache")) {
+        int mode=gpu.sun_cache_resolution==64?2:gpu.sun_cache_resolution==32?1:0;
+        if(ImGui::Combo("Shadow mode",&mode,"Direct\0Tau 32 cubed\0Tau 64 cubed\0")){gpu.sun_cache_resolution=mode==2?64:mode==1?32:0;gpu.volume_dirty=true;}
+        ImGui::Text("Builds: %u",gpu.sun_cache_builds);
+        ImGui::TextWrapped("Requires current baked density. Editing uses direct shadows. Tau interpolation is approximate; direct mode remains available.");
     }
     if(ImGui::CollapsingHeader("Optical properties")) {
         ImGui::PushItemWidth(120);

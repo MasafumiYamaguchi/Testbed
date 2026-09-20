@@ -31,6 +31,9 @@ public:
     std::uint64_t bake_count=0,estimated_gpu_bytes=0;
     double bake_record_ms=0,bake_wait_ms=0;
     void set_cache_resolution(int resolution);
+    int sun_cache_resolution=0; // 0 direct, 32/64 tau cache
+    unsigned sun_cache_builds=0;
+    void validate_sun_cache();
     int view_steps = 64, shadow_steps = 8, internal_width = 160;
     float sun_angle = -40, exposure_ev = 1;
     Uint32 hdr_width=0,hdr_height=0;
@@ -66,6 +69,11 @@ public:
     void validate_cache_samples();
     std::vector<float> read_hdr();
 private:
+    SDL_GPUTexture* sun_tau_=nullptr;
+    SDL_GPUComputePipeline* sun_generate_=nullptr;
+    std::uint64_t sun_key_=0;
+    int sun_extent_=0;
+    bool rendered_sun_=false;
     Scene scene_snapshot_{};
     std::unique_ptr<GpuBakeWorker> bake_worker_;
     std::uint64_t field_density_hash_=0;
