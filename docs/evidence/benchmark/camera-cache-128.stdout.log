@@ -1,0 +1,20 @@
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+GPU ray/box six cases max_abs_error=4.76837e-07
+GPU homogeneous optics max_abs_error=5.25884e-06 tolerance=0.001
+bake=1 extent=65x67x69 texture_bytes=1201980 peak_requested_gpu_bytes=3568956 cpu_reference_bytes=1201980 record_cpu_ms=0.3124 submit_to_fence_wall_ms=30.1466 gpu_timestamp_ms=unavailable
+density_reference max_abs_error=4.52995e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+density_publish producer_revision=2 consumer_revision=2 matching_density_hash=17993680759361396548 peak_requested_gpu_bytes=83886080
+density_job_revision=2 input_hash=1863149525988269700 publish=1 coalesced=0 discarded=1 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=0.2774 generation_submit_and_fence_wall_ms=90.8275
+fixed_recipe=recipe.white.json density_hash=17993680759361396548 internal_width=160 view_steps=64 shadow_steps=8 cache=128 camera_sun=from_saved_recipe
+benchmark_track=camera warmup_frames=30 requested_updates=60 cells=8 frames_in_flight=1 adaptive_quality=false artificial_frame_delay=false validation=1
+capture=camera-cache-128.bmp frame=120
+density_reference max_abs_error=1.46031e-06 tolerance=2e-05 detailed=0
+fixture=2 extent=128x128x128 row_bytes=512 max_abs_error=1.46031e-06 interpolation_error=0 PASS
+HDR verified 160x90 view_steps=64 shadow_steps=8 max_channel=1 min_T=0.189435 CPU_T_max_error=0.000256436
+dense_vs_direct_T max=0.017783 mean=0.000233008 sampler_reference_error=0.000256436 resolution=128
+fixed_capture width=160 height=90 revision=62 pending=0
+benchmark_samples=60 edit_to_submission_p50_ms=0.7412 edit_to_submission_p95_ms=0.8044 edit_to_gpu_complete_p50_ms=31.986 edit_to_gpu_complete_p95_ms=33.8262 serial_work_updates_per_second=31.2579073 cached_samples=60 direct_samples=0 hdr_updates=60 gpu_timestamp_ms=unavailable scanout_latency_ms=unavailable
+benchmark_wall_ms=1920.13 completed_update_hz=31.2479
+benchmark_bakes=0 final_revision=62 requested_cache=128 csv=camera-cache-128.csv
+shutdown=clean lifecycle_test=0

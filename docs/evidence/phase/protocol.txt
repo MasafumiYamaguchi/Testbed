@@ -1,0 +1,10 @@
+internal_width=160
+view_steps=64
+shadow_steps=8
+frames=90
+capture_frame=60
+warmup_frames=60
+timed_dirty_frames=see_each_log
+performance_gate=not-established
+gpu_timestamp=unavailable
+actual_gpu_residency=unavailable

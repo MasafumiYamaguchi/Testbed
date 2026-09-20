@@ -1,3 +1,4 @@
+#include "white/hdr_export.hpp"
 #include "white/gpu_spike.hpp"
 #include "white/editor_ui.hpp"
 #include "white/benchmark.hpp"
@@ -43,12 +44,12 @@ int main(int argc,char** argv) {
     int frames=0,preset=2,render_width=160,view_steps=64,shadow_steps=8,cache=0;
     std::string recipe,benchmark_output="benchmark.csv",benchmark_track="density";
     int benchmark_updates=0;bool validation=true;
-    std::string capture;
+    std::string capture,hdr_output;
     bool lifecycle=false,self_test=false;
     for(int i=1;i<argc;++i) {
         std::string_view arg(argv[i]);
         if(arg=="--help") {
-            std::cout<<"ProjectWhite --frames N --capture output.bmp --self-test --lifecycle-test --scene 0..4\n"
+            std::cout<<"ProjectWhite --export-hdr NEW_DIRECTORY --frames N --capture output.bmp --self-test --lifecycle-test --scene 0..4\n"
                 "--recipe FILE --render-width 64..640 --view-steps 8..512 --shadow-steps 1..64 --cache 0|128|256\n"
                 "--benchmark-updates 30..10000 --benchmark-track density|camera|exposure --benchmark-output FILE --no-validation\n"
                 "Windows D3D12 GPU field validation; startup fails if required GPU features are absent.\n"; return 0;
@@ -74,6 +75,7 @@ int main(int argc,char** argv) {
             std::cerr<<"--scene requires 0..4\n";return 2;
         }
         if(arg=="--lifecycle-test") {lifecycle=true;continue;}
+        if(arg=="--export-hdr" && i+1<argc){hdr_output=argv[++i];continue;}
         if(arg=="--capture" && i+1<argc) {capture=argv[++i];continue;}
         if(arg=="--frames" && i+1<argc) {
             std::string_view text(argv[++i]);
@@ -83,6 +85,7 @@ int main(int argc,char** argv) {
         }
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
+    if(!hdr_output.empty()&&(capture.empty()||!frames||self_test||lifecycle)){std::cerr<<"--export-hdr requires --capture and --frames, without self-test/lifecycle\n";return 2;}
     if(self_test&&frames>0&&frames<760){std::cerr<<"--self-test requires --frames >= 760 to finish UI checks\n";return 2;}
     if(self_test&&!recipe.empty()){std::cerr<<"Use separate runs for fixed Recipe and scripted UI self-test\n";return 2;}
     if(benchmark_updates){
@@ -122,7 +125,7 @@ int main(int argc,char** argv) {
         std::uint64_t benchmark_initial_bakes=0;
         std::chrono::steady_clock::time_point benchmark_start;double benchmark_elapsed_ms=0;
         if(benchmark_updates)std::cout<<"benchmark_track="<<benchmark_track<<" warmup_frames=30 requested_updates="<<benchmark_updates<<" cells="<<benchmark_base.cloud.cells.size()<<" frames_in_flight=1 adaptive_quality=false artificial_frame_delay=false validation="<<validation<<'\n';
-        bool running=true,captured=false;
+        bool running=true,captured=false,hdr_exported=false;
         std::vector<float> baseline_hdr;
         int convergence_frame=-1;
         for(int frame=0;running && (frames==0 || frame<frames);++frame) {
@@ -214,6 +217,11 @@ int main(int argc,char** argv) {
                 gpu.save_capture(capture);captured=true;std::cout<<"capture="<<capture<<" frame="<<frame<<'\n';
                 if(gpu.show_volume&&gpu.fixture==2) {
                     baseline_hdr=gpu.read_hdr();
+                    if(!hdr_output.empty()){
+                        if(gpu.rendered_revision!=editor.session.document().revision())throw std::runtime_error("Export frame revision mismatch");
+                        white::export_hdr({gpu.hdr_width,gpu.hdr_height,baseline_hdr},{editor.session.document().scene(),std::uint64_t(frame),gpu.rendered_revision,unsigned(gpu.view_steps),unsigned(gpu.shadow_steps),gpu.rendered_from_cache()},std::filesystem::u8path(hdr_output));
+                        hdr_exported=true;std::cout<<"HDR exported="<<hdr_output<<'\n';
+                    }
                     if(!recipe.empty())std::cout<<"fixed_capture width="<<gpu.hdr_width<<" height="<<gpu.hdr_height<<" revision="<<gpu.rendered_revision<<" pending="<<gpu.bake_pending()<<'\n';
                     if(self_test){gpu.view_steps*=2;gpu.volume_dirty=true;convergence_frame=frame;}
                 }
@@ -238,6 +246,7 @@ int main(int argc,char** argv) {
             std::ofstream output(std::filesystem::u8path(benchmark_output),std::ios::binary|std::ios::trunc);output<<white::benchmark_csv(measurements);output.close();if(!output)throw std::runtime_error("Cannot write benchmark CSV");
             std::cout<<white::benchmark_summary(measurements)<<"benchmark_wall_ms="<<benchmark_elapsed_ms<<" completed_update_hz="<<1000*benchmark_updates/benchmark_elapsed_ms<<'\n'<<"benchmark_bakes="<<gpu.bake_count-benchmark_initial_bakes<<" final_revision="<<gpu.scene_revision<<" requested_cache="<<cache<<" csv="<<benchmark_output<<'\n';
         }
+        if(!hdr_output.empty()&&!hdr_exported)throw std::runtime_error("No valid HDR frame was exported");
         if(!capture.empty() && !captured) throw std::runtime_error("No valid frame was available for screenshot");
         std::cout<<"shutdown=clean lifecycle_test="<<lifecycle<<'\n';
     } catch(const std::exception& e) {std::cerr<<"ERROR: "<<e.what()<<'\n';exit_code=1;}
