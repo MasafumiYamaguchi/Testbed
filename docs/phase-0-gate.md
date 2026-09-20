@@ -1,6 +1,9 @@
-# Phase 0 gate: Hold (Issue #14)
+# Phase 0 gate: physical validation deferred (Issue #14)
 
-Decision as of 2026-09-19: **Hold**. Phase 1 remains unstarted. Functional
+The original 2026-09-19 assessment was **Hold**. The user subsequently explicitly
+authorized Phase 1 and later implementation to proceed while physical-machine
+validation is deferred. This authorization changes implementation sequencing,
+not the measured performance status. Functional
 shape/editing and cache checks have evidence, but no RTX 5070 Ti 16 GB result,
 pure GPU timestamps, actual GPU residency, or sustained edit performance exists.
 Hosted Windows uses Microsoft Basic Render Driver (WARP), driver
@@ -82,4 +85,5 @@ Go requires evidence for the provisional target: Release on RTX 5070 Ti 16 GB,
 internal 640×360, one cloud with up to eight cells, 128³–256³, at least 10 fps
 while editing, p95 update latency no more than 200 ms and app GPU memory no more
 than 2 GiB. No new backend, sparse structure or Phase-1 feature is introduced to
-hide missing measurements. The Hold can be revised only from recorded evidence.
+hide missing measurements. Physical acceptance remains pending recorded evidence; implementation proceeds
+under the user’s explicit sequencing override.

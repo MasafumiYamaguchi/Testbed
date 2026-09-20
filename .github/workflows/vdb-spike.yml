@@ -1,7 +1,7 @@
 name: Optional OpenVDB spike
 on:
   pull_request:
-    paths: ['spikes/vdb/**', '.github/workflows/vdb-spike.yml', 'CMakeLists.txt']
+    paths: ['spikes/vdb/**', '.github/workflows/vdb-spike.yml']
   workflow_dispatch:
 permissions:
   contents: read

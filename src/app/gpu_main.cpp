@@ -1,5 +1,7 @@
 #include "white/gpu_spike.hpp"
 #include "white/editor_ui.hpp"
+#include "white/benchmark.hpp"
+#include <fstream>
 #include <SDL3/SDL_main.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
@@ -39,7 +41,8 @@ struct Ui {
 }
 int main(int argc,char** argv) {
     int frames=0,preset=2,render_width=160,view_steps=64,shadow_steps=8,cache=0;
-    std::string recipe;
+    std::string recipe,benchmark_output="benchmark.csv",benchmark_track="density";
+    int benchmark_updates=0;bool validation=true;
     std::string capture;
     bool lifecycle=false,self_test=false;
     for(int i=1;i<argc;++i) {
@@ -47,8 +50,13 @@ int main(int argc,char** argv) {
         if(arg=="--help") {
             std::cout<<"ProjectWhite --frames N --capture output.bmp --self-test --lifecycle-test --scene 0..4\n"
                 "--recipe FILE --render-width 64..640 --view-steps 8..512 --shadow-steps 1..64 --cache 0|128|256\n"
+                "--benchmark-updates 30..10000 --benchmark-track density|camera|exposure --benchmark-output FILE --no-validation\n"
                 "Windows D3D12 GPU field validation; startup fails if required GPU features are absent.\n"; return 0;
         }
+        if(arg=="--no-validation"){validation=false;continue;}
+        if(arg=="--benchmark-output"&&i+1<argc){benchmark_output=argv[++i];continue;}
+        if(arg=="--benchmark-track"&&i+1<argc){benchmark_track=argv[++i];try{(void)white::edit_track(benchmark_track);}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 2;}continue;}
+        if(arg=="--benchmark-updates"&&i+1<argc){std::string_view value(argv[++i]);auto r=std::from_chars(value.data(),value.data()+value.size(),benchmark_updates);if(r.ec==std::errc{}&&r.ptr==value.data()+value.size()&&benchmark_updates>=30&&benchmark_updates<=10000)continue;std::cerr<<"Benchmark updates must be 30..10000\n";return 2;}
         if(arg=="--recipe"&&i+1<argc){recipe=argv[++i];continue;}
         if((arg=="--render-width"||arg=="--view-steps"||arg=="--shadow-steps"||arg=="--cache")&&i+1<argc){
             std::string_view value(argv[++i]);int number=0;auto result=std::from_chars(value.data(),value.data()+value.size(),number);
@@ -77,10 +85,14 @@ int main(int argc,char** argv) {
     }
     if(self_test&&frames>0&&frames<760){std::cerr<<"--self-test requires --frames >= 760 to finish UI checks\n";return 2;}
     if(self_test&&!recipe.empty()){std::cerr<<"Use separate runs for fixed Recipe and scripted UI self-test\n";return 2;}
+    if(benchmark_updates){
+        if(recipe.empty()||self_test||lifecycle||frames){std::cerr<<"Benchmark requires --recipe and excludes --frames, --self-test and --lifecycle-test\n";return 2;}
+        frames=benchmark_updates+90;
+    }
     if(!SDL_Init(SDL_INIT_VIDEO)) {std::cerr<<SDL_GetError()<<'\n';return 1;}
     int exit_code=0;
     try {
-        white::GpuSpike gpu; gpu.initialize();gpu.validate_optics();
+        white::GpuSpike gpu; gpu.initialize(validation);gpu.validate_optics();
         if(self_test) {
             for(auto dims:{std::array<Uint32,3>{1,1,1},{17,19,23},{32,32,32}}) {
                 for(Uint32 fixture=0;fixture<2;++fixture) {gpu.create_field(dims,fixture);gpu.validate();}
@@ -104,6 +116,12 @@ int main(int argc,char** argv) {
             gpu.wait_bakes();
             std::cout<<"fixed_recipe="<<recipe<<" density_hash="<<white::density_input_hash(editor.session.document().scene())<<" internal_width="<<render_width<<" view_steps="<<view_steps<<" shadow_steps="<<shadow_steps<<" cache="<<cache<<" camera_sun=from_saved_recipe\n";
         }
+        const auto benchmark_base=editor.session.document().scene();
+        const auto track=white::edit_track(benchmark_track);
+        std::vector<white::FrameMeasurement> measurements;measurements.reserve(benchmark_updates);
+        std::uint64_t benchmark_initial_bakes=0;
+        std::chrono::steady_clock::time_point benchmark_start;double benchmark_elapsed_ms=0;
+        if(benchmark_updates)std::cout<<"benchmark_track="<<benchmark_track<<" warmup_frames=30 requested_updates="<<benchmark_updates<<" cells="<<benchmark_base.cloud.cells.size()<<" frames_in_flight=1 adaptive_quality=false artificial_frame_delay=false validation="<<validation<<'\n';
         bool running=true,captured=false;
         std::vector<float> baseline_hdr;
         int convergence_frame=-1;
@@ -120,6 +138,12 @@ int main(int argc,char** argv) {
                 if(e.type==SDL_EVENT_QUIT || e.type==SDL_EVENT_WINDOW_CLOSE_REQUESTED) running=false;
             }
             if(SDL_GetWindowFlags(gpu.window)&SDL_WINDOW_MINIMIZED) {SDL_Delay(16);continue;}
+            const bool measuring=benchmark_updates&&frame>=30&&frame<30+benchmark_updates;
+            const auto edit_start=std::chrono::steady_clock::now();
+            if(measuring){
+                if(frame==30){benchmark_initial_bakes=gpu.bake_count;benchmark_start=edit_start;}
+                if(!editor.session.apply(white::benchmark_scene(benchmark_base,track,unsigned(frame-30))))throw std::runtime_error("Benchmark trajectory did not change Document");
+            }
             if(self_test&&frame>=180&&frame<=600&&(frame-180)%20==0) {
                 if(frame==400){gpu.internal_width=96;gpu.view_steps=32;gpu.shadow_steps=4;gpu.volume_dirty=true;}
                 const int step=(frame-180)/20;
@@ -146,6 +170,7 @@ int main(int argc,char** argv) {
             editor.draw(gpu);
             gpu.poll_bakes();
             if(self_test&&frame>=630&&frame<690)gpu.set_interacting(true);
+            if(benchmark_updates&&frame==benchmark_updates+60)gpu.wait_bakes();
             if(self_test&&frame==710)gpu.wait_bakes();
             if(self_test&&frame>=190&&frame<=610&&(frame-190)%20==0)gpu.wait_bakes();
             if(self_test&&gpu.scene_revision!=editor.session.document().revision())throw std::runtime_error("Self-test preview revision is stale");
@@ -171,11 +196,21 @@ int main(int argc,char** argv) {
             }
             if(self_test||!recipe.empty()) {
                 const auto recorded=std::chrono::steady_clock::now();auto* fence=SDL_SubmitGPUCommandBufferAndAcquireFence(cmd);white::gpu_check(fence!=nullptr,"Submit timed frame");
-                if(swap)gpu.note_present(gpu.rendered_revision);
+                const auto submitted=std::chrono::steady_clock::now();
                 const bool waited=SDL_WaitForGPUFences(gpu.device,true,&fence,1);SDL_ReleaseGPUFence(gpu.device,fence);white::gpu_check(waited,"Wait timed frame");
-                if(hdr_work)std::cout<<"frame_revision="<<gpu.scene_revision<<" mode="<<(gpu.use_cache&&gpu.cache_current()?"cache":"direct")<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(recorded-record_start).count()<<" submit_to_fence_wall_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-recorded).count()<<" gpu_timestamp_ms=unavailable\n";
+                const auto completed=std::chrono::steady_clock::now();
+                if(measuring){
+                    if(!swap||gpu.rendered_revision!=editor.session.document().revision())throw std::runtime_error("Benchmark frame did not submit latest revision");
+                    auto ms=[](auto start,auto end){return std::chrono::duration<double,std::milli>(end-start).count();};
+                    if(frame==29+benchmark_updates)benchmark_elapsed_ms=std::chrono::duration<double,std::milli>(completed-benchmark_start).count();
+                    measurements.push_back({gpu.rendered_revision,ms(record_start,recorded),ms(recorded,submitted),ms(submitted,completed),ms(edit_start,submitted),ms(edit_start,completed),gpu.hdr_width,gpu.hdr_height,gpu.rendered_from_cache(),hdr_work});
+                }
+                // Report first-presentation timing after capturing the measured
+                // timestamps; console I/O must not inflate fence-wait samples.
+                if(swap&&!benchmark_updates)gpu.note_present(gpu.rendered_revision,submitted);
+                if(hdr_work&&!benchmark_updates)std::cout<<"frame_revision="<<gpu.scene_revision<<" mode="<<(gpu.use_cache&&gpu.cache_current()?"cache":"direct")<<" record_cpu_ms="<<std::chrono::duration<double,std::milli>(recorded-record_start).count()<<" submit_to_fence_wall_ms="<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-recorded).count()<<" gpu_timestamp_ms=unavailable\n";
             }else {white::gpu_check(SDL_SubmitGPUCommandBuffer(cmd),"Submit frame");if(swap)gpu.note_present(gpu.rendered_revision);}
-            if(swap && !capture.empty() && !captured && frame>=60) {
+            if(swap && !capture.empty() && !captured && frame>=(benchmark_updates?benchmark_updates+60:60)) {
                 gpu.save_capture(capture);captured=true;std::cout<<"capture="<<capture<<" frame="<<frame<<'\n';
                 if(gpu.show_volume&&gpu.fixture==2) {
                     baseline_hdr=gpu.read_hdr();
@@ -195,7 +230,13 @@ int main(int argc,char** argv) {
                 gpu.validate();if(gpu.use_cache)gpu.validate_cache_samples();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("editor-step-"+std::to_string((frame-190)/20)+".bmp"));
             }
             if(self_test&&swap&&frame==730){gpu.wait_bakes();gpu.validate();gpu.save_capture(std::filesystem::path(capture).parent_path()/"stress-idle.bmp");std::cout<<"stress_final_revision="<<gpu.scene_revision<<" expected="<<editor.session.document().revision()<<" idle_width=256 view_steps=96 shadow_steps=8 pending="<<gpu.bake_pending()<<'\n';if(gpu.scene_revision!=editor.session.document().revision()||gpu.bake_pending())throw std::runtime_error("Stress did not settle latest revision");}
-            SDL_Delay(16);
+            if(!benchmark_updates)SDL_Delay(16);
+        }
+        if(benchmark_updates){
+            if(measurements.size()!=std::size_t(benchmark_updates))throw std::runtime_error("Benchmark incomplete: window closed or frames skipped");
+            if(track!=white::EditTrack::density&&gpu.bake_count!=benchmark_initial_bakes)throw std::runtime_error("View-only benchmark rebuilt density");
+            std::ofstream output(std::filesystem::u8path(benchmark_output),std::ios::binary|std::ios::trunc);output<<white::benchmark_csv(measurements);output.close();if(!output)throw std::runtime_error("Cannot write benchmark CSV");
+            std::cout<<white::benchmark_summary(measurements)<<"benchmark_wall_ms="<<benchmark_elapsed_ms<<" completed_update_hz="<<1000*benchmark_updates/benchmark_elapsed_ms<<'\n'<<"benchmark_bakes="<<gpu.bake_count-benchmark_initial_bakes<<" final_revision="<<gpu.scene_revision<<" requested_cache="<<cache<<" csv="<<benchmark_output<<'\n';
         }
         if(!capture.empty() && !captured) throw std::runtime_error("No valid frame was available for screenshot");
         std::cout<<"shutdown=clean lifecycle_test="<<lifecycle<<'\n';
