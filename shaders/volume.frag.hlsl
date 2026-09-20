@@ -11,7 +11,7 @@ Texture3D<float> brickMax : register(t2,space2);
 SamplerState brickPoint : register(s2,space2);
 cbuffer View : register(b0,space3) {
     float4 eyeNear, rightTan, upUnused, forwardExtinction, lightAlbedo, irradianceFar;
-    float4 inverse0,inverse1,inverse2,quality,sunSettings,majorantSettings;
+    float4 inverse0,inverse1,inverse2,quality,sunSettings,majorantSettings,progressiveSettings;
 };
 float3 localVector(float3 p) {return float3(dot(inverse0.xyz,p),dot(inverse1.xyz,p),dot(inverse2.xyz,p));}
 float3 localPoint(float3 p) {return localVector(p)+float3(inverse0.w,inverse1.w,inverse2.w);}
@@ -31,6 +31,10 @@ float shadowTransmittance(float3 origin) {
     return exp(-tau);
 }
 float4 main(float4 position:SV_Position,float2 uv:TEXCOORD0):SV_Target0 {
+    if(progressiveSettings.y!=0){uint pixel=uint(position.y)*uint(1/progressiveSettings.z)+uint(position.x);
+        float2 jitter=float2(phaseRandom(pixel,uint(progressiveSettings.x),0,uint2(42,0)),phaseRandom(pixel,uint(progressiveSettings.x),1,uint2(42,0)))-.5;
+        uv+=jitter*progressiveSettings.zw;
+    }
     float2 p=float2(uv.x*2-1,1-uv.y*2);
     float3 direction=normalize(forwardExtinction.xyz+rightTan.xyz*(p.x*quality.z*rightTan.w)+upUnused.xyz*(p.y*rightTan.w));
     float3 localOrigin=localPoint(eyeNear.xyz),localDirection=localVector(direction);

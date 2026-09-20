@@ -55,6 +55,9 @@ jobs:
       - name: Conservative empty-space comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-majorant.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
+      - name: Settled progressive comparisons
+        if: matrix.config == 'Release'
+        run: ./scripts/capture-progressive.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
       - name: Bounded edit benchmark
         if: matrix.config == 'Release'
         run: ./scripts/benchmark-editor.ps1 -Executable ./build/windows/Release/white_app.exe -InternalWidth 160 -Updates 60

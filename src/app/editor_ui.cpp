@@ -173,6 +173,13 @@ void EditorUi::draw(GpuSpike& gpu) {
         ImGui::TextWrapped("g=0: isotropic. Positive g favors forward photon scattering. Optical changes preserve density caches.");
         ImGui::PopItemWidth();
     }
+    if(ImGui::CollapsingHeader("Progressive preview")) {
+        if(ImGui::Checkbox("Accumulate settled frames",&gpu.progressive)){gpu.preview_state=PreviewState{};gpu.volume_dirty=true;}
+        ImGui::Checkbox("Pause accumulation",&gpu.progressive_paused);
+        int budget=int(gpu.progressive_budget);if(ImGui::SliderInt("Sample budget",&budget,1,256)){gpu.progressive_budget=unsigned(budget);gpu.volume_dirty=true;}
+        ImGui::Text("%s | %u / %u",gpu.progressive?(gpu.preview_state.editing()?"Editing":"Settled"):"Fixed",gpu.preview_state.samples(),gpu.progressive_budget);
+        ImGui::TextWrapped("250 ms settling delay. One jittered sample per frame; edits reset the average. Exposure preserves it.");
+    }
     if(ImGui::CollapsingHeader("View settings")) {
         ImGui::PushItemWidth(120);
         if(ImGui::SliderInt("View steps",&gpu.view_steps,8,256))gpu.volume_dirty=true;
