@@ -5,6 +5,9 @@
 #include "white/centerline_scene.hpp"
 #include "white/developed_scene.hpp"
 #include "white/top_lobe_scene.hpp"
+#include "white/generation.hpp"
+#include <atomic>
+#include <future>
 namespace white {
 class EditorUi {
 public:
@@ -29,6 +32,16 @@ public:
     void verify_centerline_test(int frame);
     const std::string& status() const{return status_;}
 private:
+    std::optional<Scene> generation_initial_,generation_guard_,generation_job_guard_;
+    GenerationSettings generation_settings_;
+    std::optional<GenerationCandidate> generation_candidate_;
+    std::future<GenerationOutcome> generation_job_;
+    std::stop_source generation_stop_;
+    std::shared_ptr<std::atomic<double>> generation_progress_;
+    std::string generation_message_;
+    std::uint64_t generation_runs_=0;
+    void draw_generation_ui();
+    void poll_generation();
     Id development_=0;
     bool duplicate_regenerate_=false;
     void draw_developed_ui();

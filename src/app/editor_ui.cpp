@@ -89,6 +89,7 @@ void EditorUi::camera_preset(int direction) {
     apply(std::move(s));
 }
 void EditorUi::draw(GpuSpike& gpu) {
+    poll_generation();
     ImGuizmo::BeginFrame();ImGuizmo::Enable(true);
     auto& io=ImGui::GetIO();
     if(ImGui::IsKeyPressed(ImGuiKey_Escape)) {
@@ -132,6 +133,7 @@ void EditorUi::draw(GpuSpike& gpu) {
         apply(new_developed_scene(session.document().scene()));development_=session.document().scene().developed->cells.front().id;curve_point_=0;
     }
     ImGui::EndDisabled();
+    draw_generation_ui();
     draw_top_lobes_ui();
     draw_developed_ui();
     if(session.document().scene().centerline) {
