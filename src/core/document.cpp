@@ -2,6 +2,7 @@
 #include "white/cumulonimbus.hpp"
 #include "white/centerline.hpp"
 #include "white/developed_scene.hpp"
+#include "white/top_lobe_scene.hpp"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -70,7 +71,12 @@ Dirty classify_change(const Scene& a,const Scene& b) {
         auto clear_optics=[](auto& source){if(source){source->optics={};for(auto& cell:source->cells)cell.shape.source.modifiers.optics={};}};
         clear_optics(da);clear_optics(db);developed_density_change=da!=db;
     }
-    if(ca!=cb || a.algorithm_version!=b.algorithm_version || developed_density_change) result=result|Dirty::density;
+    bool top_density_change=false;
+    if(a.top_lobes||b.top_lobes){auto ta=a.top_lobes,tb=b.top_lobes;
+        auto clear=[](auto& source){if(source){source->trunk.optics={};for(auto& cell:source->trunk.cells)cell.shape.source.modifiers.optics={};}};
+        clear(ta);clear(tb);top_density_change=ta!=tb;
+    }
+    if(ca!=cb || a.algorithm_version!=b.algorithm_version || developed_density_change || top_density_change) result=result|Dirty::density;
     if(a.cloud.optics!=b.cloud.optics||a.preview_approx!=b.preview_approx) result=result|Dirty::optics;
     if(a.sun!=b.sun) result=result|Dirty::sun;
     if(a.camera!=b.camera) result=result|Dirty::camera;
@@ -80,11 +86,16 @@ Dirty classify_change(const Scene& a,const Scene& b) {
 std::vector<std::string> validate(const Scene& s) {
     std::vector<std::string> errors;
     auto check=[&](bool ok,const std::string& text){if(!ok)errors.push_back(text);};
-    check(s.schema_version==7,"Unsupported scene schema_version");
+    check(s.schema_version==8,"Unsupported scene schema_version");
     check(std::isfinite(s.preview_approx.strength)&&s.preview_approx.strength>=0&&s.preview_approx.strength<=1,"Preview approximation strength outside 0..1");
     check(s.algorithm_version==3,"Unsupported scene algorithm_version");
-    check(unsigned(s.cumulonimbus.has_value())+unsigned(s.centerline.has_value())+unsigned(s.developed.has_value())<=1,
+    check(unsigned(s.cumulonimbus.has_value())+unsigned(s.centerline.has_value())+unsigned(s.developed.has_value())+unsigned(s.top_lobes.has_value())<=1,
         "Scene cannot contain multiple source authorities");
+    if(s.top_lobes) {
+        const auto source_errors=validate_top_lobes(*s.top_lobes);
+        for(const auto& error:source_errors)errors.push_back("Top-lobe source: "+error);
+        if(source_errors.empty())check(s.cloud==top_lobe_proxy_recipe(*s.top_lobes),"Top-lobe metadata proxy differs from authoritative source");
+    }
     if(s.developed) {
         const auto source_errors=validate_developed_cloud(*s.developed);
         for(const auto& error:source_errors)errors.push_back("Developed source: "+error);

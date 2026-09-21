@@ -1,5 +1,6 @@
 #include "white/reference.hpp"
 #include "white/developed_scene.hpp"
+#include "white/top_lobe_scene.hpp"
 #include "white/phase.hpp"
 #include <algorithm>
 #include <array>
@@ -62,6 +63,29 @@ void grouped_snapshot_rejection(){
     rejects([&]{(void)white::TrackingSnapshot(scene,grid,std::vector<float>(64,1));});
     const auto density=std::vector<float>(64,1);const auto majorant=white::build_majorant(grid,density);
     rejects([&]{(void)white::TrackingSnapshot(scene,grid,density,majorant);});
+}
+void top_lobe_snapshot_rejection(){
+    white::Scene scene;scene.developed=white::develop_cumulonimbus(white::CumulonimbusGroup{});
+    white::refresh_developed_scene(scene);scene=white::new_top_lobe_scene(scene);
+    require(white::bake_reference_snapshot(scene,4).density().size()==64);
+    auto rejects=[](const white::Scene& active){
+        const white::GridLayout grid{active.cloud.envelope,{4,4,4}};
+        auto rejected=[](auto operation){bool found=false;try{operation();}catch(const std::invalid_argument& e){found=std::string(e.what()).find("independent hard-mask frozen-grid contract")!=std::string::npos;}require(found);};
+        rejected([&]{(void)white::bake_reference_snapshot(active,4);});
+        const auto density=std::vector<float>(64,1);const auto majorant=white::build_majorant(grid,density);
+        rejected([&]{(void)white::TrackingSnapshot(active,grid,density);});
+        rejected([&]{(void)white::TrackingSnapshot(active,grid,density,majorant);});
+    };
+    for(auto mode:{white::TopLobeMode::parent,white::TopLobeMode::children}){
+        auto settings=scene.top_lobes->settings;settings.mode=mode;
+        const auto active=white::scene_with_top_lobe_settings(scene,settings);rejects(active);
+        settings.density_scale=0;
+        require(white::bake_reference_snapshot(white::scene_with_top_lobe_settings(scene,settings),4).density().size()==64);
+    }
+    white::Scene pair;pair.developed=scene.top_lobes->trunk;white::refresh_developed_scene(pair);
+    const auto second=white::make_developed_cell(*pair.developed);
+    pair=white::scene_with_developed_command(pair,white::DevelopedAdd{second});
+    rejects(white::new_top_lobe_scene(pair)); // OFF retains both independent masks.
 }
 void progressive(){
     white::ReferenceSettings settings;settings.width=4;settings.height=3;settings.samples=64;settings.seed=17;
@@ -138,4 +162,4 @@ void roulette_weighting(){
     }
 }
 }
-int main(){try{std::cout<<std::setprecision(17);analytic_single();boundaries();grouped_snapshot_rejection();secondary_extent();progressive();multiple_seeds();roulette_weighting();std::cout<<"Reference contracts passed: multi-seed analytic single scatter, empty/absorption/unit albedo/internal camera, unclipped secondary transport, progressive reproducibility, typed safety/numerical limits, multiple-seed variance and roulette weighting\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(){try{std::cout<<std::setprecision(17);analytic_single();boundaries();grouped_snapshot_rejection();top_lobe_snapshot_rejection();secondary_extent();progressive();multiple_seeds();roulette_weighting();std::cout<<"Reference contracts passed: multi-seed analytic single scatter, empty/absorption/unit albedo/internal camera, unclipped secondary transport, progressive reproducibility, typed safety/numerical limits, independent-mask rejection, multiple-seed variance and roulette weighting\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

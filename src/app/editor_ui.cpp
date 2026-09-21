@@ -42,7 +42,13 @@ void draw_primitive(const Scene& scene,Vec3 center,Vec3 radii,bool selected,bool
 void EditorUi::apply(Scene scene) {
     try {
         const auto& before=session.document().scene();
-        if(scene.developed) {
+        if(scene.top_lobes){
+            if(before.top_lobes&&scene.top_lobes==before.top_lobes&&scene.cloud!=before.cloud){
+                if(scene.cloud.optics!=before.cloud.optics)scene.top_lobes->trunk.optics=scene.cloud.optics;
+                else throw std::invalid_argument("Edit the top hierarchy or trunk through source controls");
+            }
+            refresh_top_lobe_scene(scene);
+        }else if(scene.developed) {
             if(before.developed&&scene.developed==before.developed&&scene.cloud!=before.cloud){
                 if(scene.cloud.optics!=before.cloud.optics)scene.developed->optics=scene.cloud.optics;
                 else throw std::invalid_argument("Edit each development through its source controls");
@@ -83,6 +89,7 @@ void EditorUi::camera_preset(int direction) {
     apply(std::move(s));
 }
 void EditorUi::draw(GpuSpike& gpu) {
+    poll_generation();
     ImGuizmo::BeginFrame();ImGuizmo::Enable(true);
     auto& io=ImGui::GetIO();
     if(ImGui::IsKeyPressed(ImGuiKey_Escape)) {
@@ -122,10 +129,12 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(prefab_source(session.document().scene())&&!session.document().scene().centerline) {
         if(ImGui::Button("Enable centerline")){apply(new_centerline_scene(session.document().scene()));curve_point_=2;prefab_group_=false;scale_=false;}
     }
-    if(!session.document().scene().developed&&prefab_source(session.document().scene())&&ImGui::Button("Enable independent cells")){
+    if(!editable_developed_source(session.document().scene())&&prefab_source(session.document().scene())&&ImGui::Button("Enable independent cells")){
         apply(new_developed_scene(session.document().scene()));development_=session.document().scene().developed->cells.front().id;curve_point_=0;
     }
     ImGui::EndDisabled();
+    draw_generation_ui();
+    draw_top_lobes_ui();
     draw_developed_ui();
     if(session.document().scene().centerline) {
         if(ImGui::CollapsingHeader("Centerline and profiles",ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -197,7 +206,7 @@ void EditorUi::draw(GpuSpike& gpu) {
             ImGui::PopItemWidth();
         }
     }
-    if(!session.document().scene().developed) {
+    if(!editable_developed_source(session.document().scene())) {
     ImGui::BeginDisabled(dragging);
     ImGui::Separator();ImGui::Checkbox("Select cuts",&select_cuts_);
     if(ImGui::Button("Add cell"))try{selected_=session.add_cell();select_cuts_=false;prefab_group_=false;curve_point_=0;}catch(const std::exception& e){status_=e.what();}
@@ -236,7 +245,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     ImGui::TextUnformatted("Camera");if(ImGui::Button("Front"))camera_preset(0);ImGui::SameLine();if(ImGui::Button("Side"))camera_preset(1);ImGui::SameLine();if(ImGui::Button("Top"))camera_preset(2);
     ImGui::Checkbox("Lit volume",&gpu.show_volume);
     if(focus_noise_)ImGui::SetNextItemOpen(true);
-    if(!session.document().scene().developed&&ImGui::CollapsingHeader("Shape details")) {
+    if(!editable_developed_source(session.document().scene())&&ImGui::CollapsingHeader("Shape details")) {
         ImGui::PushItemWidth(110);
         s=session.document().scene();float medium=float(s.cloud.noise.medium_strength);
         bool changed=ImGui::SliderFloat("Medium",&medium,0,1);s.cloud.noise.medium_strength=medium;inspector_item(changed,s);
@@ -281,7 +290,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(ImGui::CollapsingHeader("Optical properties")) {
         ImGui::PushItemWidth(120);
         bool changed=false;
-        if(!session.document().scene().developed){s=session.document().scene();float density=float(s.cloud.density);
+        if(!editable_developed_source(session.document().scene())){s=session.document().scene();float density=float(s.cloud.density);
         changed=ImGui::SliderFloat("Density",&density,0,5);s.cloud.density=density;inspector_item(changed,s);}
         s=session.document().scene();float extinction=float(s.cloud.optics.extinction_scale);
         changed=ImGui::SliderFloat("Extinction / m",&extinction,0,.2f,"%.4f");s.cloud.optics.extinction_scale=extinction;inspector_item(changed,s);
@@ -341,7 +350,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     if(select_cuts_){for(auto& c:current.cloud.cuts)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
     else {for(auto& c:current.cloud.cells)if(c.id==selected_){selected_center=c.center;selected_radii=c.radii;selected=true;}}
     const DevelopedCell* development=nullptr;
-    if(current.developed){for(const auto& cell:current.developed->cells)if(cell.id==development_)development=&cell;selected=false;}
+    if(editable_developed_source(current)){for(const auto& cell:editable_developed_source(current)->cells)if(cell.id==development_)development=&cell;selected=false;}
     const CenterlineShape* active_curve=development?&development->shape:(current.centerline?&*current.centerline:nullptr);
     bool curve=active_curve&&curve_point_&&!prefab_group_;
     bool curve_endpoint=false;
@@ -349,8 +358,9 @@ void EditorUi::draw(GpuSpike& gpu) {
         if(point!=active_curve->points.end()){selected_center=sample_centerline(*active_curve,point->t).position+(development?development->translation:Vec3{});selected_radii={1,1,1};selected=true;curve_endpoint=point->t==0||point->t==1;}else {curve_point_=0;curve=false;}}
     const bool whole=(development||prefab_source(current))&&prefab_group_;
     if(whole){const auto& p=development?development->shape.source.parameters:prefab_source(current)->parameters;selected_center=(scale_?Vec3{p.width*.5,p.cloud_base+p.height,0}:Vec3{0,p.cloud_base,0})+(development?development->translation:Vec3{});selected_radii={1,1,1};selected=true;}
-    if(gpu.show_volume&&current.developed){for(const auto& cell:current.developed->cells){const auto recipe=lower_centerline_to_recipe(cell.shape);for(const auto& c:recipe.cells)if(std::find(cell.roles.begin(),cell.roles.end(),unsigned(&c-recipe.cells.data()))!=cell.roles.end())draw_primitive(current,c.center+cell.translation,c.radii,cell.id==development_,false,vx,vy,vw,vh);}}
-    if(gpu.show_volume&&!current.developed){
+    if(gpu.show_volume&&editable_developed_source(current)){for(const auto& cell:editable_developed_source(current)->cells){const auto recipe=lower_centerline_to_recipe(cell.shape);for(const auto& c:recipe.cells)if(std::find(cell.roles.begin(),cell.roles.end(),unsigned(&c-recipe.cells.data()))!=cell.roles.end())draw_primitive(current,c.center+cell.translation,c.radii,cell.id==development_,false,vx,vy,vw,vh);}}
+    if(gpu.show_volume&&current.top_lobes){for(const auto& node:generate_top_lobes(*current.top_lobes))draw_primitive(current,node.primitive.center,node.primitive.radii,false,false,vx,vy,vw,vh);}
+    if(gpu.show_volume&&!editable_developed_source(current)){
         for(const auto& c:current.cloud.cells)draw_primitive(current,c.center,c.radii,!select_cuts_&&selected_==c.id,false,vx,vy,vw,vh);
         for(const auto& c:current.cloud.cuts)draw_primitive(current,c.center,c.radii,select_cuts_&&selected_==c.id,true,vx,vy,vw,vh);
     }
@@ -399,7 +409,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     }
     const bool over=io.MousePos.x>=vx&&io.MousePos.x<vx+vw&&io.MousePos.y>=vy&&io.MousePos.y<vy+vh;
     if(over&&!modal&&!(gizmo_active&&ImGuizmo::IsOver())&&!gizmo_drag_&&!inspector_drag_) {
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole&&!curve&&!current.developed) {
+        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole&&!curve&&!editable_developed_source(current)) {
             const auto& sc=session.document().scene();auto ray=camera_ray(sc.camera,(io.MousePos.x-vx)/vw,(io.MousePos.y-vy)/vh,vw/vh);
             if(auto pick=pick_primitive(sc.cloud,ray,select_cuts_)){selected_=*pick;prefab_group_=false;curve_point_=0;}
         }

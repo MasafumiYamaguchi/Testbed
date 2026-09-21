@@ -32,7 +32,7 @@ int main(){try {
     source.modifiers.noise.origin={5,-3,8};source.modifiers.optics.g=0.6;source.modifiers.transform.translation={20,30,10};
     scene.preview_approx={true,0.25};scene.cloud=derive_cumulonimbus_recipe(source);require_valid(scene);
     const auto bytes=scene_json(scene);const auto encoded=Json::parse(bytes);
-    check(encoded.at("schema_version")==7&&encoded.at("cloud").size()==2&&encoded.at("cloud").at("kind")=="cumulonimbus","Prefab not encoded as source-only schema7 object");
+    check(encoded.at("schema_version")==8&&encoded.at("cloud").size()==2&&encoded.at("cloud").at("kind")=="cumulonimbus","Prefab not encoded as source-only schema7 object");
     check(!encoded.at("cloud").contains("cells")&&!encoded.at("cloud").contains("envelope")&&!encoded.at("cloud").contains("recipe"),"Derived Recipe serialized as second authority");
     check(encoded.at("cloud").at("source").at("cloud_id").is_string(),"Stable ID serialized numerically");
     check(parse_scene_json(bytes)==scene,"Prefab source and derived snapshot did not round-trip exactly");
@@ -49,7 +49,7 @@ int main(){try {
         if(version<=2)legacy["cloud"]["optics"].erase("g");
         if(version==1){legacy["algorithm_version"]=1u;legacy["cloud"].erase("noise");}
         const auto migrated=parse_scene_json(legacy.dump());
-        check(migrated==old&&migrated.schema_version==7&&!migrated.cumulonimbus,"Legacy Custom Cloud migration changed values or inferred prefab");
+        check(migrated==old&&migrated.schema_version==8&&!migrated.cumulonimbus,"Legacy Custom Cloud migration changed values or inferred prefab");
     }
     auto stale=scene;stale.cloud.cells[0].center.x+=1;reject([&]{require_valid(stale);},"Stale generated snapshot was accepted");
     reject([&]{scene_json(stale);},"Stale generated snapshot was saved");

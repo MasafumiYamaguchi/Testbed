@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 
 using namespace white;
@@ -110,5 +111,31 @@ void local_mask_isolation(){
     const DevelopedEvaluationPlan base(cloud);
     near(base.at(p),base.fields()[1].at(p),1e-12,"First development base globally erased the second");
 }
+void fusion_commands(){
+    auto original=develop_centerline(curved());auto second=make_developed_cell(original);
+    second.translation={55,0,0};original=command_developed_cloud(original,DevelopedAdd{second});
+    const DevelopedEvaluationPlan before(original);
+    const auto wider=command_developed_cloud(original,DevelopedSetFusion{80,original.overlap});
+    auto expected=original;expected.fusion_width=80;
+    check(wider==expected,"Fusion-width edit changed overlap, stable IDs, or source modifiers");
+    const DevelopedEvaluationPlan width_plan(wider);
+    check(width_plan.maximum()==before.maximum(),"Shape fusion changed the density-overlap bound");
+    check(width_plan.local_support().min.x<before.local_support().min.x&&width_plan.local_support().max.x>before.local_support().max.x,"Fusion-width edit failed to expand conservative support");
+    const auto denser=command_developed_cloud(wider,DevelopedSetFusion{wider.fusion_width,.6});
+    expected.overlap=.6;check(denser==expected,"Overlap edit changed fusion width, stable IDs, or source modifiers");
+    const DevelopedEvaluationPlan overlap_plan(denser);
+    check(overlap_plan.local_support()==width_plan.local_support(),"Density overlap changed geometric support");
+    const double a=overlap_plan.fields()[0].maximum(),b=overlap_plan.fields()[1].maximum();
+    near(overlap_plan.maximum(),std::max(a,b)+.6*std::min(a,b),1e-14,"Overlap edit failed to update conservative density bound");
+    const auto packet=overlap_plan.gpu_params();
+    check(packet.settings.y==80&&packet.settings.z==float(.6),"Independent fusion/overlap edits did not reach GPU packet");
+    // Reapplying the prior shared settings restores the complete source; the
+    // Scene command adapter stores this same atomic value as one undo entry.
+    check(command_developed_cloud(denser,DevelopedSetFusion{original.fusion_width,original.overlap})==original,"Restoring fusion settings did not restore exact source");
+    for(double invalid:{-1.,10001.,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()})
+        reject(original,DevelopedSetFusion{invalid,original.overlap},"Fusion width");
+    for(double invalid:{-.01,1.01,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()})
+        reject(original,DevelopedSetFusion{original.fusion_width,invalid},"Density overlap");
 }
-int main(){try{exact_migration();budget_and_independence();fusion_and_support();local_mask_isolation();std::cout<<"Developed cells: exact legacy migration, independent curves, role budgets, deletion/duplicate/reseed, continuous bounded fusion, support and grouped packet passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+}
+int main(){try{exact_migration();budget_and_independence();fusion_and_support();local_mask_isolation();fusion_commands();std::cout<<"Developed cells: exact legacy migration, independent curves, role budgets, deletion/duplicate/reseed, continuous bounded fusion, typed fusion/overlap controls, support and grouped packet passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

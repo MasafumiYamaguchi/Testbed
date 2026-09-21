@@ -12,18 +12,23 @@ void EditorUi::developed_item(bool changed,const DevelopedCommand& command) {
     inspector_item(changed,std::move(scene));
 }
 void EditorUi::draw_developed_ui() {
-    if(!session.document().scene().developed)return;
-    auto source=*session.document().scene().developed;
+    if(!editable_developed_source(session.document().scene()))return;
+    auto source=*editable_developed_source(session.document().scene());
     if(!source.cells.empty()&&std::none_of(source.cells.begin(),source.cells.end(),[&](const auto& c){return c.id==development_;}))development_=source.cells.front().id;
     if(!ImGui::CollapsingHeader("Independent developed cells",ImGuiTreeNodeFlags_DefaultOpen))return;
     ImGui::Text("%zu / 2 cells; %zu / 8 lobes",source.cells.size(),developed_primitive_count(source));
+    auto fusion=editable_developed_source(session.document().scene())->fusion_width;
+    auto overlap=editable_developed_source(session.document().scene())->overlap;
+    ImGui::SetNextItemWidth(100);bool union_changed=ImGui::InputDouble("Fusion width m",&fusion,0,0,"%.3f");developed_item(union_changed,DevelopedSetFusion{fusion,overlap});
+    fusion=editable_developed_source(session.document().scene())->fusion_width;overlap=editable_developed_source(session.document().scene())->overlap;
+    ImGui::SetNextItemWidth(100);union_changed=ImGui::InputDouble("Overlap density",&overlap,0,0,"%.3f");developed_item(union_changed,DevelopedSetFusion{fusion,overlap});
     if(source.cells.size()>1)ImGui::TextWrapped("Direct density and shadows: each cell keeps its own profile and protected masks.");
     const bool dragging=gizmo_drag_||inspector_drag_||orbit_drag_;
     ImGui::BeginDisabled(dragging);
     for(const auto& c:source.cells){const auto label="Development "+std::to_string(c.id);if(ImGui::Selectable(label.c_str(),development_==c.id)){development_=c.id;prefab_group_=true;curve_point_=0;}}
     if(ImGui::Button("Add development"))try{auto cell=make_developed_cell(source);cell.translation.x=source.cells.empty()?0:90;development_=cell.id;apply(scene_with_developed_command(session.document().scene(),DevelopedAdd{cell}));prefab_group_=true;curve_point_=0;}catch(const std::exception& e){status_=e.what();}
     ImGui::EndDisabled();
-    source=*session.document().scene().developed;
+    source=*editable_developed_source(session.document().scene());
     const auto found=std::find_if(source.cells.begin(),source.cells.end(),[&](const auto& c){return c.id==development_;});
     if(found==source.cells.end())return;
     auto cell=*found;
@@ -35,8 +40,8 @@ void EditorUi::draw_developed_ui() {
     int roles=int(cell.roles.size())-3;
     if(ImGui::Combo("Lobe budget",&roles,"3 lobes\0 4 lobes\0 5 lobes\0"))try{std::vector<unsigned> active;for(int i=0;i<roles+3;++i)active.push_back(unsigned(i));apply(scene_with_developed_command(session.document().scene(),DevelopedSetRoles{development_,active}));}catch(const std::exception& e){status_=e.what();}
     ImGui::EndDisabled();
-    if(std::none_of(session.document().scene().developed->cells.begin(),session.document().scene().developed->cells.end(),[&](const auto& c){return c.id==development_;}))return;
-    auto fresh=[&](){const auto& cells=session.document().scene().developed->cells;return *std::find_if(cells.begin(),cells.end(),[&](const auto& c){return c.id==development_;});};
+    if(std::none_of(editable_developed_source(session.document().scene())->cells.begin(),editable_developed_source(session.document().scene())->cells.end(),[&](const auto& c){return c.id==development_;}))return;
+    auto fresh=[&](){const auto& cells=editable_developed_source(session.document().scene())->cells;return *std::find_if(cells.begin(),cells.end(),[&](const auto& c){return c.id==development_;});};
     if(ImGui::RadioButton("Move cell",!scale_&&prefab_group_)){scale_=false;prefab_group_=true;curve_point_=0;}ImGui::SameLine();
     if(ImGui::RadioButton("Size cell",scale_&&prefab_group_)){scale_=true;prefab_group_=true;curve_point_=0;}
     auto position=fresh().translation;ImGui::SetNextItemWidth(-1);
