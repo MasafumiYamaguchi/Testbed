@@ -2,6 +2,7 @@
 #include "white/gpu_spike.hpp"
 #include "white/persistence.hpp"
 #include "white/cumulonimbus.hpp"
+#include "white/centerline_scene.hpp"
 namespace white {
 class EditorUi {
 public:
@@ -16,8 +17,12 @@ public:
     void start_prefab_test();
     void prefab_test_input(int frame);
     void verify_prefab_test(int frame);
+    void start_centerline_test();
+    void centerline_test_input(int frame);
+    void verify_centerline_test(int frame);
     const std::string& status() const{return status_;}
 private:
+    Id curve_point_=0;
     bool prefab_group_=true;
     bool focus_noise_=false;
     std::uint64_t last_scene_attempt_=0;
@@ -32,5 +37,6 @@ private:
     void inspector_item(bool changed,Scene,bool affects_transport=true);
     void camera_preset(int direction);
     void prefab_item(bool,const CumulonimbusCommand&);
+    void centerline_item(bool,const CenterlineCommand&);
 };
 }

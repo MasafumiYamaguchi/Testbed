@@ -1,0 +1,933 @@
+﻿2026-09-19T05:56:37.1420941Z Current runner version: '2.337.0'
+2026-09-19T05:56:37.1446339Z ##[group]Runner Image Provisioner
+2026-09-19T05:56:37.1447118Z Hosted Compute Agent
+2026-09-19T05:56:37.1447655Z Version: 20260828.587
+2026-09-19T05:56:37.1448237Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-19T05:56:37.1448917Z Build Date: 2026-08-28T16:44:25Z
+2026-09-19T05:56:37.1449518Z Worker ID: {11b12d8e-83a0-4c8a-b4a3-f7e4674666d0}
+2026-09-19T05:56:37.1450196Z Azure Region: westus
+2026-09-19T05:56:37.1450706Z ##[endgroup]
+2026-09-19T05:56:37.1452060Z ##[group]Operating System
+2026-09-19T05:56:37.1452676Z Microsoft Windows Server 2022
+2026-09-19T05:56:37.1453216Z 10.0.20348
+2026-09-19T05:56:37.1453692Z Datacenter
+2026-09-19T05:56:37.1454141Z ##[endgroup]
+2026-09-19T05:56:37.1454603Z ##[group]Runner Image
+2026-09-19T05:56:37.1455128Z Image: windows-2022
+2026-09-19T05:56:37.1455624Z Version: 20260913.307.1
+2026-09-19T05:56:37.1456875Z Included Software: https://github.com/actions/runner-images/blob/win22/20260913.307/images/windows/Windows2022-Readme.md
+2026-09-19T05:56:37.1458291Z Image Release: https://github.com/actions/runner-images/releases/tag/win22%2F20260913.307
+2026-09-19T05:56:37.1459197Z ##[endgroup]
+2026-09-19T05:56:37.1460220Z ##[group]GITHUB_TOKEN Permissions
+2026-09-19T05:56:37.1462131Z Contents: read
+2026-09-19T05:56:37.1462720Z Metadata: read
+2026-09-19T05:56:37.1463227Z ##[endgroup]
+2026-09-19T05:56:37.1465163Z Secret source: Actions
+2026-09-19T05:56:37.1465964Z Cache mode: write
+2026-09-19T05:56:37.1466604Z Prepare workflow directory
+2026-09-19T05:56:37.1797030Z Prepare all required actions
+2026-09-19T05:56:37.1868305Z Getting action download info
+2026-09-19T05:56:37.5812753Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-19T05:56:37.7049665Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-09-19T05:56:38.0239916Z Complete job name: windows (Release)
+2026-09-19T05:56:38.1877891Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-19T05:56:38.1888993Z ##[group]Run actions/checkout@v4
+2026-09-19T05:56:38.1889871Z with:
+2026-09-19T05:56:38.1890289Z   repository: MasafumiYamaguchi/Testbed
+2026-09-19T05:56:38.1894120Z   token: ***
+2026-09-19T05:56:38.1894517Z   ssh-strict: true
+2026-09-19T05:56:38.1894916Z   ssh-user: git
+2026-09-19T05:56:38.1895325Z   persist-credentials: true
+2026-09-19T05:56:38.1895769Z   clean: true
+2026-09-19T05:56:38.1896182Z   sparse-checkout-cone-mode: true
+2026-09-19T05:56:38.1896670Z   fetch-depth: 1
+2026-09-19T05:56:38.1897062Z   fetch-tags: false
+2026-09-19T05:56:38.1897527Z   show-progress: true
+2026-09-19T05:56:38.1897935Z   lfs: false
+2026-09-19T05:56:38.1898354Z   submodules: false
+2026-09-19T05:56:38.1898773Z   set-safe-directory: true
+2026-09-19T05:56:38.1899235Z   allow-unsafe-pr-checkout: false
+2026-09-19T05:56:38.1899926Z ##[endgroup]
+2026-09-19T05:56:38.3312288Z Syncing repository: MasafumiYamaguchi/Testbed
+2026-09-19T05:56:38.3314019Z ##[group]Getting Git version info
+2026-09-19T05:56:38.3314624Z Working directory is 'D:\a\Testbed\Testbed'
+2026-09-19T05:56:38.4277201Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-09-19T05:56:38.7738274Z git version 2.55.0.windows.5
+2026-09-19T05:56:38.7776444Z ##[endgroup]
+2026-09-19T05:56:38.7796480Z Temporarily overriding HOME='D:\a\_temp\9ab0a8ec-860b-4645-b5cd-20355d9c0ab3' before making global git config changes
+2026-09-19T05:56:38.7799163Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-19T05:56:38.7808010Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Testbed\Testbed
+2026-09-19T05:56:38.8340471Z Deleting the contents of 'D:\a\Testbed\Testbed'
+2026-09-19T05:56:38.8345947Z ##[group]Initializing the repository
+2026-09-19T05:56:38.8354129Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Testbed\Testbed
+2026-09-19T05:56:38.9031986Z Initialized empty Git repository in D:/a/Testbed/Testbed/.git/
+2026-09-19T05:56:38.9062496Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/MasafumiYamaguchi/Testbed
+2026-09-19T05:56:38.9530828Z ##[endgroup]
+2026-09-19T05:56:38.9531702Z ##[group]Disabling automatic garbage collection
+2026-09-19T05:56:38.9538996Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-09-19T05:56:38.9743717Z ##[endgroup]
+2026-09-19T05:56:38.9744587Z ##[group]Setting up auth
+2026-09-19T05:56:38.9755022Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-09-19T05:56:38.9964765Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-09-19T05:56:40.2605840Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-19T05:56:40.2819573Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-09-19T05:56:40.6848285Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-19T05:56:40.7064620Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-09-19T05:56:41.1074104Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-09-19T05:56:41.1302391Z ##[endgroup]
+2026-09-19T05:56:41.1303029Z ##[group]Fetching the repository
+2026-09-19T05:56:41.1319311Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6503ea6a3885b3cdf6fbb8c135b9157c1e71efcc:refs/remotes/pull/73/merge
+2026-09-19T05:56:42.6918053Z From https://github.com/MasafumiYamaguchi/Testbed
+2026-09-19T05:56:42.6947369Z  * [new ref]         6503ea6a3885b3cdf6fbb8c135b9157c1e71efcc -> pull/73/merge
+2026-09-19T05:56:42.6949466Z ##[endgroup]
+2026-09-19T05:56:42.6950098Z ##[group]Determining the checkout info
+2026-09-19T05:56:42.6952058Z ##[endgroup]
+2026-09-19T05:56:42.6965019Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-09-19T05:56:42.7330237Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-09-19T05:56:42.7547463Z ##[group]Checking out the ref
+2026-09-19T05:56:42.7556319Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force refs/remotes/pull/73/merge
+2026-09-19T05:56:42.9205370Z Note: switching to 'refs/remotes/pull/73/merge'.
+2026-09-19T05:56:42.9205867Z 
+2026-09-19T05:56:42.9206238Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-19T05:56:42.9207211Z changes and commit them, and you can discard any commits you make in this
+2026-09-19T05:56:42.9208176Z state without impacting any branches by switching back to a branch.
+2026-09-19T05:56:42.9208700Z 
+2026-09-19T05:56:42.9209011Z If you want to create a new branch to retain commits you create, you may
+2026-09-19T05:56:42.9209838Z do so (now or later) by using -c with the switch command. Example:
+2026-09-19T05:56:42.9210283Z 
+2026-09-19T05:56:42.9210485Z   git switch -c <new-branch-name>
+2026-09-19T05:56:42.9210794Z 
+2026-09-19T05:56:42.9210960Z Or undo this operation with:
+2026-09-19T05:56:42.9211270Z 
+2026-09-19T05:56:42.9211433Z   git switch -
+2026-09-19T05:56:42.9211634Z 
+2026-09-19T05:56:42.9212071Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-19T05:56:42.9214892Z 
+2026-09-19T05:56:42.9234145Z HEAD is now at 6503ea6 Merge 8e5c02b4e327df7dfa1976da876ed526362049ac into 84a85bfe1d402047aed30bfb096ab49448ecddf9
+2026-09-19T05:56:42.9357163Z ##[endgroup]
+2026-09-19T05:56:42.9703641Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-09-19T05:56:42.9952550Z 6503ea6a3885b3cdf6fbb8c135b9157c1e71efcc
+2026-09-19T05:56:43.0454351Z ##[group]Run ./scripts/fetch-dxc.ps1
+2026-09-19T05:56:43.0454754Z [36;1m./scripts/fetch-dxc.ps1[0m
+2026-09-19T05:56:43.0562062Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T05:56:43.0562428Z ##[endgroup]
+2026-09-19T05:56:45.0721862Z ##[group]Run cmake --preset windows
+2026-09-19T05:56:45.0722317Z [36;1mcmake --preset windows[0m
+2026-09-19T05:56:45.0761303Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T05:56:45.0761662Z ##[endgroup]
+2026-09-19T05:56:45.8476909Z Preset CMake variables:
+2026-09-19T05:56:45.8477163Z 
+2026-09-19T05:56:45.8477262Z   BUILD_TESTING="ON"
+2026-09-19T05:56:45.8477415Z 
+2026-09-19T05:56:46.1957300Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-09-19T05:56:55.3736830Z -- The C compiler identification is MSVC 19.44.35228.0
+2026-09-19T05:56:56.6358431Z -- The CXX compiler identification is MSVC 19.44.35228.0
+2026-09-19T05:56:56.7545475Z -- Detecting C compiler ABI info
+2026-09-19T05:56:57.7399390Z -- Detecting C compiler ABI info - done
+2026-09-19T05:56:57.7532307Z -- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+2026-09-19T05:56:57.7549857Z -- Detecting C compile features
+2026-09-19T05:56:57.7595408Z -- Detecting C compile features - done
+2026-09-19T05:56:57.7815224Z -- Detecting CXX compiler ABI info
+2026-09-19T05:56:58.4469505Z -- Detecting CXX compiler ABI info - done
+2026-09-19T05:56:58.4600765Z -- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+2026-09-19T05:56:58.4604766Z -- Detecting CXX compile features
+2026-09-19T05:56:58.4613947Z -- Detecting CXX compile features - done
+2026-09-19T05:57:14.7879182Z -- Using the multi-header code from D:/a/Testbed/Testbed/build/windows/_deps/nlohmann_json-src/include/
+2026-09-19T05:57:20.1245726Z -- Found Git: C:/Program Files/Git/bin/git.exe (found version "2.55.0.windows.5")
+2026-09-19T05:57:34.8884519Z -- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
+2026-09-19T05:57:34.8983350Z -- Detecting Target CPU Architecture
+2026-09-19T05:57:35.4544140Z -- Detecting Target CPU Architecture - X64
+2026-09-19T05:57:35.4656588Z -- Performing Test COMPILER_SUPPORTS_MMX
+2026-09-19T05:57:36.6588094Z -- Performing Test COMPILER_SUPPORTS_MMX - Failed
+2026-09-19T05:57:36.6591342Z -- Performing Test COMPILER_SUPPORTS_SSE
+2026-09-19T05:57:37.4674586Z -- Performing Test COMPILER_SUPPORTS_SSE - Success
+2026-09-19T05:57:37.4678944Z -- Performing Test COMPILER_SUPPORTS_SSE2
+2026-09-19T05:57:38.1056360Z -- Performing Test COMPILER_SUPPORTS_SSE2 - Success
+2026-09-19T05:57:38.1059780Z -- Performing Test COMPILER_SUPPORTS_SSE3
+2026-09-19T05:57:38.7450188Z -- Performing Test COMPILER_SUPPORTS_SSE3 - Success
+2026-09-19T05:57:38.7453224Z -- Performing Test COMPILER_SUPPORTS_SSE4_1
+2026-09-19T05:57:39.3960651Z -- Performing Test COMPILER_SUPPORTS_SSE4_1 - Success
+2026-09-19T05:57:39.3963973Z -- Performing Test COMPILER_SUPPORTS_SSE4_2
+2026-09-19T05:57:40.0579069Z -- Performing Test COMPILER_SUPPORTS_SSE4_2 - Success
+2026-09-19T05:57:40.0582204Z -- Performing Test COMPILER_SUPPORTS_AVX
+2026-09-19T05:57:40.7824753Z -- Performing Test COMPILER_SUPPORTS_AVX - Success
+2026-09-19T05:57:40.7827690Z -- Performing Test COMPILER_SUPPORTS_AVX2
+2026-09-19T05:57:41.4503495Z -- Performing Test COMPILER_SUPPORTS_AVX2 - Success
+2026-09-19T05:57:41.4506684Z -- Performing Test COMPILER_SUPPORTS_AVX512F
+2026-09-19T05:57:42.1326681Z -- Performing Test COMPILER_SUPPORTS_AVX512F - Success
+2026-09-19T05:57:42.1330625Z -- Looking for malloc.h
+2026-09-19T05:57:42.7614458Z -- Looking for malloc.h - found
+2026-09-19T05:57:42.7743458Z -- Looking for _copysign
+2026-09-19T05:57:43.5494975Z -- Looking for _copysign - found
+2026-09-19T05:57:43.5498140Z -- Looking for _fseeki64
+2026-09-19T05:57:44.2323481Z -- Looking for _fseeki64 - found
+2026-09-19T05:57:44.2393135Z -- Performing Test HAVE_GAMEINPUT_H
+2026-09-19T05:57:46.2299175Z -- Performing Test HAVE_GAMEINPUT_H - Success
+2026-09-19T05:57:46.2300786Z -- Looking for dxgi1_6.h
+2026-09-19T05:57:47.0979494Z -- Looking for dxgi1_6.h - found
+2026-09-19T05:57:47.0985618Z -- Performing Test HAVE_MFAPI_H
+2026-09-19T05:57:48.1107243Z -- Performing Test HAVE_MFAPI_H - Success
+2026-09-19T05:57:48.6388953Z -- Could NOT find LibUSB (missing: LibUSB_LIBRARY LibUSB_INCLUDE_PATH) (found version "LibUSB_VERSION-NOTFOUND")
+2026-09-19T05:57:48.6880149Z -- 
+2026-09-19T05:57:48.6880735Z -- SDL3 was configured with the following options:
+2026-09-19T05:57:48.6881370Z -- 
+2026-09-19T05:57:48.6881715Z -- Platform: Windows-10.0.20348
+2026-09-19T05:57:48.6882189Z -- 64-bit:   TRUE
+2026-09-19T05:57:48.6883473Z -- Compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe
+2026-09-19T05:57:48.6884728Z -- Revision: SDL-3.2.28-release-3.2.28
+2026-09-19T05:57:48.6885252Z -- Vendor:   
+2026-09-19T05:57:48.6885588Z -- 
+2026-09-19T05:57:48.6885924Z -- Subsystems:
+2026-09-19T05:57:48.6886281Z --   Audio:    ON
+2026-09-19T05:57:48.6886675Z --   Video:    ON
+2026-09-19T05:57:48.6887036Z --   GPU:      ON
+2026-09-19T05:57:48.6887472Z --   Render:   ON
+2026-09-19T05:57:48.6888491Z --   Camera:   ON
+2026-09-19T05:57:48.6889465Z --   Joystick: ON
+2026-09-19T05:57:48.6890052Z --   Haptic:   ON
+2026-09-19T05:57:48.6891181Z --   Hidapi:   ON
+2026-09-19T05:57:48.6892021Z --   Power:    ON
+2026-09-19T05:57:48.6892964Z --   Sensor:   ON
+2026-09-19T05:57:48.6893861Z --   Dialog:   ON
+2026-09-19T05:57:48.6894160Z -- 
+2026-09-19T05:57:48.6894432Z -- Options:
+2026-09-19T05:57:48.6901717Z --   SDL_ALSA                    (Wanted: OFF): OFF
+2026-09-19T05:57:48.6902654Z --   SDL_ALSA_SHARED             (Wanted: OFF): OFF
+2026-09-19T05:57:48.6903701Z --   SDL_ALTIVEC                 (Wanted: OFF): OFF
+2026-09-19T05:57:48.6904838Z --   SDL_ARMNEON                 (Wanted: OFF): OFF
+2026-09-19T05:57:48.6906058Z --   SDL_ASAN                    (Wanted: OFF): OFF
+2026-09-19T05:57:48.6907297Z --   SDL_ASSEMBLY                (Wanted: ON): ON
+2026-09-19T05:57:48.6908586Z --   SDL_ASSERTIONS              (Wanted: auto): auto
+2026-09-19T05:57:48.6909822Z --   SDL_AVX                     (Wanted: ON): ON
+2026-09-19T05:57:48.6911088Z --   SDL_AVX2                    (Wanted: ON): ON
+2026-09-19T05:57:48.6912433Z --   SDL_AVX512F                 (Wanted: ON): ON
+2026-09-19T05:57:48.6913640Z --   SDL_BACKGROUNDING_SIGNAL    (Wanted: OFF): OFF
+2026-09-19T05:57:48.6914956Z --   SDL_CCACHE                  (Wanted: OFF): OFF
+2026-09-19T05:57:48.6916176Z --   SDL_CLANG_TIDY              (Wanted: OFF): OFF
+2026-09-19T05:57:48.6917328Z --   SDL_CLOCK_GETTIME           (Wanted: OFF): OFF
+2026-09-19T05:57:48.6918437Z --   SDL_COCOA                   (Wanted: OFF): OFF
+2026-09-19T05:57:48.6919536Z --   SDL_DBUS                    (Wanted: OFF): OFF
+2026-09-19T05:57:48.6920701Z --   SDL_DEPS_SHARED             (Wanted: ON): OFF
+2026-09-19T05:57:48.6921822Z --   SDL_DIRECTX                 (Wanted: ON): ON
+2026-09-19T05:57:48.6923000Z --   SDL_DISKAUDIO               (Wanted: ON): ON
+2026-09-19T05:57:48.6924155Z --   SDL_DUMMYAUDIO              (Wanted: ON): ON
+2026-09-19T05:57:48.6925331Z --   SDL_DUMMYCAMERA             (Wanted: ON): ON
+2026-09-19T05:57:48.6926484Z --   SDL_DUMMYVIDEO              (Wanted: ON): ON
+2026-09-19T05:57:48.6927589Z --   SDL_EXAMPLES                (Wanted: OFF): OFF
+2026-09-19T05:57:48.6928725Z --   SDL_EXAMPLES_LINK_SHARED    (Wanted: ON): OFF
+2026-09-19T05:57:48.6929677Z --   SDL_FOREGROUNDING_SIGNAL    (Wanted: OFF): OFF
+2026-09-19T05:57:48.6930884Z --   SDL_GCC_ATOMICS             (Wanted: OFF): OFF
+2026-09-19T05:57:48.6931985Z --   SDL_GPU_DXVK                (Wanted: OFF): OFF
+2026-09-19T05:57:48.6933111Z --   SDL_HIDAPI                  (Wanted: ON): ON
+2026-09-19T05:57:48.6934311Z --   SDL_HIDAPI_JOYSTICK         (Wanted: ON): ON
+2026-09-19T05:57:48.6935453Z --   SDL_HIDAPI_LIBUSB           (Wanted: ON): OFF
+2026-09-19T05:57:48.6936561Z --   SDL_HIDAPI_LIBUSB_SHARED    (Wanted: ON): OFF
+2026-09-19T05:57:48.6937673Z --   SDL_IBUS                    (Wanted: OFF): OFF
+2026-09-19T05:57:48.6939719Z --   SDL_INSTALL                 (Wanted: OFF): OFF
+2026-09-19T05:57:48.6940276Z --   SDL_INSTALL_TESTS           (Wanted: OFF): OFF
+2026-09-19T05:57:48.6940717Z --   SDL_JACK                    (Wanted: OFF): OFF
+2026-09-19T05:57:48.6942013Z --   SDL_JACK_SHARED             (Wanted: OFF): OFF
+2026-09-19T05:57:48.6943118Z --   SDL_KMSDRM                  (Wanted: OFF): OFF
+2026-09-19T05:57:48.6944208Z --   SDL_KMSDRM_SHARED           (Wanted: OFF): OFF
+2026-09-19T05:57:48.6945305Z --   SDL_LASX                    (Wanted: OFF): OFF
+2026-09-19T05:57:48.6946468Z --   SDL_LIBC                    (Wanted: ON): ON
+2026-09-19T05:57:48.6947592Z --   SDL_LIBICONV                (Wanted: OFF): OFF
+2026-09-19T05:57:48.6948720Z --   SDL_LIBUDEV                 (Wanted: ON): OFF
+2026-09-19T05:57:48.6949838Z --   SDL_LIBURING                (Wanted: OFF): OFF
+2026-09-19T05:57:48.6950929Z --   SDL_LSX                     (Wanted: OFF): OFF
+2026-09-19T05:57:48.6952000Z --   SDL_METAL                   (Wanted: OFF): OFF
+2026-09-19T05:57:48.6953112Z --   SDL_MMX                     (Wanted: ON): OFF
+2026-09-19T05:57:48.6954298Z --   SDL_OFFSCREEN               (Wanted: ON): ON
+2026-09-19T05:57:48.6955446Z --   SDL_OPENGL                  (Wanted: ON): ON
+2026-09-19T05:57:48.6956618Z --   SDL_OPENGLES                (Wanted: ON): ON
+2026-09-19T05:57:48.6957715Z --   SDL_OPENVR                  (Wanted: OFF): OFF
+2026-09-19T05:57:48.6958806Z --   SDL_OSS                     (Wanted: OFF): OFF
+2026-09-19T05:57:48.6959901Z --   SDL_PIPEWIRE                (Wanted: OFF): OFF
+2026-09-19T05:57:48.6961024Z --   SDL_PIPEWIRE_SHARED         (Wanted: OFF): OFF
+2026-09-19T05:57:48.6962081Z --   SDL_PTHREADS                (Wanted: OFF): OFF
+2026-09-19T05:57:48.6963229Z --   SDL_PTHREADS_SEM            (Wanted: OFF): OFF
+2026-09-19T05:57:48.6964334Z --   SDL_PULSEAUDIO              (Wanted: OFF): OFF
+2026-09-19T05:57:48.6965478Z --   SDL_PULSEAUDIO_SHARED       (Wanted: OFF): OFF
+2026-09-19T05:57:48.6966650Z --   SDL_RENDER_D3D              (Wanted: ON): ON
+2026-09-19T05:57:48.6967823Z --   SDL_RENDER_D3D11            (Wanted: ON): ON
+2026-09-19T05:57:48.6968970Z --   SDL_RENDER_D3D12            (Wanted: ON): ON
+2026-09-19T05:57:48.6970152Z --   SDL_RENDER_GPU              (Wanted: ON): ON
+2026-09-19T05:57:48.6971270Z --   SDL_RENDER_METAL            (Wanted: OFF): OFF
+2026-09-19T05:57:48.6972433Z --   SDL_RENDER_VULKAN           (Wanted: ON): ON
+2026-09-19T05:57:48.6973543Z --   SDL_ROCKCHIP                (Wanted: OFF): OFF
+2026-09-19T05:57:48.6974636Z --   SDL_RPATH                   (Wanted: OFF): OFF
+2026-09-19T05:57:48.6975731Z --   SDL_RPI                     (Wanted: OFF): OFF
+2026-09-19T05:57:48.6976845Z --   SDL_SNDIO                   (Wanted: OFF): OFF
+2026-09-19T05:57:48.6977973Z --   SDL_SNDIO_SHARED            (Wanted: OFF): OFF
+2026-09-19T05:57:48.6979100Z --   SDL_SSE                     (Wanted: ON): ON
+2026-09-19T05:57:48.6980265Z --   SDL_SSE2                    (Wanted: ON): ON
+2026-09-19T05:57:48.6981396Z --   SDL_SSE3                    (Wanted: ON): ON
+2026-09-19T05:57:48.6982566Z --   SDL_SSE4_1                  (Wanted: ON): ON
+2026-09-19T05:57:48.6983672Z --   SDL_SSE4_2                  (Wanted: ON): ON
+2026-09-19T05:57:48.6984819Z --   SDL_SYSTEM_ICONV            (Wanted: OFF): OFF
+2026-09-19T05:57:48.6986233Z --   SDL_TESTS                   (Wanted: OFF): OFF
+2026-09-19T05:57:48.6986946Z --   SDL_TESTS_LINK_SHARED       (Wanted: ON): OFF
+2026-09-19T05:57:48.6988144Z --   SDL_UNINSTALL               (Wanted: OFF): OFF
+2026-09-19T05:57:48.6989314Z --   SDL_VIRTUAL_JOYSTICK        (Wanted: ON): ON
+2026-09-19T05:57:48.6990389Z --   SDL_VIVANTE                 (Wanted: OFF): OFF
+2026-09-19T05:57:48.6991538Z --   SDL_VULKAN                  (Wanted: ON): ON
+2026-09-19T05:57:48.6992700Z --   SDL_WASAPI                  (Wanted: ON): ON
+2026-09-19T05:57:48.6993810Z --   SDL_WAYLAND                 (Wanted: OFF): OFF
+2026-09-19T05:57:48.6995061Z --   SDL_WAYLAND_LIBDECOR        (Wanted: OFF): OFF
+2026-09-19T05:57:48.6996082Z --   SDL_WAYLAND_LIBDECOR_SHARED (Wanted: OFF): OFF
+2026-09-19T05:57:48.6997130Z --   SDL_WAYLAND_SHARED          (Wanted: OFF): OFF
+2026-09-19T05:57:48.6998233Z --   SDL_X11                     (Wanted: OFF): OFF
+2026-09-19T05:57:48.6999285Z --   SDL_X11_SHARED              (Wanted: OFF): OFF
+2026-09-19T05:57:48.7000475Z --   SDL_X11_XCURSOR             (Wanted: OFF): OFF
+2026-09-19T05:57:48.7001547Z --   SDL_X11_XDBE                (Wanted: OFF): OFF
+2026-09-19T05:57:48.7002658Z --   SDL_X11_XFIXES              (Wanted: OFF): OFF
+2026-09-19T05:57:48.7003728Z --   SDL_X11_XINPUT              (Wanted: OFF): OFF
+2026-09-19T05:57:48.7004786Z --   SDL_X11_XRANDR              (Wanted: OFF): OFF
+2026-09-19T05:57:48.7005886Z --   SDL_X11_XSCRNSAVER          (Wanted: OFF): OFF
+2026-09-19T05:57:48.7006968Z --   SDL_X11_XSHAPE              (Wanted: OFF): OFF
+2026-09-19T05:57:48.7008083Z --   SDL_X11_XSYNC               (Wanted: OFF): OFF
+2026-09-19T05:57:48.7009228Z --   SDL_XINPUT                  (Wanted: ON): ON
+2026-09-19T05:57:48.7009675Z -- 
+2026-09-19T05:57:48.7010016Z --  Build Shared Library: ON
+2026-09-19T05:57:48.7010291Z --  Build Static Library: OFF
+2026-09-19T05:57:48.7010512Z -- 
+2026-09-19T05:58:11.4271186Z -- Configuring done (85.6s)
+2026-09-19T05:58:11.8109216Z -- Generating done (0.4s)
+2026-09-19T05:58:11.8120832Z -- Build files have been written to: D:/a/Testbed/Testbed/build/windows
+2026-09-19T05:58:11.9217916Z ##[group]Run cmake --build build/windows --config Release --parallel 4
+2026-09-19T05:58:11.9218489Z [36;1mcmake --build build/windows --config Release --parallel 4[0m
+2026-09-19T05:58:11.9255543Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T05:58:11.9255907Z ##[endgroup]
+2026-09-19T05:58:12.2319728Z MSBuild version 17.14.51+25f168cee for .NET Framework
+2026-09-19T05:58:12.2609431Z 
+2026-09-19T05:58:12.5856482Z   1>Checking Build System
+2026-09-19T05:58:12.8917828Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:13.1418855Z   exr_codec.cpp
+2026-09-19T05:58:13.2594327Z   Generating shaders/cache_samples.comp.hlsl.dxil
+2026-09-19T05:58:13.2753535Z   Building Custom Rule D:/a/Testbed/Testbed/build/windows/_deps/sdl3-src/CMakeLists.txt
+2026-09-19T05:58:13.3416103Z   Generating shaders/field.comp.hlsl.dxil
+2026-09-19T05:58:13.3422907Z   Generating shaders/accumulate.frag.hlsl.dxil
+2026-09-19T05:58:13.3913161Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:13.4699981Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:13.4913628Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:13.6169597Z   Generating shaders/fullscreen.vert.hlsl.dxil
+2026-09-19T05:58:13.6542094Z   e_atan2.c
+2026-09-19T05:58:13.6704134Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:13.7888784Z   Generating shaders/majorant.comp.hlsl.dxil
+2026-09-19T05:58:13.7974087Z   Generating shaders/optics.comp.hlsl.dxil
+2026-09-19T05:58:13.8494006Z   Generating shaders/sample.comp.hlsl.dxil
+2026-09-19T05:58:13.8565863Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:13.8899839Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:13.9136343Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:13.9302883Z   Generating shaders/slice.frag.hlsl.dxil
+2026-09-19T05:58:13.9705063Z   e_exp.c
+2026-09-19T05:58:13.9814509Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:14.1367715Z   Generating shaders/sun_cache.comp.hlsl.dxil
+2026-09-19T05:58:14.1609450Z   Generating shaders/tonemap.frag.hlsl.dxil
+2026-09-19T05:58:14.1691429Z   Generating shaders/volume.frag.hlsl.dxil
+2026-09-19T05:58:14.1776742Z   e_fmod.c
+2026-09-19T05:58:14.3594171Z   e_log.c
+2026-09-19T05:58:14.3626594Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:14.3795547Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:14.5754962Z   e_log10.c
+2026-09-19T05:58:14.7066694Z   e_pow.c
+2026-09-19T05:58:14.7927430Z   e_rem_pio2.c
+2026-09-19T05:58:14.8697238Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:14.8967576Z   e_sqrt.c
+2026-09-19T05:58:15.1821178Z   k_cos.c
+2026-09-19T05:58:15.2675220Z   k_rem_pio2.c
+2026-09-19T05:58:15.3542254Z   k_sin.c
+2026-09-19T05:58:15.4352893Z   k_tan.c
+2026-09-19T05:58:15.5180961Z   s_atan.c
+2026-09-19T05:58:15.6155242Z   s_copysign.c
+2026-09-19T05:58:15.6982701Z   s_cos.c
+2026-09-19T05:58:15.7803658Z   s_fabs.c
+2026-09-19T05:58:15.8621951Z   s_floor.c
+2026-09-19T05:58:15.9577442Z   s_isinf.c
+2026-09-19T05:58:16.0595884Z   s_isinff.c
+2026-09-19T05:58:16.1465298Z   s_isnan.c
+2026-09-19T05:58:16.2350670Z   Generating Code...
+2026-09-19T05:58:16.6311285Z   Compiling...
+2026-09-19T05:58:16.6311659Z   s_isnanf.c
+2026-09-19T05:58:16.7162992Z   s_modf.c
+2026-09-19T05:58:16.7985356Z   s_scalbn.c
+2026-09-19T05:58:16.8800189Z   s_sin.c
+2026-09-19T05:58:16.9612912Z   s_tan.c
+2026-09-19T05:58:17.0428230Z   Generating Code...
+2026-09-19T05:58:17.2320167Z   SDL_uclibc.vcxproj -> D:\a\Testbed\Testbed\build\windows\_deps\sdl3-build\Release\SDL_uclibc.lib
+2026-09-19T05:58:17.3844541Z   Building Custom Rule D:/a/Testbed/Testbed/build/windows/_deps/sdl3-src/CMakeLists.txt
+2026-09-19T05:58:18.2495596Z   cmake_pch.c
+2026-09-19T05:58:18.9824737Z   SDL.c
+2026-09-19T05:58:19.1720142Z   SDL_assert.c
+2026-09-19T05:58:19.2788700Z   SDL_error.c
+2026-09-19T05:58:19.2893974Z   SDL_guid.c
+2026-09-19T05:58:19.2989520Z   SDL_hashtable.c
+2026-09-19T05:58:19.3109059Z   SDL_hints.c
+2026-09-19T05:58:19.3221539Z   SDL_list.c
+2026-09-19T05:58:19.3314362Z   SDL_log.c
+2026-09-19T05:58:19.5765788Z   SDL_properties.c
+2026-09-19T05:58:19.5897984Z   SDL_utils.c
+2026-09-19T05:58:19.6024902Z   SDL_atomic.c
+2026-09-19T05:58:19.6114432Z   SDL_spinlock.c
+2026-09-19T05:58:19.7315049Z   SDL_audio.c
+2026-09-19T05:58:19.8484708Z   SDL_audiocvt.c
+2026-09-19T05:58:19.8679995Z   SDL_audiodev.c
+2026-09-19T05:58:19.8735872Z   SDL_audioqueue.c
+2026-09-19T05:58:19.8838697Z   SDL_audioresample.c
+2026-09-19T05:58:19.8942492Z   SDL_audiotypecvt.c
+2026-09-19T05:58:19.9051576Z   SDL_mixer.c
+2026-09-19T05:58:19.9058588Z   miniz.c
+2026-09-19T05:58:19.9137760Z   SDL_wave.c
+2026-09-19T05:58:19.9299207Z   Generating Code...
+2026-09-19T05:58:21.3145126Z   Compiling...
+2026-09-19T05:58:21.3145603Z   SDL_camera.c
+2026-09-19T05:58:21.3942239Z   white_exr.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_exr.lib
+2026-09-19T05:58:21.4450267Z   SDL_core_unsupported.c
+2026-09-19T05:58:21.4520070Z   SDL_cpuinfo.c
+2026-09-19T05:58:21.4603129Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:21.4614153Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:21.5534448Z   hdr_compare.cpp
+2026-09-19T05:58:21.5622295Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:58:21.5723159Z   build_info.cpp
+2026-09-19T05:58:21.6158208Z   SDL_categories.c
+2026-09-19T05:58:21.6339996Z   SDL_clipboardevents.c
+2026-09-19T05:58:21.6519235Z   SDL_displayevents.c
+2026-09-19T05:58:21.6714062Z   diagnostic_check.cpp
+2026-09-19T05:58:21.6717788Z   SDL_dropevents.c
+2026-09-19T05:58:21.6906186Z   SDL_events.c
+2026-09-19T05:58:21.8841738Z   SDL_eventwatch.c
+2026-09-19T05:58:21.8997021Z   SDL_keyboard.c
+2026-09-19T05:58:21.9230675Z   SDL_keymap.c
+2026-09-19T05:58:21.9396730Z   SDL_keysym_to_keycode.c
+2026-09-19T05:58:21.9483520Z   SDL_keysym_to_scancode.c
+2026-09-19T05:58:21.9563783Z   SDL_mouse.c
+2026-09-19T05:58:22.1340798Z   SDL_pen.c
+2026-09-19T05:58:22.1559257Z   SDL_quit.c
+2026-09-19T05:58:22.1749353Z   SDL_scancode_tables.c
+2026-09-19T05:58:22.1837028Z   SDL_touch.c
+2026-09-19T05:58:22.2048625Z   SDL_windowevents.c
+2026-09-19T05:58:22.2248418Z   imKStoUCS.c
+2026-09-19T05:58:22.2458142Z   Generating Code...
+2026-09-19T05:58:22.2464431Z   document.cpp
+2026-09-19T05:58:23.0970225Z   Compiling...
+2026-09-19T05:58:23.1110200Z   SDL_filesystem.c
+2026-09-19T05:58:23.1568812Z   SDL_gpu.c
+2026-09-19T05:58:23.1589060Z   SDL_haptic.c
+2026-09-19T05:58:23.1754327Z   SDL_hidapi.c
+2026-09-19T05:58:23.3892625Z   SDL_asyncio.c
+2026-09-19T05:58:23.4024469Z   SDL_iostream.c
+2026-09-19T05:58:23.5731840Z   SDL_asyncio_generic.c
+2026-09-19T05:58:23.5875059Z   SDL_gamepad.c
+2026-09-19T05:58:23.7758352Z   SDL_joystick.c
+2026-09-19T05:58:23.9656702Z   SDL_steam_virtual_gamepad.c
+2026-09-19T05:58:24.1594687Z   controller_type.c
+2026-09-19T05:58:24.1785347Z   SDL_locale.c
+2026-09-19T05:58:24.1883193Z   SDL_main_callbacks.c
+2026-09-19T05:58:24.1983618Z   SDL_runapp.c
+2026-09-19T05:58:24.2065483Z   SDL_url.c
+2026-09-19T05:58:24.2153306Z   SDL_power.c
+2026-09-19T05:58:24.2245118Z   SDL_render.c
+2026-09-19T05:58:24.2735147Z   SDL_render_unsupported.c
+2026-09-19T05:58:24.2822197Z   SDL_yuv_sw.c
+2026-09-19T05:58:24.2958745Z   SDL_render_d3d.c
+2026-09-19T05:58:24.7898038Z   Generating Code...
+2026-09-19T05:58:25.3809620Z   persistence.cpp
+2026-09-19T05:58:26.3810550Z   white_hdr_compare.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_hdr_compare.exe
+2026-09-19T05:58:26.5341412Z   white_diagnostic_check.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_diagnostic_check.exe
+2026-09-19T05:58:26.9669660Z   Compiling...
+2026-09-19T05:58:26.9669922Z   SDL_shaders_d3d.c
+2026-09-19T05:58:27.1179872Z   SDL_render_d3d11.c
+2026-09-19T05:58:27.4952404Z   SDL_shaders_d3d11.c
+2026-09-19T05:58:27.6879549Z   SDL_render_d3d12.c
+2026-09-19T05:58:27.9082006Z   SDL_shaders_d3d12.c
+2026-09-19T05:58:28.1248481Z   SDL_pipeline_gpu.c
+2026-09-19T05:58:28.1357171Z   SDL_render_gpu.c
+2026-09-19T05:58:28.1510923Z   SDL_shaders_gpu.c
+2026-09-19T05:58:28.1718596Z   SDL_render_gl.c
+2026-09-19T05:58:28.3274588Z   SDL_shaders_gl.c
+2026-09-19T05:58:28.4371376Z   SDL_render_gles2.c
+2026-09-19T05:58:28.4628726Z   SDL_shaders_gles2.c
+2026-09-19T05:58:28.4784089Z   SDL_render_ps2.c
+2026-09-19T05:58:28.4841770Z   SDL_render_psp.c
+2026-09-19T05:58:28.4898381Z   SDL_blendfillrect.c
+2026-09-19T05:58:28.5104317Z   SDL_blendline.c
+2026-09-19T05:58:28.5406198Z   SDL_blendpoint.c
+2026-09-19T05:58:28.5519423Z   SDL_drawline.c
+2026-09-19T05:58:28.5613972Z   SDL_drawpoint.c
+2026-09-19T05:58:28.5691033Z   SDL_render_sw.c
+2026-09-19T05:58:28.5843437Z   Generating Code...
+2026-09-19T05:58:31.2273679Z   density.cpp
+2026-09-19T05:58:31.3854979Z   Compiling...
+2026-09-19T05:58:31.3855346Z   SDL_rotate.c
+2026-09-19T05:58:31.4857051Z   SDL_triangle.c
+2026-09-19T05:58:31.5035154Z   SDL_render_vita_gxm.c
+2026-09-19T05:58:31.5113834Z   SDL_render_vita_gxm_memory.c
+2026-09-19T05:58:31.5187304Z   SDL_render_vita_gxm_tools.c
+2026-09-19T05:58:31.5262342Z   SDL_render_vulkan.c
+2026-09-19T05:58:31.6774895Z   SDL_shaders_vulkan.c
+2026-09-19T05:58:31.6862270Z   SDL_sensor.c
+2026-09-19T05:58:31.7000568Z   SDL_crc16.c
+2026-09-19T05:58:31.7060064Z   SDL_crc32.c
+2026-09-19T05:58:31.7118586Z   SDL_getenv.c
+2026-09-19T05:58:31.8466407Z   SDL_iconv.c
+2026-09-19T05:58:31.8550689Z   SDL_malloc.c
+2026-09-19T05:58:31.8621021Z   SDL_memcpy.c
+2026-09-19T05:58:31.8676828Z   SDL_memmove.c
+2026-09-19T05:58:31.8732874Z   SDL_memset.c
+2026-09-19T05:58:31.8788991Z   SDL_murmur3.c
+2026-09-19T05:58:31.8847958Z   SDL_qsort.c
+2026-09-19T05:58:31.8924573Z   SDL_random.c
+2026-09-19T05:58:31.8980426Z   SDL_stdlib.c
+2026-09-19T05:58:31.9054469Z   Generating Code...
+2026-09-19T05:58:32.7814117Z   Compiling...
+2026-09-19T05:58:32.7814545Z   SDL_string.c
+2026-09-19T05:58:32.7973730Z   SDL_strtokr.c
+2026-09-19T05:58:32.8033850Z   SDL_storage.c
+2026-09-19T05:58:32.8117997Z   SDL_thread.c
+2026-09-19T05:58:32.9216475Z   SDL_time.c
+2026-09-19T05:58:32.9292104Z   SDL_timer.c
+2026-09-19T05:58:33.0307044Z   SDL_RLEaccel.c
+2026-09-19T05:58:33.0548929Z   SDL_blit.c
+2026-09-19T05:58:33.0727157Z   SDL_blit_0.c
+2026-09-19T05:58:33.0837956Z   SDL_blit_1.c
+2026-09-19T05:58:33.1055123Z   SDL_blit_A.c
+2026-09-19T05:58:33.1256776Z   SDL_blit_N.c
+2026-09-19T05:58:33.1438282Z   SDL_blit_auto.c
+2026-09-19T05:58:33.1944687Z   SDL_blit_copy.c
+2026-09-19T05:58:33.2022195Z   SDL_blit_slow.c
+2026-09-19T05:58:33.2153661Z   SDL_bmp.c
+2026-09-19T05:58:33.2187689Z   field_graph.cpp
+2026-09-19T05:58:33.2258456Z   SDL_clipboard.c
+2026-09-19T05:58:33.2392331Z   SDL_egl.c
+2026-09-19T05:58:33.3541939Z   SDL_fillrect.c
+2026-09-19T05:58:33.3631432Z   SDL_pixels.c
+2026-09-19T05:58:33.3783354Z   Generating Code...
+2026-09-19T05:58:36.9504454Z   Compiling...
+2026-09-19T05:58:36.9504823Z   SDL_rect.c
+2026-09-19T05:58:36.9521923Z   optics.cpp
+2026-09-19T05:58:36.9602171Z   SDL_stb.c
+2026-09-19T05:58:36.9788193Z   SDL_stretch.c
+2026-09-19T05:58:36.9892586Z   SDL_surface.c
+2026-09-19T05:58:37.0099220Z   SDL_video.c
+2026-09-19T05:58:37.1435680Z   SDL_video_unsupported.c
+2026-09-19T05:58:37.1503626Z   SDL_vulkan_utils.c
+2026-09-19T05:58:37.2696974Z   SDL_yuv.c
+2026-09-19T05:58:37.2889990Z   yuv_rgb_lsx.c
+2026-09-19T05:58:37.2995195Z   yuv_rgb_sse.c
+2026-09-19T05:58:37.3439956Z   yuv_rgb_std.c
+2026-09-19T05:58:37.3628400Z   SDL_dummyaudio.c
+2026-09-19T05:58:37.3712440Z   SDL_diskaudio.c
+2026-09-19T05:58:37.3800021Z   SDL_camera_dummy.c
+2026-09-19T05:58:37.3882121Z   SDL_virtualjoystick.c
+2026-09-19T05:58:37.3997474Z   SDL_nullevents.c
+2026-09-19T05:58:37.4116800Z   SDL_nullframebuffer.c
+2026-09-19T05:58:37.4243295Z   SDL_nullvideo.c
+2026-09-19T05:58:37.4370554Z   SDL_gameinput.c
+2026-09-19T05:58:37.6569373Z   SDL_hid.c
+2026-09-19T05:58:37.7644825Z   Generating Code...
+2026-09-19T05:58:39.4666318Z   editor_geometry.cpp
+2026-09-19T05:58:40.2022767Z   Compiling...
+2026-09-19T05:58:40.2023147Z   SDL_immdevice.c
+2026-09-19T05:58:40.3676242Z   SDL_windows.c
+2026-09-19T05:58:40.5469581Z   SDL_xinput.c
+2026-09-19T05:58:40.6411967Z   pch.c
+2026-09-19T05:58:40.6466920Z   SDL_sysmain_runapp.c
+2026-09-19T05:58:40.7431607Z   SDL_asyncio_windows_ioring.c
+2026-09-19T05:58:40.7499537Z   SDL_sysurl.c
+2026-09-19T05:58:40.8439631Z   SDL_directsound.c
+2026-09-19T05:58:41.0753855Z   SDL_wasapi.c
+2026-09-19T05:58:41.1666331Z   noise.cpp
+2026-09-19T05:58:41.2927556Z   SDL_surface_utils.c
+2026-09-19T05:58:41.3865983Z   SDL_windowsclipboard.c
+2026-09-19T05:58:41.5874988Z   SDL_windowsevents.c
+2026-09-19T05:58:41.8599327Z   SDL_windowsframebuffer.c
+2026-09-19T05:58:42.0331124Z   SDL_windowsgameinput.c
+2026-09-19T05:58:42.2599021Z   SDL_windowskeyboard.c
+2026-09-19T05:58:42.4493791Z   SDL_windowsmessagebox.c
+2026-09-19T05:58:42.6596876Z   SDL_windowsmodes.c
+2026-09-19T05:58:42.8432787Z   dense_cache.cpp
+2026-09-19T05:58:42.9236024Z   SDL_windowsmouse.c
+2026-09-19T05:58:43.0971851Z   SDL_windowsopengl.c
+2026-09-19T05:58:43.3363324Z   SDL_windowsopengles.c
+2026-09-19T05:58:43.5305033Z   Generating Code...
+2026-09-19T05:58:44.3456870Z   Compiling...
+2026-09-19T05:58:44.3457252Z   SDL_windowsrawinput.c
+2026-09-19T05:58:44.5227854Z   SDL_windowsshape.c
+2026-09-19T05:58:44.7173878Z   SDL_windowsvideo.c
+2026-09-19T05:58:44.7765808Z   revision_queue.cpp
+2026-09-19T05:58:44.9681293Z   SDL_windowsvulkan.c
+2026-09-19T05:58:45.1693202Z   SDL_windowswindow.c
+2026-09-19T05:58:45.3924511Z   SDL_syscond.c
+2026-09-19T05:58:45.3999089Z   SDL_sysrwlock.c
+2026-09-19T05:58:45.4071981Z   SDL_syscond_cv.c
+2026-09-19T05:58:45.5048210Z   SDL_sysmutex.c
+2026-09-19T05:58:45.6249980Z   SDL_sysrwlock_srw.c
+2026-09-19T05:58:45.7198340Z   SDL_syssem.c
+2026-09-19T05:58:45.8274686Z   SDL_systhread.c
+2026-09-19T05:58:45.9244166Z   SDL_systls.c
+2026-09-19T05:58:46.0221132Z   SDL_windowssensor.c
+2026-09-19T05:58:46.2222026Z   SDL_syspower.c
+2026-09-19T05:58:46.3250690Z   SDL_syslocale.c
+2026-09-19T05:58:46.4664419Z   SDL_sysfilesystem.c
+2026-09-19T05:58:46.7833130Z   benchmark.cpp
+2026-09-19T05:58:46.9835369Z   SDL_sysfsops.c
+2026-09-19T05:58:47.1184175Z   SDL_genericstorage.c
+2026-09-19T05:58:47.1269664Z   SDL_steamstorage.c
+2026-09-19T05:58:47.1351235Z   Generating Code...
+2026-09-19T05:58:47.4869574Z   Compiling...
+2026-09-19T05:58:47.4869979Z   SDL_systime.c
+2026-09-19T05:58:47.5834361Z   SDL_systimer.c
+2026-09-19T05:58:47.7399853Z   SDL_sysloadso.c
+2026-09-19T05:58:47.8369951Z   SDL_tray.c
+2026-09-19T05:58:47.9526889Z   SDL_hidapi_combined.c
+2026-09-19T05:58:47.9628896Z   SDL_hidapi_gamecube.c
+2026-09-19T05:58:47.9748421Z   SDL_hidapi_luna.c
+2026-09-19T05:58:47.9853528Z   SDL_hidapi_ps3.c
+2026-09-19T05:58:47.9986876Z   SDL_hidapi_ps4.c
+2026-09-19T05:58:48.0123402Z   SDL_hidapi_ps5.c
+2026-09-19T05:58:48.0267457Z   SDL_hidapi_rumble.c
+2026-09-19T05:58:48.1250193Z   SDL_hidapi_shield.c
+2026-09-19T05:58:48.1363992Z   SDL_hidapi_stadia.c
+2026-09-19T05:58:48.1468213Z   SDL_hidapi_steam.c
+2026-09-19T05:58:48.1618949Z   SDL_hidapi_steam_hori.c
+2026-09-19T05:58:48.1724539Z   SDL_hidapi_steamdeck.c
+2026-09-19T05:58:48.1841931Z   SDL_hidapi_switch.c
+2026-09-19T05:58:48.2025418Z   SDL_hidapi_wii.c
+2026-09-19T05:58:48.2160870Z   SDL_hidapi_xbox360.c
+2026-09-19T05:58:48.2267710Z   SDL_hidapi_xbox360w.c
+2026-09-19T05:58:48.2431280Z   Generating Code...
+2026-09-19T05:58:49.1198329Z   phase.cpp
+2026-09-19T05:58:49.1364691Z   Compiling...
+2026-09-19T05:58:49.1365071Z   SDL_hidapi_xboxone.c
+2026-09-19T05:58:49.1506657Z   SDL_hidapijoystick.c
+2026-09-19T05:58:49.2511544Z   SDL_dinputjoystick.c
+2026-09-19T05:58:49.4174434Z   SDL_rawinputjoystick.c
+2026-09-19T05:58:50.6825688Z   hdr_export.cpp
+2026-09-19T05:58:53.6415614Z   SDL_windows_gaming_input.c
+2026-09-19T05:58:54.3395896Z   sun_cache.cpp
+2026-09-19T05:58:54.4704133Z   SDL_windowsjoystick.c
+2026-09-19T05:58:54.6913260Z   SDL_xinputjoystick.c
+2026-09-19T05:58:54.8784645Z   SDL_gameinputjoystick.c
+2026-09-19T05:58:55.0724955Z   SDL_dinputhaptic.c
+2026-09-19T05:58:55.2963494Z   SDL_windowshaptic.c
+2026-09-19T05:58:55.5201873Z   SDL_camera_mediafoundation.c
+2026-09-19T05:58:55.7392586Z   SDL_dialog.c
+2026-09-19T05:58:55.7463515Z   SDL_dialog_utils.c
+2026-09-19T05:58:55.7533109Z   SDL_windowsdialog.c
+2026-09-19T05:58:55.9970933Z   majorant.cpp
+2026-09-19T05:58:56.0347159Z   SDL_process.c
+2026-09-19T05:58:56.0424746Z   SDL_windowsprocess.c
+2026-09-19T05:58:56.1394466Z   SDL_offscreenevents.c
+2026-09-19T05:58:56.1520091Z   SDL_offscreenframebuffer.c
+2026-09-19T05:58:56.1626328Z   SDL_offscreenopengles.c
+2026-09-19T05:58:56.2985718Z   SDL_offscreenvideo.c
+2026-09-19T05:58:56.3987217Z   Generating Code...
+2026-09-19T05:58:57.3643617Z   Compiling...
+2026-09-19T05:58:57.3644028Z   SDL_offscreenvulkan.c
+2026-09-19T05:58:57.5144026Z   SDL_offscreenwindow.c
+2026-09-19T05:58:57.6119030Z   SDL_tray_utils.c
+2026-09-19T05:58:57.6242586Z   SDL_gpu_d3d12.c
+2026-09-19T05:58:57.8599953Z   SDL_gpu_vulkan.c
+2026-09-19T05:58:57.9236192Z   SDL_sysmain_callbacks.c
+2026-09-19T05:58:57.9341026Z   Generating Code...
+2026-09-19T05:58:58.3953292Z   progressive.cpp
+2026-09-19T05:58:59.3577450Z   SDL_dynapi.c
+2026-09-19T05:59:00.8143793Z   diagnostics.cpp
+2026-09-19T05:59:01.2133564Z   SDL_mslibc.c
+2026-09-19T05:59:01.4157467Z   delta_tracking.cpp
+2026-09-19T05:59:01.6743304Z      Creating library D:/a/Testbed/Testbed/build/windows/_deps/sdl3-build/Release/SDL3.lib and object D:/a/Testbed/Testbed/build/windows/_deps/sdl3-build/Release/SDL3.exp
+2026-09-19T05:59:01.8251544Z   SDL3-shared.vcxproj -> D:\a\Testbed\Testbed\build\windows\_deps\sdl3-build\Release\SDL3.dll
+2026-09-19T05:59:01.9124568Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:01.9908060Z   imgui.cpp
+2026-09-19T05:59:02.5471839Z   imgui_draw.cpp
+2026-09-19T05:59:02.9334227Z   imgui_tables.cpp
+2026-09-19T05:59:03.1643474Z   imgui_widgets.cpp
+2026-09-19T05:59:03.2206564Z   ratio_tracking.cpp
+2026-09-19T05:59:03.5613662Z   imgui_impl_sdl3.cpp
+2026-09-19T05:59:03.9670610Z   imgui_impl_sdlgpu3.cpp
+2026-09-19T05:59:04.1215097Z   Generating Code...
+2026-09-19T05:59:05.4352470Z   preview_approx.cpp
+2026-09-19T05:59:07.8315527Z   Generating Code...
+2026-09-19T05:59:13.2654496Z   white_imgui.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_imgui.lib
+2026-09-19T05:59:13.3306013Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:14.0649394Z   ImGuizmo.cpp
+2026-09-19T05:59:17.3426222Z   white_gizmo.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_gizmo.lib
+2026-09-19T05:59:18.8442136Z   white_core.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_core.lib
+2026-09-19T05:59:18.9125372Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:18.9132922Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:18.9136602Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:18.9164565Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:18.9932447Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:18.9933279Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:18.9968754Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:19.0798658Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:19.0890406Z   integrator.cpp
+2026-09-19T05:59:19.0982342Z   core_tests.cpp
+2026-09-19T05:59:19.2833511Z   preview_approx_tests.cpp
+2026-09-19T05:59:19.2991840Z   ratio_tracking_tests.cpp
+2026-09-19T05:59:19.9865611Z   persistence_tests.cpp
+2026-09-19T05:59:22.1137889Z   sun_cache_tests.cpp
+2026-09-19T05:59:22.3334376Z   report.cpp
+2026-09-19T05:59:23.1985002Z   white_core_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_core_tests.exe
+2026-09-19T05:59:24.0784623Z   white_preview_approx_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_preview_approx_tests.exe
+2026-09-19T05:59:24.1473583Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:24.2591883Z   progressive_tests.cpp
+2026-09-19T05:59:24.6992240Z   white_ratio_tracking_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_ratio_tracking_tests.exe
+2026-09-19T05:59:24.7268429Z   revision_queue_tests.cpp
+2026-09-19T05:59:24.8676339Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244: '=': conversion from 'const _Ty' to 'float', possible loss of data [D:\a\Testbed\Testbed\build\windows\white_sun_cache_tests.vcxproj]
+2026-09-19T05:59:24.9291262Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244:         with [D:\a\Testbed\Testbed\build\windows\white_sun_cache_tests.vcxproj]
+2026-09-19T05:59:24.9446490Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244:         [ [D:\a\Testbed\Testbed\build\windows\white_sun_cache_tests.vcxproj]
+2026-09-19T05:59:25.0698738Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244:             _Ty=int [D:\a\Testbed\Testbed\build\windows\white_sun_cache_tests.vcxproj]
+2026-09-19T05:59:25.1321335Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244:         ] [D:\a\Testbed\Testbed\build\windows\white_sun_cache_tests.vcxproj]
+2026-09-19T05:59:25.1477610Z   (compiling source file '../../tests/sun_cache_tests.cpp')
+2026-09-19T05:59:25.2731828Z       C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24):
+2026-09-19T05:59:25.3361612Z       the template instantiation context (the oldest one first) is
+2026-09-19T05:59:25.3362460Z           D:\a\Testbed\Testbed\tests\sun_cache_tests.cpp(23,10):
+2026-09-19T05:59:25.3370551Z           see reference to function template instantiation 'void std::fill<std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,int>(const _FwdIt,const _FwdIt,const int &)' being compiled
+2026-09-19T05:59:25.3371928Z           with
+2026-09-19T05:59:25.3372221Z           [
+2026-09-19T05:59:25.3372509Z               _Ty=float,
+2026-09-19T05:59:25.3373127Z               _FwdIt=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<float>>>
+2026-09-19T05:59:25.3373787Z           ]
+2026-09-19T05:59:25.3374082Z   
+2026-09-19T05:59:26.7416367Z   phase_tests.cpp
+2026-09-19T05:59:26.9479962Z   white_persistence_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_persistence_tests.exe
+2026-09-19T05:59:27.4763364Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:27.5011628Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:27.5991127Z   white_sun_cache_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_sun_cache_tests.exe
+2026-09-19T05:59:27.8700185Z   optical_contract_tests.cpp
+2026-09-19T05:59:27.9534090Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:27.9820100Z   optics_tests.cpp
+2026-09-19T05:59:28.3373725Z   Generating Code...
+2026-09-19T05:59:31.2952212Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:31.4189128Z   noise_tests.cpp
+2026-09-19T05:59:31.5352956Z   white_optics_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_optics_tests.exe
+2026-09-19T05:59:31.5793773Z   delta_tracking_tests.cpp
+2026-09-19T05:59:31.9673786Z   white_phase_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_phase_tests.exe
+2026-09-19T05:59:32.0017537Z   white_revision_queue_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_revision_queue_tests.exe
+2026-09-19T05:59:32.0340920Z   white_reference_core.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_reference_core.lib
+2026-09-19T05:59:32.0648942Z   white_optical_contract_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_optical_contract_tests.exe
+2026-09-19T05:59:32.1558610Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:32.1579520Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:32.2437812Z   white_progressive_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_progressive_tests.exe
+2026-09-19T05:59:32.2848109Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:32.2977484Z   benchmark_tests.cpp
+2026-09-19T05:59:32.3458079Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:32.6265503Z   majorant_tests.cpp
+2026-09-19T05:59:33.6614795Z   preview_reference_tests.cpp
+2026-09-19T05:59:36.1916542Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:36.2420173Z   main.cpp
+2026-09-19T05:59:36.2949683Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:36.3838899Z   hdr_tests.cpp
+2026-09-19T05:59:36.4489351Z   white_noise_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_noise_tests.exe
+2026-09-19T05:59:36.5827777Z   reference_tests.cpp
+2026-09-19T05:59:36.9428224Z   white_majorant_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_majorant_tests.exe
+2026-09-19T05:59:38.0397639Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:38.2017006Z   white_delta_tracking_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_delta_tracking_tests.exe
+2026-09-19T05:59:38.3624418Z   white_preview_reference_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_preview_reference_tests.exe
+2026-09-19T05:59:38.5396857Z   gate_fixture_tests.cpp
+2026-09-19T05:59:38.8216567Z   white_benchmark_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_benchmark_tests.exe
+2026-09-19T05:59:40.3845892Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:41.3049237Z   field_graph_tests.cpp
+2026-09-19T05:59:41.3563240Z   white_reference_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_reference_tests.exe
+2026-09-19T05:59:41.5606225Z   white_reference.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_reference.exe
+2026-09-19T05:59:42.3230224Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:42.3931923Z   editor_geometry_tests.cpp
+2026-09-19T05:59:43.3056034Z   white_gate_fixture_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_gate_fixture_tests.exe
+2026-09-19T05:59:43.4670745Z   white_hdr_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_hdr_tests.exe
+2026-09-19T05:59:43.5545114Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:43.6196698Z   document_tests.cpp
+2026-09-19T05:59:45.1907315Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:45.2867353Z   density_tests.cpp
+2026-09-19T05:59:45.4035843Z   white_editor_geometry_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_editor_geometry_tests.exe
+2026-09-19T05:59:45.4652822Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:45.6535914Z   dense_cache_tests.cpp
+2026-09-19T05:59:45.9918624Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:46.1665354Z   white_field_graph_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_field_graph_tests.exe
+2026-09-19T05:59:46.2635574Z   gpu_main.cpp
+2026-09-19T05:59:47.5804825Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244: '=': conversion from 'const _Ty' to 'float', possible loss of data [D:\a\Testbed\Testbed\build\windows\white_dense_cache_tests.vcxproj]
+2026-09-19T05:59:47.5889456Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244:         with [D:\a\Testbed\Testbed\build\windows\white_dense_cache_tests.vcxproj]
+2026-09-19T05:59:47.5901882Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244:         [ [D:\a\Testbed\Testbed\build\windows\white_dense_cache_tests.vcxproj]
+2026-09-19T05:59:47.5909181Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244:             _Ty=int [D:\a\Testbed\Testbed\build\windows\white_dense_cache_tests.vcxproj]
+2026-09-19T05:59:47.5962179Z C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24): warning C4244:         ] [D:\a\Testbed\Testbed\build\windows\white_dense_cache_tests.vcxproj]
+2026-09-19T05:59:47.5964783Z   (compiling source file '../../tests/dense_cache_tests.cpp')
+2026-09-19T05:59:47.5966726Z       C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include\xutility(5310,24):
+2026-09-19T05:59:47.5973694Z       the template instantiation context (the oldest one first) is
+2026-09-19T05:59:47.5974557Z           D:\a\Testbed\Testbed\tests\dense_cache_tests.cpp(12,10):
+2026-09-19T05:59:47.5976230Z           see reference to function template instantiation 'void std::fill<std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,int>(const _FwdIt,const _FwdIt,const int &)' being compiled
+2026-09-19T05:59:47.5977759Z           with
+2026-09-19T05:59:47.5978193Z           [
+2026-09-19T05:59:47.5978620Z               _Ty=float,
+2026-09-19T05:59:47.5980043Z               _FwdIt=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<float>>>
+2026-09-19T05:59:47.5981533Z           ]
+2026-09-19T05:59:47.5982245Z   
+2026-09-19T05:59:47.6400945Z   white_document_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_document_tests.exe
+2026-09-19T05:59:48.2664390Z   white_density_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_density_tests.exe
+2026-09-19T05:59:48.3974209Z   white_dense_cache_tests.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_dense_cache_tests.exe
+2026-09-19T05:59:49.1667829Z   editor_ui.cpp
+2026-09-19T05:59:51.1473791Z   spike.cpp
+2026-09-19T05:59:53.3561872Z   bake_worker.cpp
+2026-09-19T05:59:55.2030265Z   Generating Code...
+2026-09-19T05:59:58.7290532Z   white_app.vcxproj -> D:\a\Testbed\Testbed\build\windows\Release\white_app.exe
+2026-09-19T05:59:59.1802778Z   Building Custom Rule D:/a/Testbed/Testbed/CMakeLists.txt
+2026-09-19T05:59:59.3822788Z ##[group]Run ctest --test-dir build/windows -C Release --output-on-failure
+2026-09-19T05:59:59.3823425Z [36;1mctest --test-dir build/windows -C Release --output-on-failure[0m
+2026-09-19T05:59:59.3861029Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T05:59:59.3861422Z ##[endgroup]
+2026-09-19T05:59:59.9767387Z Internal ctest changing into directory: D:/a/Testbed/Testbed/build/windows
+2026-09-19T06:00:00.0671724Z Test project D:/a/Testbed/Testbed/build/windows
+2026-09-19T06:00:00.0965850Z       Start  1: field_graph_contract
+2026-09-19T06:00:00.4846565Z  1/24 Test  #1: field_graph_contract .............   Passed    0.39 sec
+2026-09-19T06:00:00.4859385Z       Start  2: delta_tracking_contract
+2026-09-19T06:00:01.4195699Z  2/24 Test  #2: delta_tracking_contract ..........   Passed    0.93 sec
+2026-09-19T06:00:01.4199265Z       Start  3: ratio_tracking_contract
+2026-09-19T06:00:02.5230739Z  3/24 Test  #3: ratio_tracking_contract ..........   Passed    1.10 sec
+2026-09-19T06:00:02.5233837Z       Start  4: reference_contract
+2026-09-19T06:00:03.8701670Z  4/24 Test  #4: reference_contract ...............   Passed    1.35 sec
+2026-09-19T06:00:03.8705452Z       Start  5: preview_approx_contract
+2026-09-19T06:00:03.8785973Z  5/24 Test  #5: preview_approx_contract ..........   Passed    0.01 sec
+2026-09-19T06:00:03.8788776Z       Start  6: progressive_contract
+2026-09-19T06:00:03.8860275Z  6/24 Test  #6: progressive_contract .............   Passed    0.01 sec
+2026-09-19T06:00:03.8862917Z       Start  7: majorant_contract
+2026-09-19T06:00:03.9132091Z  7/24 Test  #7: majorant_contract ................   Passed    0.03 sec
+2026-09-19T06:00:03.9135466Z       Start  8: sun_cache_contract
+2026-09-19T06:00:03.9218419Z  8/24 Test  #8: sun_cache_contract ...............   Passed    0.01 sec
+2026-09-19T06:00:03.9221084Z       Start  9: hdr_export_contract
+2026-09-19T06:00:03.9385628Z  9/24 Test  #9: hdr_export_contract ..............   Passed    0.02 sec
+2026-09-19T06:00:03.9388228Z       Start 10: core_contract
+2026-09-19T06:00:03.9453141Z 10/24 Test #10: core_contract ....................   Passed    0.01 sec
+2026-09-19T06:00:03.9455757Z       Start 11: document_contract
+2026-09-19T06:00:03.9522288Z 11/24 Test #11: document_contract ................   Passed    0.01 sec
+2026-09-19T06:00:03.9525153Z       Start 12: persistence_contract
+2026-09-19T06:00:04.0161792Z 12/24 Test #12: persistence_contract .............   Passed    0.06 sec
+2026-09-19T06:00:04.0164669Z       Start 13: density_contract
+2026-09-19T06:00:04.0506520Z 13/24 Test #13: density_contract .................   Passed    0.03 sec
+2026-09-19T06:00:04.0509641Z       Start 14: optics_contract
+2026-09-19T06:00:04.0575526Z 14/24 Test #14: optics_contract ..................   Passed    0.01 sec
+2026-09-19T06:00:04.0578350Z       Start 15: editor_geometry_contract
+2026-09-19T06:00:04.0644458Z 15/24 Test #15: editor_geometry_contract .........   Passed    0.01 sec
+2026-09-19T06:00:04.0647208Z       Start 16: noise_contract
+2026-09-19T06:00:04.0761156Z 16/24 Test #16: noise_contract ...................   Passed    0.01 sec
+2026-09-19T06:00:04.0764075Z       Start 17: dense_cache_contract
+2026-09-19T06:00:04.0832531Z 17/24 Test #17: dense_cache_contract .............   Passed    0.01 sec
+2026-09-19T06:00:04.0835344Z       Start 18: revision_queue_contract
+2026-09-19T06:00:04.1324591Z 18/24 Test #18: revision_queue_contract ..........   Passed    0.05 sec
+2026-09-19T06:00:04.1328321Z       Start 19: phase_function_contract
+2026-09-19T06:00:04.2609899Z 19/24 Test #19: phase_function_contract ..........   Passed    0.13 sec
+2026-09-19T06:00:04.2612939Z       Start 20: optical_integration_contract
+2026-09-19T06:00:04.2686848Z 20/24 Test #20: optical_integration_contract .....   Passed    0.01 sec
+2026-09-19T06:00:04.2689866Z       Start 21: benchmark_contract
+2026-09-19T06:00:04.2775985Z 21/24 Test #21: benchmark_contract ...............   Passed    0.01 sec
+2026-09-19T06:00:04.2780524Z       Start 22: gate_fixture_contract
+2026-09-19T06:00:04.2886722Z 22/24 Test #22: gate_fixture_contract ............   Passed    0.01 sec
+2026-09-19T06:00:04.2889329Z       Start 23: app_help
+2026-09-19T06:00:04.3011470Z 23/24 Test #23: app_help .........................   Passed    0.01 sec
+2026-09-19T06:00:04.3014276Z       Start 24: app_invalid_option
+2026-09-19T06:00:04.3098846Z 24/24 Test #24: app_invalid_option ...............   Passed    0.01 sec
+2026-09-19T06:00:04.3105230Z 
+2026-09-19T06:00:04.3115028Z 100% tests passed, 0 tests failed out of 24
+2026-09-19T06:00:04.3115299Z 
+2026-09-19T06:00:04.3115399Z Total Test time (real) =   4.24 sec
+2026-09-19T06:00:04.4453301Z ##[group]Run ./scripts/capture-window.ps1 -Executable ./build/windows/Release/white_app.exe
+2026-09-19T06:00:04.4454040Z [36;1m./scripts/capture-window.ps1 -Executable ./build/windows/Release/white_app.exe[0m
+2026-09-19T06:00:04.4491740Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:00:04.4492101Z ##[endgroup]
+2026-09-19T06:01:05.2355740Z ##[group]Run ./scripts/capture-gate.ps1 -Executable ./build/windows/Release/white_app.exe
+2026-09-19T06:01:05.2356529Z [36;1m./scripts/capture-gate.ps1 -Executable ./build/windows/Release/white_app.exe[0m
+2026-09-19T06:01:05.2399497Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:01:05.2399896Z ##[endgroup]
+2026-09-19T06:03:46.7363423Z ##[group]Run ./scripts/capture-gate.ps1 -Executable ./build/windows/Release/white_app.exe -RecipeDirectory ./tests/fixtures/phase -OutputDirectory evidence/phase -ExportHdr
+2026-09-19T06:03:46.7364759Z [36;1m./scripts/capture-gate.ps1 -Executable ./build/windows/Release/white_app.exe -RecipeDirectory ./tests/fixtures/phase -OutputDirectory evidence/phase -ExportHdr[0m
+2026-09-19T06:03:46.7402602Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:03:46.7402960Z ##[endgroup]
+2026-09-19T06:04:14.7467162Z ##[group]Run ./scripts/capture-sun.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
+2026-09-19T06:04:14.7468733Z [36;1m./scripts/capture-sun.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe[0m
+2026-09-19T06:04:14.7509122Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:04:14.7509544Z ##[endgroup]
+2026-09-19T06:05:37.4596704Z ##[group]Run ./scripts/capture-majorant.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
+2026-09-19T06:05:37.4597939Z [36;1m./scripts/capture-majorant.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe[0m
+2026-09-19T06:05:37.4635861Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:05:37.4636268Z ##[endgroup]
+2026-09-19T06:06:31.7005320Z ##[group]Run ./scripts/capture-progressive.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
+2026-09-19T06:06:31.7006517Z [36;1m./scripts/capture-progressive.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe[0m
+2026-09-19T06:06:31.7045128Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:06:31.7045664Z ##[endgroup]
+2026-09-19T06:07:02.0296508Z ##[group]Run ./scripts/capture-diagnostics.ps1 -Executable ./build/windows/Release/white_app.exe -Check ./build/windows/Release/white_diagnostic_check.exe
+2026-09-19T06:07:02.0297694Z [36;1m./scripts/capture-diagnostics.ps1 -Executable ./build/windows/Release/white_app.exe -Check ./build/windows/Release/white_diagnostic_check.exe[0m
+2026-09-19T06:07:02.0335845Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:07:02.0336208Z ##[endgroup]
+2026-09-19T06:08:15.6617584Z ##[group]Run ./scripts/capture-approx.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
+2026-09-19T06:08:15.6618797Z [36;1m./scripts/capture-approx.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe[0m
+2026-09-19T06:08:15.6659319Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:08:15.6659780Z ##[endgroup]
+2026-09-19T06:08:25.5486448Z ##[group]Run ./scripts/benchmark-editor.ps1 -Executable ./build/windows/Release/white_app.exe -InternalWidth 160 -Updates 60
+2026-09-19T06:08:25.5487451Z [36;1m./scripts/benchmark-editor.ps1 -Executable ./build/windows/Release/white_app.exe -InternalWidth 160 -Updates 60[0m
+2026-09-19T06:08:25.5527863Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:08:25.5528225Z ##[endgroup]
+2026-09-19T06:10:02.5947869Z ##[group]Run Copy-Item LICENSE,THIRD_PARTY.md evidence/
+2026-09-19T06:10:02.5948447Z [36;1mCopy-Item LICENSE,THIRD_PARTY.md evidence/[0m
+2026-09-19T06:10:02.5949028Z [36;1mCopy-Item build/windows/_deps/tinyexr-src/tinyexr.h evidence/TINYEXR-source-with-license.h[0m
+2026-09-19T06:10:02.5949805Z [36;1mCopy-Item build/windows/_deps/tinyexr-src/deps/miniz/miniz.c evidence/MINIZ-source-with-license.c[0m
+2026-09-19T06:10:02.5950494Z [36;1mCopy-Item build/windows/_deps/sdl3-src/LICENSE.txt evidence/SDL-LICENSE.txt[0m
+2026-09-19T06:10:02.5951111Z [36;1mCopy-Item build/windows/_deps/imgui-src/LICENSE.txt evidence/IMGUI-LICENSE.txt[0m
+2026-09-19T06:10:02.5951690Z [36;1mCopy-Item build/windows/_deps/imguizmo-src/LICENSE evidence/IMGUIZMO-LICENSE.txt[0m
+2026-09-19T06:10:02.5952316Z [36;1mCopy-Item build/windows/_deps/nlohmann_json-src/LICENSE.MIT evidence/JSON-LICENSE.txt[0m
+2026-09-19T06:10:02.5952963Z [36;1mGet-ChildItem tools/dxc -Filter '*LICENSE*' | Copy-Item -Destination evidence/[0m
+2026-09-19T06:10:02.5953743Z [36;1mGet-CimInstance Win32_VideoController | Select-Object Name,DriverVersion,AdapterRAM | Format-List | Out-File evidence/adapters.txt[0m
+2026-09-19T06:10:02.5954865Z [36;1m"commit=6503ea6a3885b3cdf6fbb8c135b9157c1e71efcc`nconfiguration=Release`nrunner=windows-2022`nbackend=D3D12`nRTX-performance=not-validated" | Out-File evidence/build-info.txt[0m
+2026-09-19T06:10:02.5995687Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-19T06:10:02.5996084Z ##[endgroup]
+2026-09-19T06:10:03.0431283Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-19T06:10:03.0433081Z ##[group]Run actions/upload-artifact@v4
+2026-09-19T06:10:03.0433405Z with:
+2026-09-19T06:10:03.0433655Z   name: windows-Release-evidence
+2026-09-19T06:10:03.0434493Z   path: evidence/
+build/windows/Release/white_app.exe
+build/windows/Release/SDL3.dll
+build/windows/Release/shaders/
+build/windows/Testing/Temporary/
+
+2026-09-19T06:10:03.0435193Z   if-no-files-found: warn
+2026-09-19T06:10:03.0435457Z   compression-level: 6
+2026-09-19T06:10:03.0435756Z   overwrite: false
+2026-09-19T06:10:03.0436018Z   include-hidden-files: false
+2026-09-19T06:10:03.0436275Z ##[endgroup]
+2026-09-19T06:10:03.2329844Z (node:3880) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-09-19T06:10:03.2331329Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-19T06:10:03.5193767Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-09-19T06:10:03.5197486Z The least common ancestor is D:\a\Testbed\Testbed. This will be the root directory of the artifact
+2026-09-19T06:10:03.5198819Z With the provided path, there will be 753 files uploaded
+2026-09-19T06:10:03.5205183Z Artifact name is valid!
+2026-09-19T06:10:03.5209795Z Root directory input is valid!
+2026-09-19T06:10:03.9537890Z Beginning upload of artifact content to blob storage
+2026-09-19T06:10:06.1007862Z (node:3880) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-09-19T06:10:07.3342636Z Uploaded bytes 8388608
+2026-09-19T06:10:07.6158308Z Uploaded bytes 15200049
+2026-09-19T06:10:07.6941528Z Finished uploading artifact content to blob storage!
+2026-09-19T06:10:07.6945873Z SHA256 digest of uploaded artifact zip is d8bbabe5c93c7c954cf15859f66ca4f308b431ea2a7fa993209e029c7dc386c3
+2026-09-19T06:10:07.6948537Z Finalizing artifact upload
+2026-09-19T06:10:07.9609566Z Artifact windows-Release-evidence.zip successfully finalized. Artifact ID 10579240206
+2026-09-19T06:10:07.9610590Z Artifact windows-Release-evidence has been successfully uploaded! Final size is 15200049 bytes. Artifact ID is 10579240206
+2026-09-19T06:10:07.9621624Z Artifact download URL: https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35425272616/artifacts/10579240206
+2026-09-19T06:10:07.9970293Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-19T06:10:07.9971699Z Post job cleanup.
+2026-09-19T06:10:08.1765883Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-09-19T06:10:08.1979161Z git version 2.55.0.windows.5
+2026-09-19T06:10:08.2042553Z Temporarily overriding HOME='D:\a\_temp\747f6647-9020-4171-a40c-2b262d0789ac' before making global git config changes
+2026-09-19T06:10:08.2043832Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-19T06:10:08.2055220Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Testbed\Testbed
+2026-09-19T06:10:08.2344185Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-09-19T06:10:08.2636387Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-09-19T06:10:08.7519360Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-19T06:10:08.7706408Z http.https://github.com/.extraheader
+2026-09-19T06:10:08.7739025Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-09-19T06:10:08.7963275Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-09-19T06:10:09.2227691Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-19T06:10:09.2439082Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-09-19T06:10:09.6648571Z Cleaning up orphan processes
+2026-09-19T06:10:09.6868700Z Terminate orphan process: pid (3036) (vctip)
+2026-09-19T06:10:09.6959808Z Terminate orphan process: pid (2860) (MSBuild)
+2026-09-19T06:10:09.7029977Z Terminate orphan process: pid (7776) (MSBuild)
+2026-09-19T06:10:09.7074297Z Terminate orphan process: pid (6608) (MSBuild)
+2026-09-19T06:10:09.7263043Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

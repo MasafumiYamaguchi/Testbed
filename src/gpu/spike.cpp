@@ -260,8 +260,13 @@ void GpuSpike::validate() {
     SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
     const auto& noise=scene_snapshot_.cloud.noise;
     const bool detailed=noise.medium_strength>0||noise.micro_erosion>0||noise.warp_amplitude>0;
-    const float tolerance=fixture==2?float((detailed?1e-4:2e-5)*std::max(1.0,reference_field.maximum())):1e-6f;
-    std::cout<<"density_reference max_abs_error="<<max_error<<" tolerance="<<tolerance<<" detailed="<<detailed<<'\n';
+    const auto& recipe=scene_snapshot_.cloud;
+    const double unmodulated_max=recipe.cells.empty()?0:recipe.density*(1+recipe.overlap*double(recipe.cells.size()-1));
+    const double profile_bound=altitude_density_error_bound(recipe.altitude_density);
+    const double profile_tolerance=profile_bound*unmodulated_max;
+    const float tolerance=fixture==2?float((detailed?1e-4:2e-5)*std::max(1.0,reference_field.maximum())+profile_tolerance):1e-6f;
+    std::cout<<"density_reference max_abs_error="<<max_error<<" tolerance="<<tolerance<<" detailed="<<detailed
+        <<" profile_scale_error_bound="<<profile_bound<<" profile_density_tolerance="<<profile_tolerance<<'\n';
     if(!finite || max_error>tolerance) throw std::runtime_error("3D field readback differs from CPU fixture");
     if(fixture==0) {
         SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,5*sizeof(float),0};

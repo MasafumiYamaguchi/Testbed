@@ -34,3 +34,17 @@ this preview approximation as a generally accurate reference.
 
 `ctest.log`, `job.log`, `commit.txt` and `files-sha256.json` preserve test,
 provenance and file-integrity evidence. Physical GPU review remains deferred.
+
+## Fixed-head repeat
+
+[Run 35425272605](https://github.com/MasafumiYamaguchi/Testbed/actions/runs/35425272605)
+also passed for PR head `8e5c02b4e327df7dfa1976da876ed526362049ac`, tested as merge
+`6503ea6a3885b3cdf6fbb8c135b9157c1e71efcc`. Artifact `10578034649` was downloaded
+and its ZIP SHA-256 verified:
+`c9fc9bf62080b62ff8e5ecb14286e1dfaa394927e2b4c575a748c119af070f63`.
+All 31 EXRs are byte-identical to the first reviewed run archived above. All
+24 approximation numerical rows are also identical; their measured elapsed
+times differ as expected. The repeated metadata agrees with the new tested
+merge, 64-bit seeds and completion status. This repeat includes the Windows
+test-identifier portability fix and camera-independent sunlight fix; the CPU
+reference image results remained unchanged.

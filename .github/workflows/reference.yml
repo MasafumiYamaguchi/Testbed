@@ -21,6 +21,8 @@ jobs:
         run: ./scripts/capture-reference.ps1 -Executable ./build/cpu-release/white_reference
       - name: Frozen approximation comparison with independent seeds
         run: ./build/cpu-release/white_preview_reference_tests 65536 > evidence/reference/approximation.csv 2> evidence/reference/approximation.log
+      - name: Frozen heterogeneous reference image matrix
+        run: ./build/cpu-release/white_reference_image_tests tests/fixtures evidence/reference/image-matrix
       - name: Provenance and notices
         run: |
           git rev-parse HEAD > evidence/reference/commit.txt

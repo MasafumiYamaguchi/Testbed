@@ -1,4 +1,5 @@
 #include "white/cumulonimbus.hpp"
+#include "white/centerline_scene.hpp"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -149,6 +150,7 @@ CumulonimbusGroup command_cumulonimbus(CumulonimbusGroup group,const Cumulonimbu
 CumulonimbusGroup edit_cumulonimbus_recipe(const CumulonimbusGroup& source,const CloudRecipe& requested) {
     const auto before=derive_cumulonimbus_recipe(source);
     Scene validation;validation.cloud=requested;require_valid(validation);
+    if(requested.altitude_density!=before.altitude_density)throw std::invalid_argument("Edit altitude density through a centerline source or convert to Custom Cloud");
     if(requested.id!=before.id)throw std::invalid_argument("Prefab cloud ID cannot be changed");
     if(requested.envelope!=before.envelope)throw std::invalid_argument("Prefab envelope is derived; convert to Custom Cloud to edit it");
     auto group=source;
@@ -178,18 +180,19 @@ CumulonimbusGroup edit_cumulonimbus_recipe(const CumulonimbusGroup& source,const
     require(validate_cumulonimbus(group));return group;
 }
 Scene scene_with_cumulonimbus_command(Scene scene,const CumulonimbusCommand& command) {
+    if(scene.centerline)return scene_with_centerline_command(std::move(scene),CenterlineCommand{command});
     if(!scene.cumulonimbus)throw std::invalid_argument("Scene does not contain a Cumulonimbus source");
     scene.cumulonimbus=command_cumulonimbus(*scene.cumulonimbus,command);
     scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);require_valid(scene);return scene;
 }
 Scene new_cumulonimbus_scene(Scene scene) {
-    scene.cumulonimbus=CumulonimbusGroup{};scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);
+    scene.centerline.reset();scene.cumulonimbus=CumulonimbusGroup{};scene.cloud=derive_cumulonimbus_recipe(*scene.cumulonimbus);
     scene.camera.target={0,60,0};scene.camera.position={200,110,220};scene.camera.up={0,1,0};
     scene.sun.direction_to_light={0,0.8,0.6};scene.sun.irradiance={15,15,15};scene.exposure_ev=1;
     require_valid(scene);return scene;
 }
 Scene custom_cloud_scene(Scene scene) {
-    require_valid(scene);scene.cumulonimbus.reset();return scene;
+    require_valid(scene);scene.cumulonimbus.reset();scene.centerline.reset();return scene;
 }
 CumulonimbusDocument::CumulonimbusDocument(CumulonimbusGroup group):group_(std::move(group)){require(validate_cumulonimbus(group_));}
 void CumulonimbusDocument::advance() {

@@ -86,3 +86,10 @@ Actual GPU output comparison still uses the existing Actions density and capture
 fixtures after preview and bake call sites adopt `FieldEvaluationPlan::gpu_params`.
 Uniform identity establishes the same shader inputs; it does not replace recording
 the Actions runtime result or a future physical GPU review.
+
+
+Graph version 2 / density algorithm 3 extends this initial contract with the
+bounded altitude-density profile and a 912-byte uniform layout; see
+[ADR 0025](0025-centerline.md). The profile-disabled route preserves the original
+field values. This document's six-stage and 768-byte statements describe the
+original version-1 checkpoint.

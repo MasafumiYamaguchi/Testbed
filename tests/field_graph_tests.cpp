@@ -43,7 +43,7 @@ void compare_recipe(const CloudRecipe& recipe,std::size_t& samples) {
     const auto old_gpu=gpu_density_params(old),new_gpu=plan.gpu_params();
     check(std::memcmp(&old_gpu,&new_gpu,sizeof(old_gpu))==0,"GPU fixed kernel uniform bytes differ after graph lowering");
     check(plan.maximum()==old.maximum()&&plan.local_support()==old.local_support()&&plan.world_support()==old.world_support(),"Conservative bounds changed after graph lowering");
-    check(plan.algorithm_version()==2,"Density algorithm version changed");
+    check(plan.algorithm_version()==3,"Density algorithm version changed");
     GridLayout grid{old.local_support(),{31,33,35}};
     for(unsigned z=0;z<35;++z)for(unsigned y=0;y<33;++y)for(unsigned x=0;x<31;++x) {
         const auto p=index_to_local(grid,{double(x),double(y),double(z)});
@@ -95,8 +95,8 @@ int main(int argc,char** argv) {try {
     bad=original;bad.output=4;rejected(bad,"output must reference");
     bad=original;bad.nodes.push_back({99,FieldShape{}, {}});rejected(bad,"Disconnected");
     bad=original;bad.nodes.push_back({99,FieldGridOperation{}, {}});rejected(bad,"Iterative Grid Operation");
-    bad=original;bad.graph_version=2;rejected(bad,"graph version");
-    bad=original;bad.algorithm_version=3;rejected(bad,"algorithm version");
+    bad=original;bad.graph_version=3;rejected(bad,"graph version");
+    bad=original;bad.algorithm_version=4;rejected(bad,"algorithm version");
     bad=original;std::get<FieldShape>(node(bad,1).parameters).cells.resize(9);rejected(bad,"8 cell");
     bad=original;std::get<FieldMask>(node(bad,5).parameters).cuts.resize(9);rejected(bad,"8 cut");
     bad=original;std::get<FieldDensity>(node(bad,4).parameters).scale=std::numeric_limits<double>::quiet_NaN();rejected(bad,"Density/blend/overlap");

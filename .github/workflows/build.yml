@@ -46,6 +46,9 @@ jobs:
       - name: Cumulonimbus creation and parameter gizmos
         if: matrix.config == 'Release'
         run: ./scripts/capture-prefab.ps1 -Executable ./build/windows/Release/white_app.exe
+      - name: Centerline point gizmo and profile captures
+        if: matrix.config == 'Release'
+        run: ./scripts/capture-centerline.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe
       - name: Fixed Phase-0 recipe comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-gate.ps1 -Executable ./build/windows/Release/white_app.exe

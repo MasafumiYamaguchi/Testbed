@@ -47,11 +47,11 @@ int main(int argc,char** argv) {
     unsigned progressive_samples=0,diagnostic_mode=0;
     bool empty_skip=false;
     std::string capture,hdr_output;
-    bool lifecycle=false,self_test=false,prefab_test=false;
+    bool lifecycle=false,self_test=false,prefab_test=false,centerline_test=false;
     for(int i=1;i<argc;++i) {
         std::string_view arg(argv[i]);
         if(arg=="--help") {
-            std::cout<<"ProjectWhite --export-hdr NEW_DIRECTORY --frames N --capture output.bmp --self-test --prefab-test --lifecycle-test --scene 0..4\n"
+            std::cout<<"ProjectWhite --export-hdr NEW_DIRECTORY --frames N --capture output.bmp --self-test --prefab-test --centerline-test --lifecycle-test --scene 0..4\n"
                 "--recipe FILE --render-width 64..640 --view-steps 8..512 --shadow-steps 1..64 --cache 0|128|256\n"
                 "--benchmark-updates 30..10000 --benchmark-track density|camera|exposure --benchmark-output FILE --no-validation\n"
                 "Windows D3D12 GPU field validation; startup fails if required GPU features are absent.\n"; return 0;
@@ -70,6 +70,7 @@ int main(int argc,char** argv) {
             if(arg=="--cache"){valid=valid&&(number==0||number==128||number==256);cache=number;}
             if(!valid){std::cerr<<"Invalid quality/cache argument: "<<arg<<'\n';return 2;}continue;
         }
+        if(arg=="--centerline-test"){centerline_test=true;continue;}
         if(arg=="--prefab-test"){prefab_test=true;continue;}
         if(arg=="--self-test") {self_test=true;continue;}
         if(arg=="--scene" && i+1<argc) {
@@ -92,6 +93,7 @@ int main(int argc,char** argv) {
         }
         std::cerr<<"Unknown or incomplete argument: "<<arg<<'\n';return 2;
     }
+    if(centerline_test&&(self_test||prefab_test||lifecycle||benchmark_updates||!recipe.empty()||frames<200||progressive_samples)){std::cerr<<"--centerline-test requires --frames >= 200 and excludes other scripted runs\n";return 2;}
     if(prefab_test&&(self_test||lifecycle||benchmark_updates||!recipe.empty()||frames<240||progressive_samples)){std::cerr<<"--prefab-test requires --frames >= 240 and excludes other scripted runs\n";return 2;}
     if(!hdr_output.empty()&&(capture.empty()||!frames||self_test||lifecycle)){std::cerr<<"--export-hdr requires --capture and --frames, without self-test/lifecycle\n";return 2;}
     if(progressive_samples&&(self_test||benchmark_updates)){std::cerr<<"Progressive mode excludes fixed self-test/benchmark\n";return 2;}
@@ -120,6 +122,7 @@ int main(int argc,char** argv) {
         Ui ui;ui.init(gpu);
         white::EditorUi editor(preset);
         if(prefab_test)editor.start_prefab_test();
+        if(centerline_test)editor.start_centerline_test();
         if(!recipe.empty())editor.session.load(std::filesystem::u8path(recipe),true);
         gpu.internal_width=render_width;gpu.view_steps=view_steps;gpu.shadow_steps=shadow_steps;
         gpu.set_scene(editor.session.document().scene(),editor.session.document().revision());
@@ -180,6 +183,7 @@ int main(int argc,char** argv) {
             ImGui_ImplSDLGPU3_NewFrame(); ImGui_ImplSDL3_NewFrame();
             if(self_test)editor.scripted_input(frame);
             if(prefab_test)editor.prefab_test_input(frame);
+            if(centerline_test)editor.centerline_test_input(frame);
             ImGui::NewFrame();
             editor.draw(gpu);
             gpu.poll_bakes();
@@ -190,6 +194,7 @@ int main(int argc,char** argv) {
             if(self_test&&gpu.scene_revision!=editor.session.document().revision())throw std::runtime_error("Self-test preview revision is stale");
             if(self_test)editor.verify_scripted_input(frame);
             if(prefab_test)editor.verify_prefab_test(frame);
+            if(centerline_test)editor.verify_centerline_test(frame);
             ImGui::Render();
             bool hdr_work=false;
             const auto record_start=std::chrono::steady_clock::now();
@@ -245,6 +250,7 @@ int main(int argc,char** argv) {
                 gpu.save_capture(std::filesystem::path(capture).parent_path()/"step-half.bmp");
                 gpu.view_steps/=2;gpu.volume_dirty=true;convergence_frame=-1;baseline_hdr.clear();
             }
+            if(centerline_test&&swap&&(frame==116||frame==160)) {gpu.validate();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("centerline-"+std::to_string(frame)+".bmp"));}
             if(prefab_test&&swap&&(frame==116||frame==156||frame==196||frame==225)) {gpu.validate();(void)gpu.read_hdr();gpu.save_capture(std::filesystem::path(capture).parent_path()/("prefab-"+std::to_string(frame)+".bmp"));}
             if(self_test&&swap&&(frame==116||frame==156))gpu.save_capture(std::filesystem::path(capture).parent_path()/(frame==116?"gizmo-move.bmp":"gizmo-scale.bmp"));
             if(self_test&&swap&&frame>=190&&frame<=610&&(frame-190)%20==0) {
