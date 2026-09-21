@@ -23,7 +23,7 @@ void gpu_check(bool success, const char* operation) {
     if (!success) throw std::runtime_error(std::string(operation) + ": " + SDL_GetError());
 }
 namespace {
-struct DensityAllowance {bool detailed=false;double profile_bound=0,profile_tolerance=0;};
+struct DensityAllowance {bool detailed=false;double profile_bound=0,profile_tolerance=0,anvil_bound=0,anvil_tolerance=0;};
 DensityAllowance density_allowance(const Scene& scene){
     bool detailed=false;double profile_bound=0,profile_tolerance=0;
     auto include_profile=[&](const CloudRecipe& recipe,double translation_y){
@@ -35,9 +35,9 @@ DensityAllowance density_allowance(const Scene& scene){
         const double unmodulated_max=recipe.cells.empty()?0:recipe.density*(1+recipe.overlap*double(recipe.cells.size()-1));
         profile_bound=std::max(profile_bound,bound);profile_tolerance+=bound*unmodulated_max;
     };
-    const auto* grouped=scene.top_lobes?&scene.top_lobes->trunk:(scene.developed?&*scene.developed:nullptr);
-    if(scene.top_lobes&&TopLobeEvaluationPlan(*scene.top_lobes).gpu_params().mask.x!=0){
-        const auto& source=*scene.top_lobes;const DevelopedEvaluationPlan trunk(source.trunk);
+    const auto* grouped=editable_developed_source(scene);
+    if(scene_has_active_top_lobes(scene)){
+        const auto& source=*editable_top_lobe_source(scene);const DevelopedEvaluationPlan trunk(source.trunk);
         include_profile(trunk.fields()[0].recipe(),trunk.cloud().cells[0].translation.y);
         // The top group uses object-local coordinates; its inherited profile
         // and mask are shifted once when lowered, matching its GPU packet.
@@ -48,13 +48,23 @@ DensityAllowance density_allowance(const Scene& scene){
         const AltitudeDensityProfile ramp{true,top_lobe_mask_height(source),source.settings.mask_transition,{{0,0},{1,1}}};
         const double mask_bound=1.5*altitude_density_error_bound(ramp);
         profile_bound=std::max(profile_bound,mask_bound);profile_tolerance+=mask_bound*top.density;
-    }else if(grouped&&grouped->cells.size()>1){
+    }else if(grouped&&(grouped->cells.size()>1||scene_has_active_anvil(scene))){
         const DevelopedEvaluationPlan plan(*grouped);
         for(size_t i=0;i<plan.fields().size();++i)include_profile(plan.fields()[i].recipe(),plan.cloud().cells[i].translation.y);
         // Each nonnegative profile coefficient has piecewise derivative at
         // most one (coverage + bridge <= 1, overlap <= 1): sum its allowance.
     }else include_profile(scene.cloud,0);
-    return {detailed,profile_bound,profile_tolerance};
+    double anvil_bound=0,anvil_tolerance=0;
+    if(scene_has_active_anvil(scene)){
+        anvil_bound=anvil_edge_error_bound(*scene.anvil);
+        const auto& source=*scene.anvil;const auto& cells=source.cloud.trunk.cells;
+        const auto& cell=*std::find_if(cells.begin(),cells.end(),[&](const auto& value){return value.id==source.cloud.target_cell;});
+        const auto recipe=lower_centerline_to_recipe(cell.shape);
+        // max(original, addition) is 1-Lipschitz in both operands. The sheet
+        // inherits only factors <= 1 and has no density-overlap multiplier.
+        anvil_tolerance=anvil_bound*recipe.density*source.settings.density_scale*AltitudeDensityEvaluator(recipe.altitude_density).maximum();
+    }
+    return {detailed,profile_bound,profile_tolerance,anvil_bound,anvil_tolerance};
 }
 struct Transfer {
     SDL_GPUDevice* device;
@@ -220,7 +230,7 @@ void GpuSpike::set_scene(const Scene& scene,std::uint64_t revision,std::chrono::
     require_valid(scene);const auto dirty=classify_change(scene_snapshot_,scene);
     const bool density_changed=has(dirty,Dirty::density)||fixture!=2;
     scene_snapshot_=scene;scene_revision=revision;exposure_ev=float(scene.exposure_ev);accepted_=accepted;
-    if(scene_density_requires_direct(scene_snapshot_))std::cout<<"density_mode=grouped_direct groups=2 top_lobes="<<(scene_snapshot_.top_lobes&&gpu_scene_density_params(scene_snapshot_).mask.x!=0)<<" density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints\n";
+    if(scene_density_requires_direct(scene_snapshot_))std::cout<<"density_mode=grouped_direct groups=2 top_lobes="<<scene_has_active_top_lobes(scene_snapshot_)<<" density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints\n";
     const auto invalidate=invalidation(dirty);if(invalidate.hdr)volume_dirty=true;
     if(density_changed)try{const auto n=Uint32(cache_resolution);queue_bake(use_cache&&!scene_density_requires_direct(scene_snapshot_)?std::array<Uint32,3>{n,n,n}:std::array<Uint32,3>{65,67,69});}
     catch(const std::exception& e){report=std::string("Bake failed; direct preview active: ")+e.what();}
@@ -294,9 +304,10 @@ void GpuSpike::validate() {
     SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
     const auto allowance=density_allowance(scene_snapshot_);
     const auto detailed=allowance.detailed;const auto profile_bound=allowance.profile_bound,profile_tolerance=allowance.profile_tolerance;
-    const float tolerance=fixture==2?float((detailed?1e-4:2e-5)*std::max(1.0,reference_field.maximum())+profile_tolerance):1e-6f;
+    const float tolerance=fixture==2?float((detailed?1e-4:2e-5)*std::max(1.0,reference_field.maximum())+profile_tolerance+allowance.anvil_tolerance):1e-6f;
     std::cout<<"density_reference max_abs_error="<<max_error<<" tolerance="<<tolerance<<" detailed="<<detailed
-        <<" profile_scale_error_bound="<<profile_bound<<" profile_density_tolerance="<<profile_tolerance<<'\n';
+        <<" profile_scale_error_bound="<<profile_bound<<" profile_density_tolerance="<<profile_tolerance
+        <<" anvil_coverage_error_bound="<<allowance.anvil_bound<<" anvil_density_tolerance="<<allowance.anvil_tolerance<<'\n';
     if(!finite || max_error>tolerance) throw std::runtime_error("3D field readback differs from CPU fixture");
     if(fixture==0) {
         SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,5*sizeof(float),0};
@@ -559,7 +570,7 @@ void GpuSpike::validate_cache_samples() {
         const auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map cache samples");
         if(scene_density_requires_direct(scene_snapshot_)){
             const SceneDensityEvaluator cpu(scene_snapshot_);const auto allowance=density_allowance(scene_snapshot_);
-            const double tolerance=(allowance.detailed?1e-4:2e-5)*std::max(1.,cpu.maximum())+allowance.profile_tolerance;
+            const double tolerance=(allowance.detailed?1e-4:2e-5)*std::max(1.,cpu.maximum())+allowance.profile_tolerance+allowance.anvil_tolerance;
             bool finite=true;double maximum=0,sum=0;
             for(int i=0;i<256;++i){const Vec3 p{values[4*i+1],values[4*i+2],values[4*i+3]};
                 for(int c=0;c<4;++c)finite=finite&&std::isfinite(values[4*i+c]);

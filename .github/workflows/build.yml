@@ -46,6 +46,9 @@ jobs:
       - name: Selected growth stage and altitude wind comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-growth.ps1 -Executable ./build/windows/Release/white_app.exe -Generator ./build/windows/Release/white_generation_tests.exe
+      - name: Anvil growth wind and handle comparisons
+        if: matrix.config == 'Release'
+        run: ./scripts/capture-anvil.ps1 -Executable ./build/windows/Release/white_app.exe -Generator ./build/windows/Release/white_anvil_tests.exe -Compare ./build/windows/Release/white_hdr_compare.exe
       - name: Top lobe hierarchy comparisons
         if: matrix.config == 'Release'
         run: ./scripts/capture-top-lobes.ps1 -Executable ./build/windows/Release/white_app.exe -Compare ./build/windows/Release/white_hdr_compare.exe

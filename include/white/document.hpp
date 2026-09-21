@@ -192,6 +192,20 @@ struct TopLobeSource {
     TopLobeSettings settings{};
     bool operator==(const TopLobeSource&)const=default;
 };
+inline constexpr std::uint32_t anvil_contract_version=1;
+struct AnvilSettings {
+    bool enabled=false,follow_wind=true;
+    double start_height=84,thickness=24,width=100,extension=80;
+    Vec3 direction{1,0,0}; // Unit horizontal vector in development-local space.
+    double shear=0,edge_fade=1,density_scale=.8;
+    bool operator==(const AnvilSettings&)const=default;
+};
+struct AnvilSource {
+    std::uint32_t contract_version=anvil_contract_version;
+    TopLobeSource cloud; // One authority, includes the target and fixed top IDs.
+    AnvilSettings settings{};
+    bool operator==(const AnvilSource&)const=default;
+};
 struct Camera {
     Vec3 position{120,70,120},target{0,20,0},up{0,1,0};
     double vertical_fov_degrees=45,near_plane=0.1,far_plane=10000;
@@ -203,11 +217,12 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=8,algorithm_version=3;
+    std::uint32_t schema_version=9,algorithm_version=3;
     CloudRecipe cloud{}; // Derived render snapshot when cumulonimbus is present.
     std::optional<CumulonimbusGroup> cumulonimbus{};
     std::optional<CenterlineShape> centerline{}; // Exclusive source alternative.
     std::optional<TopLobeSource> top_lobes{};
+    std::optional<AnvilSource> anvil{};
     std::optional<DevelopedCloud> developed{}; // Complete source; cloud is a validated metadata proxy for >1 group.
     Camera camera{};
     Sun sun{};

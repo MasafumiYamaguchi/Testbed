@@ -1,0 +1,87 @@
+backend=direct3d12 SDL=3002028 requested_debug=true format=R32_FLOAT dimensions=17x19x23
+GPU optical_contract case=0 T=1 L=6 T_abs_error=0 L_abs_error=0 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=1 T=1 L=5e-09 T_abs_error=9.60465e-09 L_abs_error=9.46126e-17 L_absolute_tolerance=1e-14 relative_tolerance=2e-5
+GPU optical_contract case=2 T=0.496585 L=0.672666 T_abs_error=5.71405e-09 L_abs_error=2.64492e-08 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=3 T=0.496585 L=0.487224 T_abs_error=5.71405e-09 L_abs_error=1.18421e-10 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=4 T=0.367879 L=1.26424 T_abs_error=9.14976e-09 L_abs_error=1.82995e-08 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_contract case=5 T=0.367879 L=1.51709 T_abs_error=5.86897e-07 L_abs_error=1.33703e-06 L_absolute_tolerance=2e-05 relative_tolerance=2e-5
+GPU optical_convergence steps=16 T_abs_error=0.000294456
+GPU optical_convergence steps=32 T_abs_error=7.37696e-05
+GPU optical_convergence steps=64 T_abs_error=1.89631e-05
+GPU HG samples=104 cosine_max_error=1.57724e-05 pdf_max_relative_error=0.000123273 RNG_exact=true
+GPU ray/box six cases max_abs_error=4.76837e-07
+GPU homogeneous optics max_abs_error=9.99995e-06 tolerance=0.001
+bake=1 extent=65x67x69 texture_bytes=1201980 peak_requested_gpu_bytes=3568956 cpu_reference_bytes=1201980 record_cpu_ms=0.4318 submit_to_fence_wall_ms=214.995 gpu_timestamp_ms=unavailable
+density_reference max_abs_error=4.52995e-06 tolerance=2e-05 detailed=0 profile_scale_error_bound=0 profile_density_tolerance=0
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=4.52995e-06 interpolation_error=0 PASS
+edit_to_present_submission revision=2 ms=101.166 samples=1 p50_ms=101.166 p95_ms=101.166
+density_publish producer_revision=2 consumer_revision=2 matching_density_hash=15677740586957856678 peak_requested_gpu_bytes=73823548
+density_job_revision=2 input_hash=7700102445826741793 publish=1 coalesced=0 discarded=0 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=0.5278 generation_submit_and_fence_wall_ms=39.9808
+capture=developed-initial.bmp frame=60
+HDR verified 160x138 view_steps=64 shadow_steps=8 max_channel=1 min_T=0.320038 CPU_T_max_error=2.25004e-06
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=3 ms=1.8968 samples=2 p50_ms=1.8968 p95_ms=101.166
+density_publish producer_revision=3 consumer_revision=3 matching_density_hash=13292494102284941332 peak_requested_gpu_bytes=77043388
+density_job_revision=3 input_hash=12098955854436107059 publish=1 coalesced=0 discarded=0 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=0.713 generation_submit_and_fence_wall_ms=411.854
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=4 ms=21.1093 samples=3 p50_ms=21.1093 p95_ms=101.166
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=5 ms=42.6268 samples=4 p50_ms=21.1093 p95_ms=101.166
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+density_job_revision=4 input_hash=17857468212245509728 publish=0 coalesced=0 discarded=1 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=20.0953 generation_submit_and_fence_wall_ms=76.7076
+edit_to_present_submission revision=6 ms=1.8664 samples=5 p50_ms=21.1093 p95_ms=101.166
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=7 ms=101.957 samples=6 p50_ms=21.1093 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+density_job_revision=5 input_hash=7735540733373651205 publish=0 coalesced=1 discarded=2 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=0.9019 generation_submit_and_fence_wall_ms=140.63
+edit_to_present_submission revision=8 ms=61.43 samples=7 p50_ms=42.6268 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+density_job_revision=7 input_hash=9166190522003659336 publish=0 coalesced=1 discarded=3 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=0.9168 generation_submit_and_fence_wall_ms=79.9878
+edit_to_present_submission revision=9 ms=60.6291 samples=8 p50_ms=42.6268 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+density_job_revision=8 input_hash=7887506434675518034 publish=0 coalesced=1 discarded=4 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=0.5176 generation_submit_and_fence_wall_ms=77.8457
+edit_to_present_submission revision=10 ms=1.9025 samples=9 p50_ms=42.6268 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=11 ms=91.3139 samples=10 p50_ms=42.6268 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+density_job_revision=9 input_hash=16246931683949350602 publish=0 coalesced=2 discarded=5 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=1.0145 generation_submit_and_fence_wall_ms=144.871
+edit_to_present_submission revision=12 ms=60.0588 samples=11 p50_ms=60.0588 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+density_job_revision=11 input_hash=6252686515405345284 publish=0 coalesced=2 discarded=6 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=0.6583 generation_submit_and_fence_wall_ms=65.0849
+edit_to_present_submission revision=13 ms=60.9622 samples=12 p50_ms=60.0588 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+density_job_revision=12 input_hash=18427078523028149542 publish=0 coalesced=2 discarded=7 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=0.5479 generation_submit_and_fence_wall_ms=78.5504
+edit_to_present_submission revision=14 ms=1.8471 samples=13 p50_ms=60.0588 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=15 ms=101.906 samples=14 p50_ms=60.0588 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+density_job_revision=13 input_hash=1761638608629670667 publish=0 coalesced=3 discarded=8 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=0.6721 generation_submit_and_fence_wall_ms=140.9
+edit_to_present_submission revision=16 ms=1.8462 samples=15 p50_ms=60.0588 p95_ms=101.957
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=17 ms=78.2018 samples=16 p50_ms=60.0588 p95_ms=101.957
+density_job_revision=15 input_hash=12849611707650230199 publish=0 coalesced=4 discarded=9 pending=1 running=0 generation_cpu_elapsed_excluding_fences_ms=0.5775 generation_submit_and_fence_wall_ms=130.693
+density_publish producer_revision=17 consumer_revision=17 matching_density_hash=14484408174453542782 peak_requested_gpu_bytes=76361404
+density_job_revision=17 input_hash=12374433771415546617 publish=1 coalesced=4 discarded=9 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=1.0366 generation_submit_and_fence_wall_ms=454.82
+density_reference max_abs_error=1.43945e-05 tolerance=0.000181332 detailed=1 profile_scale_error_bound=1.40905e-06 profile_density_tolerance=1.83177e-06
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=1.43945e-05 interpolation_error=0 PASS
+grouped_direct_points samples=256 max_abs=4.99203e-07 mean_abs=1.40359e-08 tolerance=0.000181332 coordinates=GPU_evaluated combined_cache=false
+HDR verified 160x138 view_steps=64 shadow_steps=8 max_channel=1 min_T=0.319947 CPU_T_max_error=1.83962e-06
+developed_move_gizmo_command_undo=true PASS
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=19 ms=20.083 samples=17 p50_ms=60.0588 p95_ms=101.957
+developed_independent_stretch_source_save_reload=true PASS
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=20 ms=21.0932 samples=18 p50_ms=42.6268 p95_ms=101.957
+density_publish producer_revision=20 consumer_revision=20 matching_density_hash=16544629974255366770 peak_requested_gpu_bytes=77043388
+density_job_revision=20 input_hash=11967165080495491509 publish=1 coalesced=4 discarded=9 pending=0 running=0 generation_cpu_elapsed_excluding_fences_ms=0.6192 generation_submit_and_fence_wall_ms=501.91
+developed_delete_undo=true PASS
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=22 ms=18.0809 samples=19 p50_ms=42.6268 p95_ms=101.957
+density_reference max_abs_error=1.0848e-05 tolerance=0.000181597 detailed=1 profile_scale_error_bound=1.61302e-06 profile_density_tolerance=2.09692e-06
+fixture=2 extent=65x67x69 row_bytes=512 max_abs_error=1.0848e-05 interpolation_error=0 PASS
+grouped_direct_points samples=256 max_abs=8.76817e-07 mean_abs=1.3146e-08 tolerance=0.000181597 coordinates=GPU_evaluated combined_cache=false
+HDR verified 160x138 view_steps=64 shadow_steps=8 max_channel=1 min_T=0.320348 CPU_T_max_error=2.11298e-06
+developed_empty_source_undo=true PASS
+density_mode=grouped_direct groups=2 density_cache=false sun_cache=false majorant_skip=false reason=independent_group_hard_constraints
+edit_to_present_submission revision=24 ms=17.5181 samples=20 p50_ms=21.1093 p95_ms=101.906
+shutdown=clean lifecycle_test=0

@@ -42,7 +42,13 @@ void draw_primitive(const Scene& scene,Vec3 center,Vec3 radii,bool selected,bool
 void EditorUi::apply(Scene scene) {
     try {
         const auto& before=session.document().scene();
-        if(scene.top_lobes){
+        if(scene.anvil){
+            if(before.anvil&&scene.anvil==before.anvil&&scene.cloud!=before.cloud){
+                if(scene.cloud.optics!=before.cloud.optics)scene.anvil->cloud.trunk.optics=scene.cloud.optics;
+                else throw std::invalid_argument("Edit the anvil or trunk through source controls");
+            }
+            refresh_anvil_scene(scene);
+        }else if(scene.top_lobes){
             if(before.top_lobes&&scene.top_lobes==before.top_lobes&&scene.cloud!=before.cloud){
                 if(scene.cloud.optics!=before.cloud.optics)scene.top_lobes->trunk.optics=scene.cloud.optics;
                 else throw std::invalid_argument("Edit the top hierarchy or trunk through source controls");
@@ -135,6 +141,7 @@ void EditorUi::draw(GpuSpike& gpu) {
     ImGui::EndDisabled();
     draw_generation_ui();
     draw_top_lobes_ui();
+    draw_anvil_ui();
     draw_developed_ui();
     if(session.document().scene().centerline) {
         if(ImGui::CollapsingHeader("Centerline and profiles",ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -359,13 +366,15 @@ void EditorUi::draw(GpuSpike& gpu) {
     const bool whole=(development||prefab_source(current))&&prefab_group_;
     if(whole){const auto& p=development?development->shape.source.parameters:prefab_source(current)->parameters;selected_center=(scale_?Vec3{p.width*.5,p.cloud_base+p.height,0}:Vec3{0,p.cloud_base,0})+(development?development->translation:Vec3{});selected_radii={1,1,1};selected=true;}
     if(gpu.show_volume&&editable_developed_source(current)){for(const auto& cell:editable_developed_source(current)->cells){const auto recipe=lower_centerline_to_recipe(cell.shape);for(const auto& c:recipe.cells)if(std::find(cell.roles.begin(),cell.roles.end(),unsigned(&c-recipe.cells.data()))!=cell.roles.end())draw_primitive(current,c.center+cell.translation,c.radii,cell.id==development_,false,vx,vy,vw,vh);}}
-    if(gpu.show_volume&&current.top_lobes){for(const auto& node:generate_top_lobes(*current.top_lobes))draw_primitive(current,node.primitive.center,node.primitive.radii,false,false,vx,vy,vw,vh);}
+    if(gpu.show_volume&&editable_top_lobe_source(current)){for(const auto& node:generate_top_lobes(*editable_top_lobe_source(current)))draw_primitive(current,node.primitive.center,node.primitive.radii,false,false,vx,vy,vw,vh);}
     if(gpu.show_volume&&!editable_developed_source(current)){
         for(const auto& c:current.cloud.cells)draw_primitive(current,c.center,c.radii,!select_cuts_&&selected_==c.id,false,vx,vy,vw,vh);
         for(const auto& c:current.cloud.cuts)draw_primitive(current,c.center,c.radii,select_cuts_&&selected_==c.id,true,vx,vy,vw,vh);
     }
     const bool modal=ImGui::IsPopupOpen(nullptr,ImGuiPopupFlags_AnyPopupId);
-    const bool gizmo_active=selected&&gpu.show_volume&&!inspector_drag_&&!orbit_drag_&&!modal;
+    const bool anvil_handles=current.anvil&&anvil_handle_!=0&&gpu.show_volume&&!inspector_drag_&&!orbit_drag_&&!modal;
+    if(anvil_handles)draw_anvil_gizmo(vx,vy,vw,vh);
+    const bool gizmo_active=selected&&gpu.show_volume&&!inspector_drag_&&!orbit_drag_&&!modal&&!anvil_handles;
     if(gizmo_active) {
         auto view=camera_view(current.camera),projection=camera_projection(current.camera,vw/vh),model=primitive_matrix(current.cloud.transform,selected_center,selected_radii);
         ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());ImGuizmo::SetRect(vx,vy,vw,vh);ImGuizmo::SetOrthographic(false);
@@ -408,7 +417,7 @@ void EditorUi::draw(GpuSpike& gpu) {
         if(!using_now&&gizmo_drag_){session.end_drag();gizmo_drag_=false;}
     }
     const bool over=io.MousePos.x>=vx&&io.MousePos.x<vx+vw&&io.MousePos.y>=vy&&io.MousePos.y<vy+vh;
-    if(over&&!modal&&!(gizmo_active&&ImGuizmo::IsOver())&&!gizmo_drag_&&!inspector_drag_) {
+    if(over&&!modal&&!((gizmo_active||anvil_handles)&&ImGuizmo::IsOver())&&!gizmo_drag_&&!inspector_drag_) {
         if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)&&gpu.show_volume&&!whole&&!curve&&!editable_developed_source(current)) {
             const auto& sc=session.document().scene();auto ray=camera_ray(sc.camera,(io.MousePos.x-vx)/vw,(io.MousePos.y-vy)/vh,vw/vh);
             if(auto pick=pick_primitive(sc.cloud,ray,select_cuts_)){selected_=*pick;prefab_group_=false;curve_point_=0;}

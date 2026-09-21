@@ -1,0 +1,1 @@
+Actual Windows development move gizmo/Command/Undo, independent stretch, source Save/Open and delete Undo. One group migrates exactly. Two groups render Direct even when dense/sun/empty-skip requested. GPU density and point comparisons run during input capture. Physical review deferred.
