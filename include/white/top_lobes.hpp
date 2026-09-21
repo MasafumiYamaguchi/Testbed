@@ -28,6 +28,7 @@ public:
     explicit TopLobeEvaluationPlan(TopLobeSource);
     const TopLobeSource& source()const{return source_;}
     const std::vector<TopLobeNode>& hierarchy()const{return hierarchy_;}
+    const std::optional<DensityField>& top_field()const{return top_;}
     double at(Vec3 object_local)const;
     double maximum()const{return maximum_;}
     Bounds local_support()const{return support_;}

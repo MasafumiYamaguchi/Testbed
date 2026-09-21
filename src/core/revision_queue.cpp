@@ -7,6 +7,7 @@
 namespace white {
 namespace {std::uint64_t hash_byte(std::uint64_t h,unsigned char b){return (h^b)*1099511628211ull;}}
 std::uint64_t density_input_hash(const Scene& scene){
+    if(scene.frozen){require_valid(scene);auto hash=frozen_density_hash(*scene.frozen);if(!scene.finish_stack.layers.empty()){const auto stack=finish_stack_hash(scene.finish_stack);for(unsigned i=0;i<8;++i)hash=hash_byte(hash,static_cast<unsigned char>(stack>>(8*i)));}return hash;}
     Scene canonical;canonical.schema_version=scene.schema_version;canonical.algorithm_version=scene.algorithm_version;canonical.cloud=scene.cloud;canonical.cloud.optics={};
     if(scene_has_active_anvil(scene)){
         canonical.anvil=*scene.anvil;auto& source=canonical.anvil->cloud.trunk;

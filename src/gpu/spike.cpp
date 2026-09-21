@@ -23,7 +23,7 @@ void gpu_check(bool success, const char* operation) {
     if (!success) throw std::runtime_error(std::string(operation) + ": " + SDL_GetError());
 }
 namespace {
-struct DensityAllowance {bool detailed=false;double profile_bound=0,profile_tolerance=0,anvil_bound=0,anvil_tolerance=0;};
+struct DensityAllowance {bool detailed=false;double profile_bound=0,profile_tolerance=0,anvil_bound=0,anvil_tolerance=0,finish_tolerance=0;};
 DensityAllowance density_allowance(const Scene& scene){
     bool detailed=false;double profile_bound=0,profile_tolerance=0;
     auto include_profile=[&](const CloudRecipe& recipe,double translation_y){
@@ -36,7 +36,13 @@ DensityAllowance density_allowance(const Scene& scene){
         profile_bound=std::max(profile_bound,bound);profile_tolerance+=bound*unmodulated_max;
     };
     const auto* grouped=editable_developed_source(scene);
-    if(scene_has_active_top_lobes(scene)){
+    if(scene.frozen){
+        for(const auto& field:scene.frozen->fields)include_profile(frozen_effective_recipe(field),field.translation.y);
+        if(scene.frozen->top_enabled){const auto& top=scene.frozen->fields[1].recipe;
+            const AltitudeDensityProfile ramp{true,top.base.height,top.base.transition,{{0,0},{1,1}}};
+            const double bound=1.5*altitude_density_error_bound(ramp);profile_bound=std::max(profile_bound,bound);profile_tolerance+=bound*top.density;
+        }
+    }else if(scene_has_active_top_lobes(scene)){
         const auto& source=*editable_top_lobe_source(scene);const DevelopedEvaluationPlan trunk(source.trunk);
         include_profile(trunk.fields()[0].recipe(),trunk.cloud().cells[0].translation.y);
         // The top group uses object-local coordinates; its inherited profile
@@ -55,7 +61,11 @@ DensityAllowance density_allowance(const Scene& scene){
         // most one (coverage + bridge <= 1, overlap <= 1): sum its allowance.
     }else include_profile(scene.cloud,0);
     double anvil_bound=0,anvil_tolerance=0;
-    if(scene_has_active_anvil(scene)){
+    if(scene.frozen&&scene.frozen->anvil){
+        anvil_bound=frozen_anvil_edge_error_bound(*scene.frozen);
+        const auto recipe=frozen_effective_recipe(scene.frozen->fields.front());
+        anvil_tolerance=anvil_bound*recipe.density*scene.frozen->anvil->density_scale*AltitudeDensityEvaluator(recipe.altitude_density).maximum();
+    }else if(scene_has_active_anvil(scene)){
         anvil_bound=anvil_edge_error_bound(*scene.anvil);
         const auto& source=*scene.anvil;const auto& cells=source.cloud.trunk.cells;
         const auto& cell=*std::find_if(cells.begin(),cells.end(),[&](const auto& value){return value.id==source.cloud.target_cell;});
@@ -64,7 +74,9 @@ DensityAllowance density_allowance(const Scene& scene){
         // inherits only factors <= 1 and has no density-overlap multiplier.
         anvil_tolerance=anvil_bound*recipe.density*source.settings.density_scale*AltitudeDensityEvaluator(recipe.altitude_density).maximum();
     }
-    return {detailed,profile_bound,profile_tolerance,anvil_bound,anvil_tolerance};
+    const double gain=finish_density_bound(scene.finish_stack);
+    const double finish_tolerance=scene.frozen?finish_density_error_bound(*scene.frozen,scene.finish_stack):0;
+    return {detailed,profile_bound,profile_tolerance*gain,anvil_bound,anvil_tolerance*gain,finish_tolerance};
 }
 struct Transfer {
     SDL_GPUDevice* device;
@@ -304,10 +316,11 @@ void GpuSpike::validate() {
     SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
     const auto allowance=density_allowance(scene_snapshot_);
     const auto detailed=allowance.detailed;const auto profile_bound=allowance.profile_bound,profile_tolerance=allowance.profile_tolerance;
-    const float tolerance=fixture==2?float((detailed?1e-4:2e-5)*std::max(1.0,reference_field.maximum())+profile_tolerance+allowance.anvil_tolerance):1e-6f;
+    const float tolerance=fixture==2?float((detailed?1e-4:2e-5)*std::max(1.0,reference_field.maximum())+profile_tolerance+allowance.anvil_tolerance+allowance.finish_tolerance):1e-6f;
     std::cout<<"density_reference max_abs_error="<<max_error<<" tolerance="<<tolerance<<" detailed="<<detailed
         <<" profile_scale_error_bound="<<profile_bound<<" profile_density_tolerance="<<profile_tolerance
-        <<" anvil_coverage_error_bound="<<allowance.anvil_bound<<" anvil_density_tolerance="<<allowance.anvil_tolerance<<'\n';
+        <<" anvil_coverage_error_bound="<<allowance.anvil_bound<<" anvil_density_tolerance="<<allowance.anvil_tolerance
+        <<" modifier_density_tolerance="<<allowance.finish_tolerance<<'\n';
     if(!finite || max_error>tolerance) throw std::runtime_error("3D field readback differs from CPU fixture");
     if(fixture==0) {
         SDL_GPUBufferCreateInfo bi{SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE,5*sizeof(float),0};
@@ -570,14 +583,17 @@ void GpuSpike::validate_cache_samples() {
         const auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));gpu_check(values!=nullptr,"Map cache samples");
         if(scene_density_requires_direct(scene_snapshot_)){
             const SceneDensityEvaluator cpu(scene_snapshot_);const auto allowance=density_allowance(scene_snapshot_);
-            const double tolerance=(allowance.detailed?1e-4:2e-5)*std::max(1.,cpu.maximum())+allowance.profile_tolerance+allowance.anvil_tolerance;
+            const double tolerance=(allowance.detailed?1e-4:2e-5)*std::max(1.,cpu.maximum())+allowance.profile_tolerance+allowance.anvil_tolerance+allowance.finish_tolerance;
             bool finite=true;double maximum=0,sum=0;
             for(int i=0;i<256;++i){const Vec3 p{values[4*i+1],values[4*i+2],values[4*i+3]};
                 for(int c=0;c<4;++c)finite=finite&&std::isfinite(values[4*i+c]);
                 const double error=std::abs(values[4*i]-cpu.at(p));maximum=std::max(maximum,error);sum+=error;}
+            bool hard_interiors=true;const auto& layers=scene_snapshot_.finish_stack.layers;
+            for(std::size_t layer=0;layer<layers.size();++layer){const auto& item=layers[layer];if(item.enabled&&item.kind==FinishModifierKind::cut&&item.hard_cut&&item.strength==1&&item.target_kind==FinishTargetKind::object)hard_interiors=hard_interiors&&values[4*(16+12*layer)]==0;}
             SDL_UnmapGPUTransferBuffer(device,transfer.buffer);
             std::cout<<"grouped_direct_points samples=256 max_abs="<<maximum<<" mean_abs="<<sum/256<<" tolerance="<<tolerance<<" coordinates=GPU_evaluated combined_cache=false\n";
-            if(!finite||maximum>tolerance)throw std::runtime_error("Grouped direct GPU points differ from CPU field");
+            if(!layers.empty())std::cout<<"modifier_gpu_probes="<<layers.size()*12<<" mask_boundary_and_feather=true hard_interiors_zero="<<hard_interiors<<" modifier_density_tolerance="<<allowance.finish_tolerance<<'\n';
+            if(!finite||!hard_interiors||maximum>tolerance)throw std::runtime_error("Grouped direct GPU points differ from CPU field or modifier hard constraints");
         }else{
         double maximum=0,sum=0;bool finite=true;for(int i=0;i<256;++i){for(int c=0;c<4;++c)finite=finite&&std::isfinite(values[i*4+c]);double delta=std::abs(double(values[i*4+2])-values[i*4]);maximum=std::max(maximum,delta);sum+=delta;}
         const bool protected_base=!scene_snapshot_.cloud.base.enabled||values[2]==0;

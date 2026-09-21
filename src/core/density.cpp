@@ -28,22 +28,23 @@ DensityField::DensityField(CloudRecipe recipe):recipe_(std::move(recipe)),altitu
 double DensityField::maximum() const {
     return recipe_.cells.empty()?0:recipe_.density*(1+recipe_.overlap*double(recipe_.cells.size()-1))*altitude_density_.maximum();
 }
-double DensityField::at(Vec3 p) const {
+double DensityField::at(Vec3 p,double detail_scale,double density_scale) const {
     if(!std::isfinite(p.x)||!std::isfinite(p.y)||!std::isfinite(p.z))throw std::invalid_argument("Non-finite field sample");
+    if(!std::isfinite(detail_scale)||detail_scale<0||detail_scale>1||!std::isfinite(density_scale)||density_scale<0||density_scale>256)throw std::invalid_argument("Invalid finishing field scale");
     const auto& r=recipe_;const auto& e=r.envelope;
     if(r.cells.empty()||p.x<=e.min.x||p.y<=e.min.y||p.z<=e.min.z||p.x>=e.max.x||p.y>=e.max.y||p.z>=e.max.z)return 0;
     if(r.base.enabled&&p.y<=r.base.height)return 0;
     double merged=0,sum=0;
     for(size_t i=0;i<r.cells.size();++i) {
         const auto& c=r.cells[i];auto q=p;
-        if(r.noise.warp_amplitude>0)q=q+domain_displacement((p-r.noise.origin)*r.noise.warp_frequency,noise_seed(cell_random_key(r,c)),r.noise.warp_amplitude);
+        if(r.noise.warp_amplitude*detail_scale>0)q=q+domain_displacement((p-r.noise.origin)*r.noise.warp_frequency,noise_seed(cell_random_key(r,c)),r.noise.warp_amplitude*detail_scale);
         const double d=implicit(q,c.center,c.radii);
         merged=i==0?d:smooth_min(merged,d,r.blend_width);sum+=coverage(d);
     }
     const auto n=p-r.noise.origin;const auto seed=noise_seed(r.detail_seed);
-    if(r.noise.micro_erosion>0)merged+=r.noise.micro_erosion*detail_noise(n*r.noise.micro_frequency,seed^0x6c8e9cf5u);
+    if(r.noise.micro_erosion*detail_scale>0)merged+=r.noise.micro_erosion*detail_scale*detail_noise(n*r.noise.micro_frequency,seed^0x6c8e9cf5u);
     double value=r.density*coverage(merged)*(1+r.overlap*std::max(0.0,sum-1));
-    if(r.noise.medium_strength>0)value*=1-r.noise.medium_strength*detail_noise(n*r.noise.medium_frequency,seed);
+    if(r.noise.medium_strength*detail_scale>0)value*=1-r.noise.medium_strength*detail_scale*detail_noise(n*r.noise.medium_frequency,seed);
     if(r.base.enabled&&r.base.transition>0)value*=smooth((p.y-r.base.height)/r.base.transition);
     for(const auto& cut:r.cuts) {
         const double d=implicit(p,cut.center,cut.radii);
@@ -51,7 +52,7 @@ double DensityField::at(Vec3 p) const {
         if(cut.transition>0)value*=smooth(d/cut.transition);
     }
     value*=altitude_density_.at(p.y);
-    return std::clamp(value,0.0,maximum());
+    return std::clamp(value,0.0,maximum())*density_scale;
 }
 Bounds DensityField::local_support() const {
     // The explicit envelope is always conservative, including empty fields.

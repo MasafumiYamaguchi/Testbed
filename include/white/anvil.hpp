@@ -11,6 +11,10 @@ inline constexpr double max_anvil_edge_error=.002;
 // independent ray/grid construction errors are not covered. Density/profile
 // scaling and the legacy masks/noise allowance are applied by the consumer.
 double anvil_edge_error_bound(const AnvilSource&);
+// Evaluated-data form for Frozen Structure/detail edits. It performs no source
+// generation; center/support already include the attachment and development.
+double anvil_edge_error_bound(const AnvilSettings&,Vec3 center,Bounds support,
+                             const NoiseSettings&,Vec3 development_translation);
 struct alignas(16) GpuAnvilParams {
     GpuTopLobeParams cloud{};
     Float4 center{}; // Object-local center.

@@ -14,7 +14,7 @@ $log=Get-Content "$out/input.stdout.log" -Raw
 foreach($marker in @("top_lobes_mode=parent","top_lobes_mode=children","top_lobes_detail_seed_topology_preserved=true single_undo=true save_reload=true PASS")){if(!$log.Contains($marker)){throw "Missing $marker"}}
 foreach($mode in @("off","parent","children")){
     $scene=Get-Content "$out/top-lobes-$mode.white.json" -Raw | ConvertFrom-Json
-    if($scene.schema_version -ne 9 -or $scene.algorithm_version -ne 3 -or $scene.cloud.kind -ne "top_lobes"){throw "Top hierarchy source schema mismatch"}
+    if($scene.schema_version -ne 11 -or $scene.algorithm_version -ne 3 -or $scene.cloud.kind -ne "top_lobes"){throw "Top hierarchy source schema mismatch"}
     foreach($view in @("front","side")){
         $recipe=if($view -eq "front"){"top-lobes-$mode.white.json"}else{"top-lobes-$mode-side.white.json"}
         $name="$mode-$view"

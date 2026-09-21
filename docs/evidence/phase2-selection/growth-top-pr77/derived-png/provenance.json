@@ -1,0 +1,175 @@
+{
+  "conversion": "Pillow 12.3.0; lossless format conversion only; no resizing, crop, color adjustment, annotation or retouching",
+  "images": [
+    {
+      "source": "growth/calm-young-front-hdr/display.ppm",
+      "source_sha256": "565569515451574ebe3a0f0fff58f8621490262a04eb6816ddbfa02f7c7d38b1",
+      "png": "derived-png/growth-calm-young-front.png",
+      "png_sha256": "4a3ecd0a14b0fc2eae6e82fa0d3a46182d7f41da19cb90ce2a217355752cd9cf",
+      "width": 256,
+      "height": 144,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "growth/calm-young-side-hdr/display.ppm",
+      "source_sha256": "8c7f4c472923170c32584cbf4285122f2d6885d1d574f53f6ac0b661543b7997",
+      "png": "derived-png/growth-calm-young-side.png",
+      "png_sha256": "0316ce7997bdb4662bbea99081ff0f6e846e2eb0473f3632bcc73c8bd66215d0",
+      "width": 256,
+      "height": 144,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "growth/calm-mature-front-hdr/display.ppm",
+      "source_sha256": "4e245415af0b67ab53287bef4f44d93f27b66494ffec77d52cf41999cd3efa11",
+      "png": "derived-png/growth-calm-mature-front.png",
+      "png_sha256": "450786aaefce2df6d1ec9ffd34fb1500937162fa207e5396381476bab7dd9625",
+      "width": 256,
+      "height": 144,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "growth/calm-mature-side-hdr/display.ppm",
+      "source_sha256": "2ca2690f06dcd77aa71a746d4a6384597ae6fa3f62e3a2e7c6ba0688f5e12745",
+      "png": "derived-png/growth-calm-mature-side.png",
+      "png_sha256": "2dd59f767a6289ebb0d1c08120c955d7abdd34ac3b01ed45db43edb9fb1ce841",
+      "width": 256,
+      "height": 144,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "growth/shear-young-front-hdr/display.ppm",
+      "source_sha256": "d9280d015da1ad5178fb14d92f013618c27113cb1eec0756f34bf553b3b6befc",
+      "png": "derived-png/growth-shear-young-front.png",
+      "png_sha256": "76f987fb0d25f0c6125106b6c6da9a18c0a5320ee21e133f3840045da23db442",
+      "width": 256,
+      "height": 144,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "growth/shear-young-side-hdr/display.ppm",
+      "source_sha256": "e1a78785bc0f571984a40b63b601ff9d2f46273612a1ced54b8039593d38583c",
+      "png": "derived-png/growth-shear-young-side.png",
+      "png_sha256": "796606ff7666e074c79a81cd5a3df128ec1bfc15316bda88740de5d5c8b71c9e",
+      "width": 256,
+      "height": 144,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "growth/shear-mature-front-hdr/display.ppm",
+      "source_sha256": "100035d2298f34edc02363b74d712b539d282ea7cd2ac66ea3ca4ef3c831b33c",
+      "png": "derived-png/growth-shear-mature-front.png",
+      "png_sha256": "eeec5bcfe48853b6105580b8eab9bb3326b8c153c9d93a8b34279a73f1bf6b34",
+      "width": 256,
+      "height": 144,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "growth/shear-mature-side-hdr/display.ppm",
+      "source_sha256": "4b7d64c83e47950f51d0bc1ef68e4b502d0acb72ee1bd1c91b65d3c4992392f2",
+      "png": "derived-png/growth-shear-mature-side.png",
+      "png_sha256": "051cd0fec3d701b9d0300f33adc100ac61571d2bab0a029d69aa9fece54744df",
+      "width": 256,
+      "height": 144,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "top-lobes/off-front-hdr/display.ppm",
+      "source_sha256": "f2968bcf64c271da79eddf36f5bf1ec4ac44b270ec93ce763a213b7ec6ea4a41",
+      "png": "derived-png/top-lobes-off-front.png",
+      "png_sha256": "19045b2bbda5e848a66e6e3132b09808c1a7fcbba240d866260b23edbb1a0aba",
+      "width": 160,
+      "height": 90,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "top-lobes/off-side-hdr/display.ppm",
+      "source_sha256": "303763f4119a0ffcd1859d10ac9adfb94a931e1bceb5df6cff5814cf8772fd60",
+      "png": "derived-png/top-lobes-off-side.png",
+      "png_sha256": "68105878c5f49b43f9e81c7911af3337c7d7fe45e60681d1653ccd99175085e8",
+      "width": 160,
+      "height": 90,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "top-lobes/parent-front-hdr/display.ppm",
+      "source_sha256": "59ae942cd4f40eb8bff0726d4b7c2cd5a1c37ff3b7ced4655d35f11bcf748b2f",
+      "png": "derived-png/top-lobes-parent-front.png",
+      "png_sha256": "d2f7e5dad75336bda107aabf86230506bfca903396ef0d6d0db476ccd51fe992",
+      "width": 160,
+      "height": 90,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "top-lobes/parent-side-hdr/display.ppm",
+      "source_sha256": "3fa94a4b14c3a41b884a15f1358f8596eea8f1c2a20470ff6ea6a948d8fcdd8e",
+      "png": "derived-png/top-lobes-parent-side.png",
+      "png_sha256": "baba5801516dd60c2dbd6ec088771b3ad1e90f677168751f4cdbd2b6b5cf5da8",
+      "width": 160,
+      "height": 90,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "top-lobes/children-front-hdr/display.ppm",
+      "source_sha256": "f902f1ae35ce9d9c1980882a8ddfa5d8822dca9f80ea343b9fbbf71fb325308f",
+      "png": "derived-png/top-lobes-children-front.png",
+      "png_sha256": "497320965c933eb6e955c52dd99393fc8c187e20b1d87d68f3d66bee67b485ac",
+      "width": 160,
+      "height": 90,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "top-lobes/children-side-hdr/display.ppm",
+      "source_sha256": "349671be9338af6ed4de82fdbc82280e677e2962c12b4c35387936f2a30a47df",
+      "png": "derived-png/top-lobes-children-side.png",
+      "png_sha256": "848163eab3affd3d30fc9b8b1677ddbde0326ad74783b6197660540f53d252de",
+      "width": 160,
+      "height": 90,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "top-lobes/children-slice-hdr/display.ppm",
+      "source_sha256": "5f2991ff5231a138edaf898d6a05b3ef2981fc2b899dca34ab5a8d2d492eb83e",
+      "png": "derived-png/top-lobes-children-slice.png",
+      "png_sha256": "775619b4391089e825edd4b93947dd33d88070fa90c565e2c63790ccb8736de1",
+      "width": 160,
+      "height": 90,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "developed/overlap-35-hdr/display.ppm",
+      "source_sha256": "8ee5a39ec0faffd98c6e0459ee860f4dcf73d5bb5b0ac29a5b5be073851139a2",
+      "png": "derived-png/developed-overlap-35.png",
+      "png_sha256": "c9fbfab3ab59af30b7a7dec4df97b03d2c6862f1d260610b1e836548af3098ee",
+      "width": 160,
+      "height": 90,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "developed/overlap-0-hdr/display.ppm",
+      "source_sha256": "52a9329b01d2a8f3c47ee126a749f3e131e69b770683b40564987c30e4d9df18",
+      "png": "derived-png/developed-overlap-0.png",
+      "png_sha256": "17668954d14e5808c3b4708c7814336df649da51b6dfa39f2d096b37e0868a5f",
+      "width": 160,
+      "height": 90,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    }
+  ]
+}

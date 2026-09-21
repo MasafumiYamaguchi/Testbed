@@ -1,5 +1,7 @@
 #include "white/generation.hpp"
 #include "white/revision_queue.hpp"
+#include "white/persistence.hpp"
+#include <atomic>
 #include "white/anvil_scene.hpp"
 #include <algorithm>
 #include <bit>
@@ -9,6 +11,7 @@
 
 namespace white {
 namespace {
+std::atomic<std::uint64_t> generation_calls{0};
 bool finite(Vec3 p){return std::isfinite(p.x)&&std::isfinite(p.y)&&std::isfinite(p.z);}
 bool range(double v,double lo,double hi){return std::isfinite(v)&&v>=lo&&v<=hi;}
 double smooth(double t){return t*t*(3-2*t);}
@@ -59,6 +62,7 @@ std::vector<std::string> settings_errors(const GenerationSettings& s){
 }
 struct Cancelled{};
 }
+std::uint64_t generation_job_count(){return generation_calls.load();}
 GenerationSettings default_generation_settings(const Scene& input){
     auto scene=prepared(input);const auto& source=trunk(scene);GenerationSettings settings;
     if(!source.cells.empty()){
@@ -90,7 +94,12 @@ double development_stage(const GenerationSettings& s,Id id){
     const auto* r=rule(s,id);return std::clamp((s.stage-(r?r->start_stage:0))/(1-(r?r->start_stage:0)),0.,1.)*(r?r->amount:1);
 }
 std::uint64_t generation_input_hash(const Scene& scene,const GenerationSettings& settings){
-    require(validate_generation(scene,settings));std::uint64_t hash=density_input_hash(scene);
+    require(validate_generation(scene,settings));
+    // Generation provenance includes dormant source controls too. A density
+    // cache hash intentionally canonicalizes them away and is insufficient.
+    auto initial=scene;initial.camera=Camera{};initial.sun=Sun{};initial.exposure_ev=0;initial.preview_approx={};
+    std::uint64_t hash=UINT64_C(14695981039346656037);
+    for(unsigned char c:scene_json(initial)){hash^=c;hash*=UINT64_C(1099511628211);}
     auto add=[&](std::uint64_t v){for(int i=0;i<8;++i){hash^=(v>>(8*i))&255;hash*=UINT64_C(1099511628211);}};
     auto real=[&](double v){add(std::bit_cast<std::uint64_t>(v==0?0.:v));};
     add(settings.algorithm_version);add(settings.enabled);real(settings.stage);real(settings.initial_height_fraction);real(settings.wind_base);real(settings.wind_height);
@@ -101,6 +110,7 @@ std::uint64_t generation_input_hash(const Scene& scene,const GenerationSettings&
     return hash;
 }
 GenerationOutcome generate_cloud_state(const Scene& initial,const GenerationSettings& settings,std::stop_token stop,const std::function<void(double)>& progress){
+    generation_calls.fetch_add(1);
     const auto begin=std::chrono::steady_clock::now();
     auto checkpoint=[&](double value){if(stop.stop_requested())throw Cancelled{};if(progress)progress(value);if(stop.stop_requested())throw Cancelled{};};
     try{

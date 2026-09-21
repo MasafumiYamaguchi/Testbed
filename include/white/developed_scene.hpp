@@ -1,6 +1,7 @@
 #pragma once
 #include "white/top_lobes.hpp"
 #include "white/anvil.hpp"
+#include "white/frozen_cloud.hpp"
 
 namespace white {
 // Exact zero/one-group Recipe, or first group's metadata carrier with the full
@@ -23,13 +24,18 @@ public:
     Bounds local_support()const;
     Bounds world_support()const;
     const CloudRecipe& recipe()const{return recipe_;}
-    GpuAnvilParams gpu_params()const;
+    GpuFinishedParams gpu_params()const;
 private:
+    GpuAnvilParams base_gpu_params()const;
+    FinishStack finish_;
+    Id object_id_=0;
+    std::vector<Id> field_ids_;
     CloudRecipe recipe_;
     std::optional<DensityField> single_;
     std::optional<DevelopedEvaluationPlan> developed_;
     std::optional<TopLobeEvaluationPlan> top_;
     std::optional<AnvilEvaluationPlan> anvil_;
+    std::optional<FrozenEvaluationPlan> frozen_;
 };
-GpuAnvilParams gpu_scene_density_params(const Scene&);
+GpuFinishedParams gpu_scene_density_params(const Scene&);
 }

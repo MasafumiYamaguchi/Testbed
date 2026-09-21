@@ -1,0 +1,79 @@
+{
+  "algorithm_version": 1,
+  "fixtures": [
+    {
+      "density_bound": 1.14032,
+      "generation_cpu_ms": 6.3375,
+      "input_hash": "16030728680786948039",
+      "name": "calm-young",
+      "selected_height_m": 68.28599999999999,
+      "stage": 0.35,
+      "support_max": [
+        50.08891747950533,
+        80.43241180878694,
+        42.297308093804496
+      ],
+      "support_min": [
+        -50.08891747950533,
+        -10.51099879337,
+        -42.297308093804496
+      ]
+    },
+    {
+      "density_bound": 1.6,
+      "generation_cpu_ms": 6.8226,
+      "input_hash": "9133451282893669613",
+      "name": "calm-mature",
+      "selected_height_m": 120.0,
+      "stage": 1.0,
+      "support_max": [
+        47.06666666666667,
+        133.4691261692137,
+        38.84444444444444
+      ],
+      "support_min": [
+        -47.06666666666667,
+        -15.199999999999992,
+        -38.84444444444444
+      ]
+    },
+    {
+      "density_bound": 1.14032,
+      "generation_cpu_ms": 6.8561,
+      "input_hash": "1215325722546965419",
+      "name": "shear-young",
+      "selected_height_m": 68.28599999999999,
+      "stage": 0.35,
+      "support_max": [
+        51.22630454632369,
+        81.9031363640131,
+        42.2949161728045
+      ],
+      "support_min": [
+        -50.03834868990533,
+        -10.51099879337,
+        -42.29970001480449
+      ]
+    },
+    {
+      "density_bound": 1.6,
+      "generation_cpu_ms": 6.3204,
+      "input_hash": "13970670982355589861",
+      "name": "shear-mature",
+      "selected_height_m": 120.0,
+      "stage": 1.0,
+      "support_max": [
+        82.27242666666666,
+        136.97107300308474,
+        45.92999999999999
+      ],
+      "support_min": [
+        -46.68832,
+        -15.199999999999992,
+        -39.32756444444444
+      ]
+    }
+  ],
+  "stage_unit": "dimensionless",
+  "wind_unit": "object-local metres at stage 1; not metres/second"
+}

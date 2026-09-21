@@ -28,7 +28,7 @@ int main(){try {
     shape.source.modifiers.noise.origin={2,3,4};shape.source.modifiers.manual_cells.push_back({100,{45,50,0},{5,6,7},9007199254740993ULL});
     shape.source.modifiers.cuts.push_back({101,{10,40,0},{4,5,6},1});
     scene.cloud=lower_centerline_to_recipe(shape);require_valid(scene);
-    check(scene.schema_version==9&&scene.algorithm_version==3&&scene.cloud.altitude_density.enabled,"New centerline lacks schema7 algorithm3 full density profile");
+    check(scene.schema_version==11&&scene.algorithm_version==3&&scene.cloud.altitude_density.enabled,"New centerline lacks schema7 algorithm3 full density profile");
     const auto bytes=scene_json(scene);const auto encoded=Json::parse(bytes);const auto& cloud=encoded.at("cloud");
     check(cloud.size()==2&&cloud.at("kind")=="centerline"&&!cloud.contains("recipe")&&!cloud.contains("altitude_density"),"Centerline serialized competing generated authority");
     check(cloud.at("source").at("points")[0].at("id").is_string()&&cloud.at("source").at("profile")[2].at("id")=="18446744073709551615","Curve/profile IDs lost uint64 precision");

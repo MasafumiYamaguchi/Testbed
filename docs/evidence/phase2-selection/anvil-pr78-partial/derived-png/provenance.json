@@ -1,0 +1,55 @@
+{
+  "conversion": "Pillow 12.3.0; lossless format conversion only; no resizing, crop, color adjustment, annotation or retouching",
+  "images": [
+    {
+      "source": "off-front-hdr/display.ppm",
+      "source_sha256": "23b71a076eb7f6569152231b19861889b9eeb144706d68a820e861ae08088219",
+      "png": "derived-png/off-front.png",
+      "png_sha256": "75ca534fafd18ad74aeee9ff65f99777652d465b7019d6d0c4eb5c9dc716b5e5",
+      "width": 192,
+      "height": 108,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "wide-front-hdr/display.ppm",
+      "source_sha256": "009cb1eb6a086942dabc7008639fb7cca8741b948e70b142ed63b3dfab4a2387",
+      "png": "derived-png/wide-front.png",
+      "png_sha256": "ac65db09066c2b4a318d02fd7b50ee83facdb982e7ed67291b132530666c7337",
+      "width": 192,
+      "height": 108,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "wind-front-hdr/display.ppm",
+      "source_sha256": "e7478dad7e66f38681cb73a1588a5cd1cd10812909943dbf4fa82cb295f2478a",
+      "png": "derived-png/wind-front.png",
+      "png_sha256": "5dc4f62d9444e5476714ae3b9716ad5715365a813e64b9b522131810f9b23097",
+      "width": 192,
+      "height": 108,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "wind-side-hdr/display.ppm",
+      "source_sha256": "94b3f140934732d0a5c94d1b94d9e2059670181c8585fb18bc876025109c5d2c",
+      "png": "derived-png/wind-side.png",
+      "png_sha256": "539a4139c9155289e571e8f97a1a8f78ddde8db88afc3ce4bcb16944061b9e95",
+      "width": 192,
+      "height": 108,
+      "mode": "RGB",
+      "decoded_pixels_equal": true
+    },
+    {
+      "source": "anvil-160.bmp",
+      "source_sha256": "1c9eda390dd68a1f2453915a9e5eb5eb8814cac4df09ca635b095a89f4a3f845",
+      "png": "derived-png/direction-handle.png",
+      "png_sha256": "5d0bc7da96c222e2f767f4b12e50fca8ab3a6ff6c83666b8277468908c8b62d9",
+      "width": 900,
+      "height": 600,
+      "mode": "RGBA",
+      "decoded_pixels_equal": true
+    }
+  ]
+}

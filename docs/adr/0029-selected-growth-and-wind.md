@@ -75,10 +75,10 @@ or cancelled retries. A result cannot silently overwrite edits made while it
 was being generated. Adoption uses the existing single EditorSession Undo
 transaction. View settings at generation start are retained for comparison.
 
-This initial selected-state Scene can be saved and evaluated without running
-growth again. Native provenance persistence and an explicit FrozenCloudState
-with finishing layers are Issue #33/#38; the generation draft itself is not yet
-a saved document field. The draft does not become a second live edit authority.
+This selected-state Scene can be saved and evaluated without running growth
+again. ADR 0031 adds explicit Freeze adoption and native provenance persistence
+for Issues #33/#38. The generation draft remains transient and never becomes a
+second live edit authority.
 
 ## Validation and limitations
 

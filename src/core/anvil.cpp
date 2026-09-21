@@ -30,11 +30,8 @@ double packed_error(double value){return std::abs(double(float(value))-value);}
 double product_error(double a,double b,double ea,double eb){
     return a*eb+b*ea+ea*eb+.5*float_ulp((a+ea)*(b+eb));
 }
-double edge_error(const AnvilSource& source){
-    const auto& s=source.settings;
+double edge_error(const AnvilSettings& s,Vec3 center,const Bounds& support,const NoiseSettings& noise,Vec3 translation){
     if(!s.enabled||s.density_scale==0)return 0;
-    const auto& cell=target(source);const auto a=anchor(source),center=a+s.direction*(s.extension*.5);
-    auto support=TopLobeEvaluationPlan(source.cloud).local_support();const auto sheet=anvil_bounds(source);grow(support,sheet.min,sheet.max);
     const double along=(s.width+s.extension)*.5,cross=s.width*.5,half=s.thickness*.5;
     const double dx=std::abs(s.direction.x),dz=std::abs(s.direction.z),shear=std::abs(s.shear);
     const double edx=packed_error(s.direction.x),edz=packed_error(s.direction.z),eshear=packed_error(s.shear);
@@ -60,7 +57,6 @@ double edge_error(const AnvilSource& source){
     const double norm_error=std::hypot(eu,ev,ew)+4*float_ulp(1+std::hypot(eu,ev,ew));
     const double difference_error=norm_error+.5*float_ulp(1+norm_error);
     double distance_error=product_error(1.,half,difference_error,packed_error(half));
-    const auto& noise=cell.shape.source.modifiers.noise;
     if(noise.micro_erosion>0){
         const auto coordinate_error=[&](double lo,double hi,double position,double translation,double origin){
             double extent=std::max(std::abs(lo-translation),std::abs(hi-translation));
@@ -69,7 +65,7 @@ double edge_error(const AnvilSource& source){
             error+=packed_error(origin);error+=.5*float_ulp(extent+error);
             return product_error(extent,noise.micro_frequency,error,packed_error(noise.micro_frequency));
         };
-        const double coordinate=coordinate_error(support.min.x,support.max.x,px,cell.translation.x,noise.origin.x)+coordinate_error(support.min.y,support.max.y,py,cell.translation.y,noise.origin.y)+coordinate_error(support.min.z,support.max.z,pz,cell.translation.z,noise.origin.z);
+        const double coordinate=coordinate_error(support.min.x,support.max.x,px,translation.x,noise.origin.x)+coordinate_error(support.min.y,support.max.y,py,translation.y,noise.origin.y)+coordinate_error(support.min.z,support.max.z,pz,translation.z,noise.origin.z);
         // Quintic value noise has per-axis derivative <= 1.875. The fixed
         // 2:1 octaves raise this to 2.5; 128 epsilons cover interpolation and
         // polynomial arithmetic on [0,1], including lattice-value packing.
@@ -84,12 +80,23 @@ double edge_error(const AnvilSource& source){
     return std::min(1.,1.5*(normalize_error+.5*float_ulp(1+normalize_error))+16*std::numeric_limits<float>::epsilon());
 }
 }
+double anvil_edge_error_bound(const AnvilSettings& s,Vec3 center,Bounds support,const NoiseSettings& noise,Vec3 translation){
+    try{
+        if(!s.enabled||s.density_scale==0)return 0;
+        if(!range(s.thickness,1,2000)||!range(s.width,8,10000)||s.thickness>s.width*.5||
+           !range(s.extension,0,40000)||s.extension>s.width*4||!range(s.edge_fade,.01,250)||s.edge_fade>s.thickness*.125||
+           !finite(s.direction)||s.direction.y!=0||std::abs(dot(s.direction,s.direction)-1)>=1e-9||!range(s.shear,-4,4)||
+           !finite(center)||!finite(support.min)||!finite(support.max)||support.min.x>=support.max.x||support.min.y>=support.max.y||support.min.z>=support.max.z||
+           !finite(translation)||!finite(noise.origin)||!range(noise.micro_frequency,.0001,2)||!range(noise.micro_erosion,0,20))return INFINITY;
+        return edge_error(s,center,support,noise,translation);
+    }catch(const std::exception&){return INFINITY;}
+}
 double anvil_edge_error_bound(const AnvilSource& source){
     try{
-        const auto& s=source.settings;
-        if(!s.enabled||s.density_scale==0)return 0;
-        if(!range(s.thickness,1,2000)||!range(s.width,8,10000)||!range(s.extension,0,40000)||!range(s.edge_fade,.01,250)||!finite(s.direction)||!std::isfinite(s.shear))return INFINITY;
-        return edge_error(source);
+        const auto& s=source.settings;if(!s.enabled||s.density_scale==0)return 0;
+        const auto& cell=target(source);const auto center=anchor(source)+s.direction*(s.extension*.5);
+        auto support=TopLobeEvaluationPlan(source.cloud).local_support();const auto sheet=anvil_bounds(source);grow(support,sheet.min,sheet.max);
+        return anvil_edge_error_bound(s,center,support,cell.shape.source.modifiers.noise,cell.translation);
     }catch(const std::exception&){return INFINITY;}
 }
 Vec3 anvil_connection_point(const AnvilSource& source){return anchor(source);}

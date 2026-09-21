@@ -1,0 +1,82 @@
+[
+  {
+    "density_hash": "771833583301030121",
+    "name": "off-front",
+    "recipe": "off-front.white.json"
+  },
+  {
+    "density_hash": "771833583301030121",
+    "name": "off-side",
+    "recipe": "off-side.white.json"
+  },
+  {
+    "density_hash": "15410792247730815004",
+    "name": "narrow-front",
+    "recipe": "narrow-front.white.json"
+  },
+  {
+    "density_hash": "15410792247730815004",
+    "name": "narrow-side",
+    "recipe": "narrow-side.white.json"
+  },
+  {
+    "density_hash": "14349001089488058955",
+    "name": "wide-front",
+    "recipe": "wide-front.white.json"
+  },
+  {
+    "density_hash": "14349001089488058955",
+    "name": "wide-side",
+    "recipe": "wide-side.white.json"
+  },
+  {
+    "density_hash": "12766983050744838440",
+    "name": "tilted-front",
+    "recipe": "tilted-front.white.json"
+  },
+  {
+    "density_hash": "12766983050744838440",
+    "name": "tilted-side",
+    "recipe": "tilted-side.white.json"
+  },
+  {
+    "density_hash": "1633525509308367633",
+    "name": "wind-front",
+    "recipe": "wind-front.white.json"
+  },
+  {
+    "density_hash": "1633525509308367633",
+    "name": "wind-side",
+    "recipe": "wind-side.white.json"
+  },
+  {
+    "density_hash": "10022058057455279655",
+    "name": "manual-front",
+    "recipe": "manual-front.white.json"
+  },
+  {
+    "density_hash": "10022058057455279655",
+    "name": "manual-side",
+    "recipe": "manual-side.white.json"
+  },
+  {
+    "density_hash": "4806948564777018477",
+    "name": "young-front",
+    "recipe": "young-front.white.json"
+  },
+  {
+    "density_hash": "4806948564777018477",
+    "name": "young-side",
+    "recipe": "young-side.white.json"
+  },
+  {
+    "density_hash": "8325452308525462565",
+    "name": "top-wind-front",
+    "recipe": "top-wind-front.white.json"
+  },
+  {
+    "density_hash": "8325452308525462565",
+    "name": "top-wind-side",
+    "recipe": "top-wind-side.white.json"
+  }
+]
