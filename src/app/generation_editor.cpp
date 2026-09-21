@@ -17,6 +17,8 @@ void EditorUi::poll_generation(){
 }
 void EditorUi::launch_generation(bool cancel_before_start){
     if(generation_job_.valid()||!generation_initial_)throw std::logic_error("Generation already running or no initial recipe");
+    if(!generation_draft_resets_edits_&&(!generation_draft_current_||!generation_draft_matches_current(*generation_draft_current_,session.document().scene())))
+        throw std::logic_error("The current cloud structure or saved source changed after draft preparation. Prepare a new draft before generating.");
     generation_preview_candidate_=false;generation_job_resets_edits_=generation_draft_resets_edits_;
     generation_job_draft_token_=generation_draft_token_;
     generation_job_guard_=session.document().scene();generation_stop_=std::stop_source{};generation_progress_=std::make_shared<std::atomic<double>>(0);
@@ -34,11 +36,12 @@ void EditorUi::adopt_generation_candidate(bool reset_confirmed){
     if(session.document().scene()!=fixed)throw std::runtime_error("Freeze adoption failed");
     if(generation_candidate_is_clone_){
         ++generation_draft_token_;
+        generation_draft_current_=session.document().scene();
         generation_initial_.reset();generation_draft_resets_edits_=false;
         if(frozen_can_regenerate(*fixed.frozen)){generation_initial_=generation_initial_scene(*fixed.frozen);generation_settings_=fixed.frozen->provenance->settings;}
     }
     // Even identical prepared inputs express a distinct pending reset intent.
-    if(generation_candidate_draft_token_==generation_draft_token_)generation_draft_resets_edits_=false;
+    if(generation_candidate_draft_token_==generation_draft_token_){generation_draft_resets_edits_=false;generation_draft_current_=session.document().scene();}
     generation_preview_candidate_=false;generation_candidate_resets_edits_=false;generation_guard_=session.document().scene();generation_message_="Selected state frozen. Detail edits keep the evaluated structure; Undo restores the previous cloud.";
 }
 void EditorUi::discard_generation_candidate(){

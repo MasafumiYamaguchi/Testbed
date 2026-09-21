@@ -15,6 +15,35 @@ constexpr std::array definitions{
 std::uint64_t mix(std::uint64_t x){x+=UINT64_C(0x9e3779b97f4a7c15);x=(x^(x>>30))*UINT64_C(0xbf58476d1ce4e5b9);x=(x^(x>>27))*UINT64_C(0x94d049bb133111eb);return x^(x>>31);}
 DevelopedCloud& editable(Scene& s){return s.anvil?s.anvil->cloud.trunk:s.top_lobes?s.top_lobes->trunk:*s.developed;}
 void require_errors(const std::vector<std::string>& errors){if(!errors.empty())throw std::invalid_argument(errors.front());}
+FrozenCloudState structure(FrozenCloudState state){
+    // Derived sampling bounds/checksums may change with detail. Hard clipping,
+    // evaluated geometry, stable references and the full saved source stay put.
+    state.transform={};state.optics={};state.support={};state.rho_max=0;state.content_hash=0;state.payload_hash=0;
+    for(auto& field:state.fields){field.layers={};field.recipe.optics={};field.recipe.detail_seed=0;
+        const auto origin=field.recipe.noise.origin;field.recipe.noise={};field.recipe.noise.origin=origin;
+        if(!field.clipping_envelope)field.recipe.envelope={};
+    }
+    return state;
+}
+Scene source_structure(Scene scene){
+    scene.camera={};scene.sun={};scene.exposure_ev=0;scene.preview_approx={};scene.cloud.transform={};scene.cloud.optics={};scene.finish_stack={};
+    if(scene.cumulonimbus){scene.cumulonimbus->modifiers.transform={};scene.cumulonimbus->modifiers.optics={};}
+    if(scene.centerline){scene.centerline->source.modifiers.transform={};scene.centerline->source.modifiers.optics={};}
+    if(editable_developed_source(scene)){auto& cloud=editable(scene);cloud.transform={};cloud.optics={};for(auto& cell:cloud.cells)cell.shape.source.modifiers.optics={};}
+    return scene;
+}
+Vec3 selected_motion(const FrozenCloudState& state){
+    if(!frozen_can_regenerate(state))throw std::invalid_argument("Instance motion preservation requires supported saved generation inputs");
+    const auto& settings=state.provenance->settings;auto validation=settings;validation.enabled=false;
+    require_errors(validate_generation(Scene{},validation));
+    return settings.enabled?settings.reference_translation*settings.stage:Vec3{};
+}
+}
+bool generation_draft_matches_current(const Scene& prepared,const Scene& current){
+    require_valid(prepared);require_valid(current);
+    if(prepared.frozen.has_value()!=current.frozen.has_value())return false;
+    if(current.frozen)return structure(*prepared.frozen)==structure(*current.frozen);
+    return source_structure(prepared)==source_structure(current);
 }
 std::span<const CloudPresetDefinition> cloud_presets(){return definitions;}
 GenerationDraft make_cloud_preset(const CloudPresetRequest& request){
@@ -63,15 +92,18 @@ Scene regenerate_fixed_detail(Scene scene,std::uint64_t seed,Id target){
 }
 Scene preserve_candidate_finish(const Scene& current,Scene candidate){
     require_valid(current);require_valid(candidate);
-    if(!current.frozen)return candidate;
     if(!candidate.frozen)throw std::invalid_argument("Finish preservation requires a completed frozen candidate");
-    for(const auto& field:current.frozen->fields){
+    const auto delta=selected_motion(*candidate.frozen)-(current.frozen?selected_motion(*current.frozen):Vec3{});
+    // Generation applies this local displacement through the source TRS. Keep
+    // the user's current instance and apply only the change in selected motion.
+    auto instance=current.cloud.transform;instance.translation=local_to_world(instance,delta);
+    if(current.frozen)for(const auto& field:current.frozen->fields){
         const auto next=std::find_if(candidate.frozen->fields.begin(),candidate.frozen->fields.end(),[&](const auto& f){return f.development_id==field.development_id;});
         if(next==candidate.frozen->fields.end())throw std::invalid_argument("Candidate removed a fixed detail target; use an explicit reset before replacing it");
         if(next->recipe.noise.origin!=field.recipe.noise.origin)throw std::invalid_argument("Candidate changed a fixed detail reference frame; use an explicit reset before replacing it");
         candidate=scene_with_frozen_detail(std::move(candidate),field.development_id,field.recipe.noise,field.recipe.detail_seed,field.layers);
     }
-    candidate.frozen->optics=current.frozen->optics;refresh_frozen_scene(candidate);return candidate;
+    candidate.frozen->transform=instance;candidate.frozen->optics=current.cloud.optics;refresh_frozen_scene(candidate);return candidate;
 }
 Scene candidate_comparison_scene(const Scene& current,const Scene& candidate){
     require_valid(current);require_valid(candidate);auto result=candidate;

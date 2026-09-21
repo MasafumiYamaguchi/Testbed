@@ -49,7 +49,7 @@ private:
     std::uint64_t modifier_test_jobs_=0,modifier_test_content_=0;
     void draw_modifier_ui();
     void finish_item(bool,const FinishModifier&);
-    std::optional<Scene> generation_initial_,generation_guard_,generation_job_guard_;
+    std::optional<Scene> generation_initial_,generation_guard_,generation_job_guard_,generation_draft_current_;
     GenerationSettings generation_settings_;
     std::optional<GenerationCandidate> generation_candidate_;
     std::future<GenerationOutcome> generation_job_;

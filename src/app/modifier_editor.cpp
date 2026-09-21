@@ -76,7 +76,15 @@ void EditorUi::modifier_test_step(int frame){
         std::cout<<"modifier_native=detail_and_density hard_cut_final=true layers_retained=true PASS\n";
     }
     if(frame==105){const auto before=session.document().scene();apply(scene_with_finish_command(before,{FinishCommandKind::move_up,2,{}}));check(session.undo()&&session.document().scene()==before,"Reorder Undo lost exact graph");
-        apply(scene_with_finish_command(before,{FinishCommandKind::duplicate,3,{}}));check(session.document().scene().finish_stack.layers.back().id==4,"Duplicate reused a stable ID");apply(scene_with_finish_command(session.document().scene(),{FinishCommandKind::erase,4,{}}));
+        // Duplicating protection also doubles its conservative detail error.
+        // This fixture exceeds the supported budget; refusal must keep history.
+        const auto revision=session.document().revision();bool precision_rejected=false;
+        try{apply(scene_with_finish_command(before,{FinishCommandKind::duplicate,3,{}}));}catch(const std::invalid_argument& error){precision_rejected=std::string(error.what()).find("0.5% GPU density precision budget")!=std::string::npos;}
+        check(precision_rejected&&session.document().scene()==before&&session.document().revision()==revision&&session.can_redo(),"Over-budget duplicate changed the document or history");
+        check(session.redo()&&session.undo()&&session.document().scene()==before,"Rejected duplicate damaged reorder Undo/Redo");
+        std::cout<<"modifier_native=precision_rejection current_retained=true revision_unchanged=true undo_redo_retained=true PASS\n";
+        // A cut duplicate fits the same unchanged budget and exercises success.
+        apply(scene_with_finish_command(before,{FinishCommandKind::duplicate,1,{}}));check(session.document().scene().finish_stack.layers[1].id==4,"Duplicate reused a stable ID");apply(scene_with_finish_command(session.document().scene(),{FinishCommandKind::erase,4,{}}));
         check(session.document().scene()==before,"Duplicate/delete changed original layers");
         auto broken=before;broken.finish_stack.layers.front().target_kind=FinishTargetKind::field;broken.finish_stack.layers.front().target_id=999999;bool rejected=false;try{session.apply(broken);}catch(const std::exception&){rejected=true;}check(rejected&&session.document().scene()==before,"Missing reference changed current cloud");
         check(generation_job_count()==modifier_test_jobs_&&before.frozen->content_hash==modifier_test_content_,"Finishing restarted generation or changed fixed structure");
