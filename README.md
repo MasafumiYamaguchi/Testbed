@@ -75,6 +75,11 @@ See [architecture decision](docs/adr/0001-foundation.md) and
 write/reopen test and is not on the preview build path. Real GPU validation and
 performance measurements are separate from hosted CI success.
 
+The [single-state density export contract](docs/adr/0034-single-state-density-export.md)
+defines an immutable Frozen + supported finishing snapshot, world-metre voxel
+coordinates and provenance/optical metadata. Its CPU API and contract tests do
+not yet provide a product VDB writer or paint support.
+
 ## Editing
 
 Click a blue cell outline to select it. Choose Move or Scale and drag an axis;
