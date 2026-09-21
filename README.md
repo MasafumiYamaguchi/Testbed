@@ -79,6 +79,10 @@ The [single-state density export contract](docs/adr/0034-single-state-density-ex
 defines an immutable Frozen + supported finishing snapshot, world-metre voxel
 coordinates and provenance/optical metadata. Its CPU API and contract tests do
 not yet provide a product VDB writer or paint support.
+The CPU-only `white_export_plan` command reports separate dense-grid, tile,
+aligned transfer, readback-queue and caller-retained-snapshot reservations before
+execution-buffer allocation. See [resource preflight](docs/adr/0035-export-resource-preflight.md)
+for explicit byte limits and the remaining unmeasured memory costs.
 
 ## Editing
 
