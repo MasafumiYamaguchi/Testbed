@@ -1,0 +1,716 @@
+Start testing: Sep 19 05:52 UTC
+----------------------------------------------------------
+1/22 Testing: field_graph_contract
+1/22 Test: field_graph_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_field_graph_tests" "/home/runner/work/Testbed/Testbed/tests/fixtures/gate"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"field_graph_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+Field Graph: 17 Phase 0 fixtures + empty/extreme cases; 680295 exact CPU comparisons; GPU uniforms byte-identical; validation and revision tests passed
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"field_graph_contract" end time: Sep 19 05:52 UTC
+"field_graph_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/22 Testing: delta_tracking_contract
+2/22 Test: delta_tracking_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_delta_tracking_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"delta_tracking_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+fixture,mode,seed,samples,expected_survival,survival,ci95_low,ci95_high,censored_mean,candidates,nulls,elapsed_ms
+homogeneous,global,17,2048,0.09071795329,0.1020507812,0.08894010327,0.1151614592,1.563702957,1839,0,0.564625
+homogeneous,global,17,8192,0.09071795329,0.09143066406,0.08518920575,0.09767212238,1.517708129,7443,0,2.285158
+homogeneous,global,17,32768,0.09071795329,0.09255981445,0.08942182597,0.09569780294,1.524831653,29735,0,8.952802
+homogeneous,global,42,2048,0.09071795329,0.09912109375,0.08617891639,0.1120632711,1.540782877,1845,0,0.556673
+homogeneous,global,42,8192,0.09071795329,0.09008789062,0.0838878572,0.09628792405,1.521121989,7454,0,2.243977
+homogeneous,global,42,32768,0.09071795329,0.08865356445,0.08557590223,0.09173122668,1.509214083,29863,0,8.917099
+homogeneous,global,4294967313,2048,0.09071795329,0.0849609375,0.07288500824,0.09703686676,1.512489022,1874,0,0.562121
+homogeneous,global,4294967313,8192,0.09071795329,0.08764648438,0.08152284052,0.09377012823,1.520693128,7474,0,2.231989
+homogeneous,global,4294967313,32768,0.09071795329,0.09069824219,0.0875887852,0.09380769918,1.516636647,29796,0,8.999752
+homogeneous,global,99991,2048,0.09071795329,0.09033203125,0.07791683941,0.1027472231,1.527037534,1863,0,0.558155
+homogeneous,global,99991,8192,0.09071795329,0.09155273438,0.0853075305,0.09779793825,1.518800977,7442,0,2.214903
+homogeneous,global,99991,32768,0.09071795329,0.09051513672,0.08740850732,0.09362176612,1.509185254,29802,0,8.852664
+homogeneous,local,17,2048,0.09071795329,0.09130859375,0.07883317498,0.1037840125,1.521831216,1861,0,0.890326
+homogeneous,local,17,8192,0.09071795329,0.09069824219,0.0844793282,0.09691715617,1.512954192,7449,0,3.580792
+homogeneous,local,17,32768,0.09071795329,0.09051513672,0.08740850732,0.09362176612,1.520594026,29802,0,14.328777
+homogeneous,local,42,2048,0.09071795329,0.083984375,0.07197164313,0.09599710687,1.506116258,1876,0,0.898609
+homogeneous,local,42,8192,0.09071795329,0.09399414062,0.08767472393,0.1003135573,1.515775564,7422,0,3.550128
+homogeneous,local,42,32768,0.09071795329,0.08996582031,0.0868676968,0.09306394383,1.517661146,29820,0,14.311493
+homogeneous,local,4294967313,2048,0.09071795329,0.08544921875,0.0733418699,0.0975565676,1.535167001,1873,0,0.887992
+homogeneous,local,4294967313,8192,0.09071795329,0.08776855469,0.0816410579,0.09389605147,1.518263096,7473,0,3.530077
+homogeneous,local,4294967313,32768,0.09071795329,0.08834838867,0.08527551383,0.09142126352,1.511584997,29873,0,14.213087
+homogeneous,local,99991,2048,0.09071795329,0.0927734375,0.08020848653,0.1053383885,1.544423895,1858,0,0.901542
+homogeneous,local,99991,8192,0.09071795329,0.08850097656,0.08235043674,0.09465151639,1.52403699,7467,0,3.578679
+homogeneous,local,99991,32768,0.09071795329,0.09088134766,0.0877690669,0.09399362841,1.518158318,29790,0,14.305093
+sparse_slab,global,17,2048,0.2008895554,0.2094726562,0.191848302,0.2270970105,4.294764789,12994,11375,2.298738
+sparse_slab,global,17,8192,0.2008895554,0.2020263672,0.1933315712,0.2107211632,4.258157631,52400,45863,9.261328
+sparse_slab,global,17,32768,0.2008895554,0.2063903809,0.2020083111,0.2107724507,4.279346073,209924,183919,37.013675
+sparse_slab,local,17,2048,0.2008895554,0.203125,0.1857001967,0.2205498033,4.269169661,5233,3601,1.804226
+sparse_slab,local,17,8192,0.2008895554,0.2017822266,0.1930913566,0.2104730965,4.26608085,20927,14388,7.161564
+sparse_slab,local,17,32768,0.2008895554,0.2000732422,0.1957416185,0.2044048659,4.254929718,83296,57084,28.561383
+sparse_slab,global,42,2048,0.2008895554,0.1928710938,0.1757829017,0.2099592858,4.227835612,13045,11392,2.339608
+sparse_slab,global,42,8192,0.2008895554,0.1907958984,0.1822869742,0.1993048226,4.205738817,51717,45088,9.176894
+sparse_slab,global,42,32768,0.2008895554,0.1990661621,0.1947427349,0.2033895893,4.250089069,209065,182820,37.532583
+sparse_slab,local,42,2048,0.2008895554,0.212890625,0.1951615162,0.2306197338,4.31009619,5328,3716,1.823315
+sparse_slab,local,42,8192,0.2008895554,0.2025146484,0.1938120153,0.2112172816,4.252338092,21057,14524,7.225148
+sparse_slab,local,42,32768,0.2008895554,0.2007141113,0.196377294,0.2050509287,4.254511087,83534,57343,28.705476
+sparse_slab,global,4294967313,2048,0.2008895554,0.2006835938,0.1833373121,0.2180298754,4.262932509,13230,11593,2.32755
+sparse_slab,global,4294967313,8192,0.2008895554,0.2049560547,0.1962145329,0.2136975764,4.278734548,52898,46385,9.308498
+sparse_slab,global,4294967313,32768,0.2008895554,0.2012939453,0.1969524439,0.2056354467,4.257993142,209543,183371,36.906217
+sparse_slab,local,4294967313,2048,0.2008895554,0.208984375,0.1913751382,0.2265936118,4.307507275,5211,3591,1.790086
+sparse_slab,local,4294967313,8192,0.2008895554,0.1987304688,0.1900890979,0.2073718396,4.244783799,20803,14239,7.112032
+sparse_slab,local,4294967313,32768,0.2008895554,0.1998291016,0.195499461,0.2041587422,4.245972938,83068,56848,28.706117
+sparse_slab,global,99991,2048,0.2008895554,0.1904296875,0.1734243322,0.2074350428,4.221827069,13045,11387,2.297445
+sparse_slab,global,99991,8192,0.2008895554,0.1961669922,0.1875678133,0.2047661711,4.248757261,52586,46001,9.297792
+sparse_slab,global,99991,32768,0.2008895554,0.1967163086,0.1924121748,0.2010204424,4.239124776,209282,182960,36.917944
+sparse_slab,local,99991,2048,0.2008895554,0.19921875,0.1819200627,0.2165174373,4.259635563,5226,3586,1.788303
+sparse_slab,local,99991,8192,0.2008895554,0.2036132812,0.1948930871,0.2123334754,4.270593833,21002,14478,7.522858
+sparse_slab,local,99991,32768,0.2008895554,0.2011108398,0.1967708161,0.2054508636,4.252192914,83304,57126,28.946061
+Delta tracking: immutable grid, hard masks, conservative bounds, global/local free flights, independent seeds, failures and world units passed
+<end of output>
+Test time =   0.36 sec
+----------------------------------------------------------
+Test Passed.
+"delta_tracking_contract" end time: Sep 19 05:52 UTC
+"delta_tracking_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/22 Testing: ratio_tracking_contract
+3/22 Test: ratio_tracking_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_ratio_tracking_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"ratio_tracking_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+fixture,mode,seed,samples,reference_T,mean_T,sample_variance,standard_error,events,random_draws,quadrature_delta
+homogeneous,global,17,2048,0.018315638888734179,0.018724278746590765,0.00063879778141439465,0.0005584917002124986,32808,34856,0
+homogeneous,global,17,16384,0.018315638888734179,0.018100264530431068,0.00056028803116083264,0.00018492503218035759,262790,279174,0
+homogeneous,global,42,2048,0.018315638888734179,0.018788158607676235,0.00059775996949369724,0.00054025455583858273,32723,34771,0
+homogeneous,global,42,16384,0.018315638888734179,0.018232560183653566,0.00064376266607614691,0.00019822248841106351,262790,279174,0
+homogeneous,global,4294967313,2048,0.018315638888734179,0.018533057287826362,0.00057785923429253363,0.00053118530593795725,32984,35032,0
+homogeneous,global,4294967313,16384,0.018315638888734179,0.018379022992904351,0.00059124205428420242,0.00018996460503158813,262539,278923,0
+homogeneous,local,17,2048,0.018315638888734179,0.020556179806590628,0.0096401230188247148,0.0021695832129202848,14444,22636,0
+homogeneous,local,17,16384,0.018315638888734179,0.018449436465744522,0.0085545200427252707,0.00072258319067875745,114861,180397,0
+homogeneous,local,42,2048,0.018315638888734179,0.020544281112962026,0.010211311819674166,0.0022329335188156132,14330,22522,0
+homogeneous,local,42,16384,0.018315638888734179,0.017822531020116272,0.0080467208803814139,0.00070080872300094636,115030,180566,0
+homogeneous,local,4294967313,2048,0.018315638888734179,0.013603319763206457,0.0055147767779905252,0.0016409637712722928,14391,22583,0
+homogeneous,local,4294967313,16384,0.018315638888734179,0.018146833805076781,0.0081398314054755613,0.00070485167353270719,115003,180539,0
+piecewise-voxel-with-exact-linear-transition,global,17,2048,0.28650479686019009,0.29272664257918662,0.14650410997099705,0.0084578490141865217,8265,10313,0
+piecewise-voxel-with-exact-linear-transition,global,17,16384,0.28650479686019009,0.28814159270620338,0.147704992964973,0.00300253181906908,65551,81935,0
+piecewise-voxel-with-exact-linear-transition,global,42,2048,0.28650479686019009,0.28682750212190106,0.15308612559621609,0.0086457553032558924,8214,10262,0
+piecewise-voxel-with-exact-linear-transition,global,42,16384,0.28650479686019009,0.28570789535041818,0.14700862257360375,0.0029954455843625638,65555,81939,0
+piecewise-voxel-with-exact-linear-transition,global,4294967313,2048,0.28650479686019009,0.29790571338129518,0.15137908954436272,0.0085974165344354092,8098,10146,0
+piecewise-voxel-with-exact-linear-transition,global,4294967313,16384,0.28650479686019009,0.28396340851331592,0.14769276034331749,0.0030024074847608854,65310,81694,0
+piecewise-voxel-with-exact-linear-transition,local,17,2048,0.28650479686019009,0.27779260150534396,0.14469356951449669,0.0084054242599347906,6701,14893,0
+piecewise-voxel-with-exact-linear-transition,local,17,16384,0.28650479686019009,0.28438895491965732,0.14708669547193512,0.0029962408849132489,53178,118714,0
+piecewise-voxel-with-exact-linear-transition,local,42,2048,0.28650479686019009,0.28021275173987448,0.14612326390091604,0.008446848521881942,6630,14822,0
+piecewise-voxel-with-exact-linear-transition,local,42,16384,0.28650479686019009,0.28434791054274483,0.14616405438015795,0.0029868287358378012,53196,118732,0
+piecewise-voxel-with-exact-linear-transition,local,4294967313,2048,0.28650479686019009,0.27705441014879095,0.14539883912043514,0.0084258843401909429,6744,14936,0
+piecewise-voxel-with-exact-linear-transition,local,4294967313,16384,0.28650479686019009,0.28725164054858743,0.14798329755808623,0.0030053591613729024,53161,118697,0
+oblique-trilinear,global,17,2048,0.26107732010034856,0.24513494855830442,0.11877334610836994,0.0076154315639021739,4671,6719,1.6568263427885199e-10
+oblique-trilinear,global,17,16384,0.26107732010034856,0.26091141223898129,0.12005852862561335,0.0027069892969513953,36531,52915,1.6568263427885199e-10
+oblique-trilinear,global,42,2048,0.26107732010034856,0.26160752131201914,0.11943940179536361,0.0076367545729774753,4625,6673,1.6568263427885199e-10
+oblique-trilinear,global,42,16384,0.26107732010034856,0.26003960609643467,0.11858027311678024,0.0026902723835794686,36667,53051,1.6568263427885199e-10
+oblique-trilinear,global,4294967313,2048,0.26107732010034856,0.26315912186721735,0.12355222685143005,0.0077671253219772259,4499,6547,1.6568263427885199e-10
+oblique-trilinear,global,4294967313,16384,0.26107732010034856,0.26083934206118614,0.12026124655518096,0.0027092736986718863,36402,52786,1.6568263427885199e-10
+oblique-trilinear,local,17,2048,0.26107732010034856,0.24775084260058036,0.11472044893450237,0.0074843733342411494,4634,10778,1.6568263427885199e-10
+oblique-trilinear,local,17,16384,0.26107732010034856,0.26229382094278997,0.1194728822832426,0.0027003788693062253,36459,85611,1.6568263427885199e-10
+oblique-trilinear,local,42,2048,0.26107732010034856,0.25805378572938542,0.11851861199191255,0.0076072607429794369,4607,10751,1.6568263427885199e-10
+oblique-trilinear,local,42,16384,0.26107732010034856,0.25865597494818288,0.11914036429980461,0.0026966183917492841,36443,85595,1.6568263427885199e-10
+oblique-trilinear,local,4294967313,2048,0.26107732010034856,0.25754192463503012,0.11984755049463833,0.0076497916157866755,4537,10681,1.6568263427885199e-10
+oblique-trilinear,local,4294967313,16384,0.26107732010034856,0.26000978425580329,0.11969115040023715,0.0027028444399226389,36464,85616,1.6568263427885199e-10
+reverse-boundaries,global,42,16384,0.28650479686019009,0.28235737404332678,0.14700439632473511,0.0029954025270599498,65555,81939,0
+exact-brick-start,global,42,16384,0.37221588761195501,0.36951405709749946,0.22231213297144539,0.0036835927804499437,32979,49363,0
+reverse-boundaries,local,42,16384,0.28650479686019009,0.29196343583237688,0.14915553620097804,0.0030172390454816845,53100,118636,0
+exact-brick-start,local,42,16384,0.37221588761195501,0.36969217711567059,0.22252009778261997,0.0036853153103808484,32758,65526,0
+thick-log,global,17,1,0,0,0,0,2032,2033,0 log_T=-1408.475070897794
+thick-log,global,42,1,0,0,0,0,1949,1950,0 log_T=-1350.943854911319
+thick-log,global,4294967313,1,0,0,0,0,2020,2021,0 log_T=-1400.1573047310746
+thick-log,local,17,1,0,0,0,0,2032,2033,0 log_T=-1408.475070897794
+thick-log,local,42,1,0,0,0,0,1949,1950,0 log_T=-1350.943854911319
+thick-log,local,4294967313,1,0,0,0,0,2020,2021,0 log_T=-1400.1573047310746
+Ratio tracking analytic means, variance, events, independent quadrature, boundaries, log underflow and failure checks passed
+<end of output>
+Test time =   0.42 sec
+----------------------------------------------------------
+Test Passed.
+"ratio_tracking_contract" end time: Sep 19 05:52 UTC
+"ratio_tracking_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/22 Testing: reference_contract
+4/22 Test: reference_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_reference_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"reference_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+single_slab,-0.59999999999999998,-1,17,8192,0.26078416298176654,0.25811034712026926,0.0034386831459410788
+single_slab,-0.59999999999999998,-1,42,8192,0.26078416298176654,0.26164197911505466,0.0034482819050864399
+single_slab,-0.59999999999999998,-1,99991,8192,0.26078416298176654,0.25911592290312474,0.0034434585397522693
+single_slab,-0.59999999999999998,-1,4294967313,8192,0.26078416298176654,0.25835915565844569,0.0034390110515881765
+single_slab,-0.59999999999999998,1,17,8192,0.010315580747439157,0.010280727635880718,9.7868064655548255e-05
+single_slab,-0.59999999999999998,1,42,8192,0.010315580747439157,0.01022301933083296,9.7183152559894155e-05
+single_slab,-0.59999999999999998,1,99991,8192,0.010315580747439157,0.010220186780287297,9.7984111321803368e-05
+single_slab,-0.59999999999999998,1,4294967313,8192,0.010315580747439157,0.010287899259419546,9.6997668927216129e-05
+single_slab,0,-1,17,8192,0.032144357313759149,0.031850768598742446,0.00035280927957534545
+single_slab,0,-1,42,8192,0.032144357313759149,0.032095167149783353,0.00035473724257890986
+single_slab,0,-1,99991,8192,0.032144357313759149,0.031877168462184122,0.00035518885107484785
+single_slab,0,-1,4294967313,8192,0.032144357313759149,0.031959694862716159,0.00035282698389493161
+single_slab,0,1,17,8192,0.029624070690115661,0.029558253549323191,0.00034739671499305769
+single_slab,0,1,42,8192,0.029624070690115661,0.029841508287642423,0.00034741322471555246
+single_slab,0,1,99991,8192,0.029624070690115661,0.029615738362587466,0.00034810490891619379
+single_slab,0,1,4294967313,8192,0.029624070690115661,0.029099879479033822,0.00034417293222643196
+single_slab,0.59999999999999998,-1,17,8192,0.010709375532383452,0.01063893311235245,9.7938564115507829e-05
+single_slab,0.59999999999999998,-1,42,8192,0.010709375532383452,0.010575153528042414,9.8526296153440826e-05
+single_slab,0.59999999999999998,-1,99991,8192,0.010709375532383452,0.010573535233349222,9.9085127951240956e-05
+single_slab,0.59999999999999998,-1,4294967313,8192,0.010709375532383452,0.010734745413119856,9.8004363465058891e-05
+single_slab,0.59999999999999998,1,17,8192,0.23558129674533168,0.23518519662607357,0.0033751754474885555
+single_slab,0.59999999999999998,1,42,8192,0.23558129674533168,0.23910539049364204,0.0033867583685244272
+single_slab,0.59999999999999998,1,99991,8192,0.23558129674533168,0.23650162190715579,0.0033799830239174197
+single_slab,0.59999999999999998,1,4294967313,8192,0.23558129674533168,0.22976100182161871,0.0033551588690258283
+multi_slab,17,512,0.09379439947419399,0.014130316763645533,0.0052534060312329923
+multi_slab,17,4096,0.09626487837341223,0.013305605571296708,0.0018023426034413823
+multi_slab,42,512,0.1049149378122477,0.014617128397074797,0.0053431338089679837
+multi_slab,42,4096,0.097349164512914657,0.013536839029946447,0.0018179362863685624
+multi_slab,99991,512,0.096300344135271304,0.011822847208703753,0.004805361428082129
+multi_slab,99991,4096,0.096929424091976815,0.012830407539380945,0.0017698654512897799
+multi_slab,4294967313,512,0.085570111198596407,0.011501768334971539,0.0047396615152604819
+multi_slab,4294967313,4096,0.095009891278217726,0.012762307491886766,0.0017651622382974935
+roulette_weighting,17,16384,0.06836987452943051,0.067706894420136596,0.00090617824912613606,6325
+roulette_weighting,42,16384,0.067573639597849774,0.068802849626396975,0.00090558472435946951,6359
+roulette_weighting,99991,16384,0.068606002032234839,0.067835992159883104,0.00090491997271257305,6329
+roulette_weighting,4294967313,16384,0.067453199440412753,0.068289100859947063,0.00090396955178009917,6399
+Reference contracts passed: multi-seed analytic single scatter, empty/absorption/unit albedo/internal camera, unclipped secondary transport, progressive reproducibility, typed safety/numerical limits, multiple-seed variance and roulette weighting
+<end of output>
+Test time =   0.51 sec
+----------------------------------------------------------
+Test Passed.
+"reference_contract" end time: Sep 19 05:52 UTC
+"reference_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/22 Testing: preview_approx_contract
+5/22 Test: preview_approx_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_preview_approx_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"preview_approx_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+tau,albedo,cosine,single_source,approx_source
+0.2,0.2,-1,0.00135265,0.00146215
+0.2,0.2,1,0.246132,0.247013
+0.2,0.8,-1,0.00541059,0.00794974
+0.2,0.8,1,0.984527,1.0009
+0.2,0.98,-1,0.00662797,0.0107926
+0.2,0.98,1,1.20605,1.23165
+5,0.2,-1,1.11319e-05,8.44761e-05
+5,0.2,1,0.0020256,0.00251842
+5,0.8,-1,4.45278e-05,0.00251711
+5,0.8,1,0.00810241,0.0197405
+5,0.98,-1,5.45465e-05,0.0043498
+5,0.98,1,0.00992545,0.0290794
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"preview_approx_contract" end time: Sep 19 05:52 UTC
+"preview_approx_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/22 Testing: progressive_contract
+6/22 Test: progressive_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_progressive_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"progressive_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+Progressive reset, 250ms hysteresis, exposure reuse and linear HDR/T average passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"progressive_contract" end time: Sep 19 05:52 UTC
+"progressive_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/22 Testing: majorant_contract
+7/22 Test: majorant_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_majorant_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"majorant_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+Majorant exhaustive support, impulse halo, random grid, hierarchy, exact fixed-sample skipping and DDA boundary checks passed
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"majorant_contract" end time: Sep 19 05:52 UTC
+"majorant_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/22 Testing: sun_cache_contract
+8/22 Test: sun_cache_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_sun_cache_tests" "/home/runner/work/Testbed/Testbed/tests/fixtures/sun"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"sun_cache_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+Sun cache: empty/homogeneous, noncubic axes/low sun, optical/density/transform invalidation, view-only reuse passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"sun_cache_contract" end time: Sep 19 05:52 UTC
+"sun_cache_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/22 Testing: hdr_export_contract
+9/22 Test: hdr_export_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_hdr_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"hdr_export_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+HDR FLOAT exact roundtrip: 0, >1, tiny values, RGBA, asymmetric rows; no-clobber/failure cleanup passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"hdr_export_contract" end time: Sep 19 05:52 UTC
+"hdr_export_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/22 Testing: core_contract
+10/22 Test: core_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_core_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"core_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+PASS 128 cubed float grid
+PASS non-aligned extents
+PASS size exceeds 32-bit
+PASS reject zero
+PASS reject overflow
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"core_contract" end time: Sep 19 05:52 UTC
+"core_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/22 Testing: document_contract
+11/22 Test: document_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_document_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"document_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+PASS single cell recipe
+PASS empty recipe
+PASS multiple cells
+PASS reordering keeps local random stream
+PASS detail seed independent of structure
+PASS deletion keeps surviving ID
+PASS known rotated and scaled point
+PASS world/local round trip
+PASS known voxel center
+PASS index/local round trip
+PASS lower boundary convention
+PASS negative radius rejected
+PASS singular transform rejected
+PASS non-unit rotation rejected
+PASS NaN rejected
+PASS Inf rejected
+PASS invalid albedo rejected
+PASS cell limit rejected
+PASS cross-type duplicate ID rejected
+PASS degenerate camera rejected
+PASS future schema rejected
+PASS camera change only
+PASS exposure change only
+PASS sun change only
+PASS optics do not dirty density
+PASS shape change dirties density
+PASS no-op preserves revision
+PASS change increments revision
+PASS invalid replacement preserves document
+PASS ID overflow rejected
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"document_contract" end time: Sep 19 05:52 UTC
+"document_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/22 Testing: persistence_contract
+12/22 Test: persistence_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_persistence_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"persistence_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+PASS exact round-trip including uint64 seeds
+PASS truncated JSON rejected
+PASS future version rejected
+PASS input size cap
+PASS nesting cap
+PASS invalid decoded optics rejected
+PASS new scene is unsaved
+PASS save marks exact scene clean
+PASS add cell command
+PASS undo uses newer revision and returns to saved state
+PASS redo reproduces scene
+PASS remove cell command
+PASS branch edit discards redo
+PASS drag collapses twenty edits into one undo
+PASS drag redo
+PASS cancel restores with newer revision
+PASS load refuses implicit discard of unsaved changes
+PASS unsaved scene preserved
+PASS broken load rejected
+PASS failed load preserves scene and revision
+PASS write failure injected
+PASS write failure preserves previous file and dirty state
+PASS publish failure injected
+PASS publish failure preserves previous file
+PASS missing parent fails safely
+PASS destination directory cannot be overwritten
+PASS temporary files cleaned on failures
+PASS atomic overwrite succeeds
+PASS explicit load resets history and dirty state
+PASS save during drag refused
+PASS invalid command rejected
+PASS invalid command preserves scene
+PASS history bounded at 128 commands
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"persistence_contract" end time: Sep 19 05:52 UTC
+"persistence_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/22 Testing: density_contract
+13/22 Test: density_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_density_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"density_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+PASS fixture samples finite/nonnegative/bounded with base constraint
+PASS outside conservative support is zero
+PASS envelope boundary is zero
+PASS fixture samples finite/nonnegative/bounded with base constraint
+PASS outside conservative support is zero
+PASS envelope boundary is zero
+PASS fixture samples finite/nonnegative/bounded with base constraint
+PASS outside conservative support is zero
+PASS envelope boundary is zero
+PASS fixture samples finite/nonnegative/bounded with base constraint
+PASS outside conservative support is zero
+PASS envelope boundary is zero
+PASS fixture samples finite/nonnegative/bounded with base constraint
+PASS outside conservative support is zero
+PASS envelope boundary is zero
+PASS tall ellipsoid has vertical extent
+PASS wide ellipsoid has horizontal extent
+PASS flat base never regrows below plane
+PASS complete cut and retained body
+PASS ID-sorted smooth union independent of vector order
+PASS coincident shape union does not add density by default
+PASS overlap addition independently controlled and bounded
+PASS empty field
+PASS minimum radius and maximum density remain finite
+PASS world support contains transformed envelope
+PASS non-finite sample rejected
+PASS uniform layout exact size
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"density_contract" end time: Sep 19 05:52 UTC
+"density_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/22 Testing: optics_contract
+14/22 Test: optics_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_optics_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"optics_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS homogeneous transmittance/source analytic agreement
+PASS zero distance
+PASS absorption-only no light
+PASS inside camera
+PASS axis parallel ray
+PASS parallel outside ray
+PASS boundary ray finite
+PASS invalid coefficients rejected
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"optics_contract" end time: Sep 19 05:52 UTC
+"optics_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/22 Testing: editor_geometry_contract
+15/22 Test: editor_geometry_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_editor_geometry_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"editor_geometry_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+PASS screen center follows camera forward
+PASS primitive picking hits cell
+PASS primitive miss
+PASS cut mode picks cut primitive
+PASS gizmo matrix round-trip under cloud rotation/scale
+PASS world gizmo translation converts to cloud-local coordinate
+PASS transformed cell picking
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"editor_geometry_contract" end time: Sep 19 05:52 UTC
+"editor_geometry_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/22 Testing: noise_contract
+16/22 Test: noise_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_noise_tests" "/home/runner/work/Testbed/Testbed/tests/fixtures/scene-v1.white.json"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"noise_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+PASS detail reseed preserves macro parameters and structure seed
+PASS detail seed changes density
+PASS remote cell preserves local random series and nonoverlapping density
+PASS changing bounds does not renormalize noise coordinates
+PASS bottom, envelope and full cuts remain empty after all detail stages
+PASS multiple seeds and parameter extrema preserve finite density upper bound
+PASS domain displacement obeys documented magnitude bound
+PASS noise settings and seeds round-trip
+PASS v1 scene migrates with all noise disabled
+PASS invalid displacement rejected
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"noise_contract" end time: Sep 19 05:52 UTC
+"noise_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/22 Testing: dense_cache_contract
+17/22 Test: dense_cache_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_dense_cache_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"dense_cache_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+PASS noncubic transformed ramp interpolation has no half-voxel shift
+PASS first voxel center
+PASS envelope boundary is zero
+PASS impulse trilinear half texel
+PASS budget includes replacement and padded readback
+PASS overbudget rejected before allocation
+PASS hard cut and base protected after filtering
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"dense_cache_contract" end time: Sep 19 05:52 UTC
+"dense_cache_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/22 Testing: revision_queue_contract
+18/22 Test: revision_queue_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_revision_queue_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"revision_queue_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+PASS slow running job plus one latest pending request remains bounded
+PASS out-of-order completion cannot publish or erase active job
+PASS obsolete result discarded after completion
+PASS only newest unstarted revision executes
+PASS current result publishes once
+PASS completed queue result is not assumed to remain resident
+PASS recreated current result completes
+PASS A B A after rejected completion requests A again
+PASS same-hash request survives an active cancellation decision
+PASS successful return-to-A clears redundant pending request
+PASS already-cancelled A is not published after return to A
+PASS return-to-A retained for retry after cancellation
+PASS retry publishes matching latest input
+PASS camera/sun/optics/exposure do not enter density hash
+PASS density source enters cache identity
+PASS local density edit invalidates global lighting
+PASS exposure preserves density and HDR
+PASS failed job never publishes
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"revision_queue_contract" end time: Sep 19 05:52 UTC
+"revision_queue_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/22 Testing: phase_function_contract
+19/22 Test: phase_function_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_phase_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"phase_function_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+HG g=-0.95 sphere_integral=1 cosine_integral=-0.95
+HG sample g=-0.95 seed=17 count=32768 mean_cos=-0.949569 mean_bound=0.00617541
+HG sample g=-0.95 seed=42 count=32768 mean_cos=-0.951377 mean_bound=0.00617541
+HG sample g=-0.95 seed=4294967313 count=32768 mean_cos=-0.948173 mean_bound=0.00617541
+HG sample g=-0.95 seed=99991 count=32768 mean_cos=-0.949288 mean_bound=0.00617541
+HG g=-0.5 sphere_integral=1 cosine_integral=-0.5
+HG sample g=-0.5 seed=17 count=32768 mean_cos=-0.502517 mean_bound=0.0167728
+HG sample g=-0.5 seed=42 count=32768 mean_cos=-0.502892 mean_bound=0.0167728
+HG sample g=-0.5 seed=4294967313 count=32768 mean_cos=-0.497435 mean_bound=0.0167728
+HG sample g=-0.5 seed=99991 count=32768 mean_cos=-0.501985 mean_bound=0.0167728
+HG g=-1e-08 sphere_integral=1 cosine_integral=-1e-08
+HG sample g=-1e-08 seed=17 count=32768 mean_cos=-0.00176024 mean_bound=0.0193366
+HG sample g=-1e-08 seed=42 count=32768 mean_cos=-0.00274526 mean_bound=0.0193366
+HG sample g=-1e-08 seed=4294967313 count=32768 mean_cos=0.000796366 mean_bound=0.0193366
+HG sample g=-1e-08 seed=99991 count=32768 mean_cos=-0.00305483 mean_bound=0.0193366
+HG g=0 sphere_integral=1 cosine_integral=-4.74107e-18
+HG sample g=0 seed=17 count=32768 mean_cos=-0.00176023 mean_bound=0.0193366
+HG sample g=0 seed=42 count=32768 mean_cos=-0.00274525 mean_bound=0.0193366
+HG sample g=0 seed=4294967313 count=32768 mean_cos=0.000796376 mean_bound=0.0193366
+HG sample g=0 seed=99991 count=32768 mean_cos=-0.00305482 mean_bound=0.0193366
+HG g=1e-08 sphere_integral=1 cosine_integral=1e-08
+HG sample g=1e-08 seed=17 count=32768 mean_cos=-0.00176022 mean_bound=0.0193366
+HG sample g=1e-08 seed=42 count=32768 mean_cos=-0.00274524 mean_bound=0.0193366
+HG sample g=1e-08 seed=4294967313 count=32768 mean_cos=0.000796386 mean_bound=0.0193366
+HG sample g=1e-08 seed=99991 count=32768 mean_cos=-0.00305481 mean_bound=0.0193366
+HG g=0.5 sphere_integral=1 cosine_integral=0.5
+HG sample g=0.5 seed=17 count=32768 mean_cos=0.50085 mean_bound=0.0167728
+HG sample g=0.5 seed=42 count=32768 mean_cos=0.49694 mean_bound=0.0167728
+HG sample g=0.5 seed=4294967313 count=32768 mean_cos=0.499753 mean_bound=0.0167728
+HG sample g=0.5 seed=99991 count=32768 mean_cos=0.497547 mean_bound=0.0167728
+HG g=0.95 sphere_integral=1 cosine_integral=0.95
+HG sample g=0.95 seed=17 count=32768 mean_cos=0.950402 mean_bound=0.00617541
+HG sample g=0.95 seed=42 count=32768 mean_cos=0.948532 mean_bound=0.00617541
+HG sample g=0.95 seed=4294967313 count=32768 mean_cos=0.950032 mean_bound=0.00617541
+HG sample g=0.95 seed=99991 count=32768 mean_cos=0.950603 mean_bound=0.00617541
+HG normalization, sampling, RNG, persistence and invalidation PASS
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"phase_function_contract" end time: Sep 19 05:52 UTC
+"phase_function_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/22 Testing: optical_integration_contract
+20/22 Test: optical_integration_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_optical_contract_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"optical_integration_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+case,steps,transmittance,radiance,T_abs_error,L_abs_error
+slab-0,1,1,0,0,0
+slab-0,8,1,0,0,0
+slab-0,64,1,0,0,0
+slab-0,128,1,0,0,0
+slab-1e-12,1,0.99999999999,5.999999999969999e-12,0,0
+slab-1e-12,8,0.99999999999,5.999999999969999e-12,0,0
+slab-1e-12,64,0.9999999999900027,5.999999999970005e-12,2.664535259100376e-15,6.462348535570529e-27
+slab-1e-12,128,0.9999999999899956,5.999999999969987e-12,4.440892098500626e-15,1.211690350419474e-26
+slab-0.01,1,0.9048374180359595,0.05709754917842425,0,0
+slab-0.01,8,0.9048374180359596,0.05709754917842426,1.110223024625157e-16,6.938893903907228e-18
+slab-0.01,64,0.9048374180359587,0.05709754917842421,7.771561172376096e-16,4.163336342344337e-17
+slab-0.01,128,0.90483741803596,0.05709754917842424,4.440892098500626e-16,1.387778780781446e-17
+slab-0.5,1,0.006737946999085467,0.5959572318005487,0,0
+slab-0.5,8,0.00673794699908547,0.5959572318005488,2.602085213965211e-18,1.110223024625157e-16
+slab-0.5,64,0.006737946999085464,0.5959572318005485,2.602085213965211e-18,2.220446049250313e-16
+slab-0.5,128,0.006737946999085476,0.5959572318005489,8.673617379884035e-18,2.220446049250313e-16
+slab-10,1,3.720075976020836e-44,0.6,0,0
+slab-10,8,3.720075976020837e-44,0.6000000000000001,4.978412222288913e-60,1.110223024625157e-16
+slab-10,64,3.720075976020822e-44,0.6,1.443739544463785e-58,0
+slab-10,128,3.720075976020841e-44,0.6000000000000002,4.978412222288913e-59,2.220446049250313e-16
+quadratic,16,0.3014884905521276,0.4191069056687234,0.0002942786399254271,0.0001765671839553118
+quadratic,32,0.3012677546323622,0.4192393472205826,7.354272016008023e-05,4.412563209610365e-05
+quadratic,64,0.3012125959090171,0.4192724424545897,1.838399681491909e-05,1.103039808902917e-05
+quadratic,128,0.3011988078062122,0.4192807153162725,4.5958940100288e-06,2.757536406272632e-06
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"optical_integration_contract" end time: Sep 19 05:52 UTC
+"optical_integration_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/22 Testing: benchmark_contract
+21/22 Test: benchmark_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_benchmark_tests"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"benchmark_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_contract" end time: Sep 19 05:52 UTC
+"benchmark_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/22 Testing: gate_fixture_contract
+22/22 Test: gate_fixture_contract
+Command: "/home/runner/work/Testbed/Testbed/build/cpu-release/white_gate_fixture_tests" "/home/runner/work/Testbed/Testbed/tests/fixtures/gate"
+Directory: /home/runner/work/Testbed/Testbed/build/cpu-release
+"gate_fixture_contract" start time: Sep 19 05:52 UTC
+Output:
+----------------------------------------------------------
+17 fixed recipes validated; detail pair changes only detail seed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"gate_fixture_contract" end time: Sep 19 05:52 UTC
+"gate_fixture_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 19 05:52 UTC

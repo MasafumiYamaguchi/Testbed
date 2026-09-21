@@ -2,6 +2,8 @@
 #include <array>
 #include "white/preview_approx.hpp"
 #include <chrono>
+#include <cstddef>
+#include <optional>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -81,6 +83,47 @@ struct CloudRecipe {
     NoiseSettings noise{};
     bool operator==(const CloudRecipe&) const = default;
 };
+inline constexpr std::uint32_t cumulonimbus_contract_version=1;
+inline constexpr std::size_t cumulonimbus_generated_cells=5;
+
+struct CumulonimbusParameters {
+    double width=80,height=120,cloud_base=0; // cloud-local metres
+    Vec3 growth_direction{0,1,0}; // unit upward vector, y >= 0.2
+    double density=1; // dimensionless density multiplier
+    std::uint64_t structure_seed=42,detail_seed=17;
+    bool operator==(const CumulonimbusParameters&)const=default;
+};
+// Offsets remain cloud-local metres when width/height change; scales multiply
+// the generated radii. The edit is attached to an ID, never a vector index.
+struct CumulonimbusCellAdjustment {
+    Id cell_id=0;
+    Vec3 center_offset{};
+    Vec3 radius_scale{1,1,1};
+    std::optional<std::uint64_t> structure_seed{};
+    bool operator==(const CumulonimbusCellAdjustment&)const=default;
+};
+struct CumulonimbusModifiers {
+    Transform transform{};
+    Optics optics{};
+    NoiseSettings noise{{},0.12,0.2,0.6,0.5,0.035,1};
+    double blend_width=4,overlap=0.15,base_transition=2;
+    bool base_enabled=true;
+    std::vector<Cell> manual_cells;
+    std::vector<Cut> cuts;
+    bool operator==(const CumulonimbusModifiers&)const=default;
+};
+// This source model is authoritative. Graphs/recipes are derived snapshots;
+// never store an independently editable generated graph alongside this model.
+struct CumulonimbusGroup {
+    std::uint32_t contract_version=cumulonimbus_contract_version;
+    Id cloud_id=1;
+    std::array<Id,cumulonimbus_generated_cells> cell_ids{2,3,4,5,6};
+    CumulonimbusParameters parameters{};
+    std::vector<CumulonimbusCellAdjustment> cell_adjustments;
+    CumulonimbusModifiers modifiers{};
+    bool operator==(const CumulonimbusGroup&)const=default;
+};
+
 struct Camera {
     Vec3 position{120,70,120},target{0,20,0},up{0,1,0};
     double vertical_fov_degrees=45,near_plane=0.1,far_plane=10000;
@@ -92,8 +135,9 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=4,algorithm_version=2;
-    CloudRecipe cloud{};
+    std::uint32_t schema_version=5,algorithm_version=2;
+    CloudRecipe cloud{}; // Derived render snapshot when cumulonimbus is present.
+    std::optional<CumulonimbusGroup> cumulonimbus{};
     Camera camera{};
     Sun sun{};
     double exposure_ev=0;
