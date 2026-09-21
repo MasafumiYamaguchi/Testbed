@@ -9,6 +9,7 @@
 #include "white/frozen_cloud.hpp"
 #include "white/anvil_scene.hpp"
 #include "white/modifiers.hpp"
+#include "white/cloud_presets.hpp"
 #include <atomic>
 #include <future>
 namespace white {
@@ -25,6 +26,8 @@ public:
     void start_prefab_test();
     void prefab_test_input(int frame);
     void verify_prefab_test(int frame);
+    void start_preset_test();
+    void preset_test_step(int frame,GpuSpike&);
     void start_freeze_test();
     void freeze_test_step(int frame);
     void start_top_lobes_test();
@@ -57,7 +60,29 @@ private:
     void draw_generation_ui();
     void draw_frozen_ui();
     void launch_generation(bool cancel_before_start=false);
-    void adopt_generation_candidate();
+    void adopt_generation_candidate(bool reset_confirmed=false);
+    void discard_generation_candidate();
+    void undo_generation_candidate_discard();
+    void clone_current_candidate();
+    void clone_test_step(int frame,GpuSpike&);
+    void draw_preset_ui();
+    void prepare_generation_draft(GenerationDraft,bool resets_manual_edits);
+    void publish_editor_preview(GpuSpike&);
+    Scene generation_candidate_view()const;
+    std::optional<Scene> generation_candidate_fixed_,generation_discarded_fixed_;
+    bool candidate_preview_active()const{return generation_preview_candidate_&&generation_candidate_fixed_.has_value();}
+    bool generation_preview_candidate_=false;
+    bool generation_draft_resets_edits_=false,generation_job_resets_edits_=false,generation_candidate_resets_edits_=false;
+    std::uint64_t generation_draft_token_=0,generation_job_draft_token_=0,generation_candidate_draft_token_=0,generation_discarded_draft_token_=0;
+    bool generation_candidate_is_clone_=false,generation_discarded_is_clone_=false,generation_discarded_resets_edits_=false;
+    std::optional<Scene> generation_preview_scene_;
+    std::uint64_t generation_preview_epoch_=0;
+    int preset_kind_=0,preset_wind_=0,variation_scope_=0;
+    std::uint64_t preset_structure_seed_=42,preset_detail_seed_=17,variation_seed_=100;
+    double preset_stage_=.8;
+    Id variation_target_=0;
+    std::string generation_preset_label_;
+    std::uint64_t preset_test_jobs_=0;
     std::optional<GenerationCandidate> generation_discarded_;
     std::optional<Scene> generation_discarded_guard_;
     std::uint64_t freeze_test_jobs_=0;
