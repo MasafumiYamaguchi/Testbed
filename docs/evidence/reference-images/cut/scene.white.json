@@ -1,0 +1,149 @@
+{
+  "algorithm_version": 3,
+  "camera": {
+    "far_plane": 10000.0,
+    "near_plane": 0.1,
+    "position": [
+      120.0,
+      70.0,
+      120.0
+    ],
+    "target": [
+      0.0,
+      35.0,
+      0.0
+    ],
+    "up": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "vertical_fov_degrees": 45.0
+  },
+  "cloud": {
+    "altitude_density": {
+      "base": 0.0,
+      "enabled": false,
+      "height": 1.0,
+      "knots": [
+        {
+          "scale": 1.0,
+          "t": 0.0
+        },
+        {
+          "scale": 1.0,
+          "t": 1.0
+        }
+      ]
+    },
+    "base": {
+      "enabled": true,
+      "height": 0.0,
+      "transition": 2.0
+    },
+    "blend_width": 2.0,
+    "cells": [
+      {
+        "center": [
+          0.0,
+          35.0,
+          0.0
+        ],
+        "id": "2",
+        "radii": [
+          18.0,
+          48.0,
+          18.0
+        ],
+        "structure_seed": "0"
+      }
+    ],
+    "cuts": [
+      {
+        "center": [
+          12.0,
+          40.0,
+          0.0
+        ],
+        "id": "3",
+        "radii": [
+          17.0,
+          20.0,
+          26.0
+        ],
+        "transition": 3.0
+      }
+    ],
+    "density": 1.0,
+    "detail_seed": "17",
+    "envelope": {
+      "max": [
+        50.0,
+        100.0,
+        50.0
+      ],
+      "min": [
+        -50.0,
+        -20.0,
+        -50.0
+      ]
+    },
+    "id": "1",
+    "noise": {
+      "medium_frequency": 0.12,
+      "medium_strength": 0.0,
+      "micro_erosion": 0.0,
+      "micro_frequency": 0.15,
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "warp_amplitude": 0.0,
+      "warp_frequency": 0.035
+    },
+    "optics": {
+      "albedo": 0.9,
+      "extinction_scale": 0.02,
+      "g": 0.0
+    },
+    "overlap": 0.0,
+    "structure_seed": "42",
+    "transform": {
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "exposure_ev": 1.0,
+  "preview_approx": {
+    "enabled": false,
+    "strength": 0.5
+  },
+  "schema_version": 6,
+  "sun": {
+    "direction_to_light": [
+      -0.5019327955006592,
+      0.6246950475544243,
+      0.5981802122787655
+    ],
+    "irradiance": [
+      15.0,
+      15.0,
+      15.0
+    ]
+  }
+}

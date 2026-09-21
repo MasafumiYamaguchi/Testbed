@@ -151,6 +151,26 @@ struct CenterlineShape {
     std::vector<CenterlineProfilePoint> profile{{1,0,1,1},{2,1,1,1}};
     bool operator==(const CenterlineShape&)const=default;
 };
+inline constexpr std::uint32_t developed_cloud_contract_version=1;
+inline constexpr std::size_t max_developed_cells=2,max_developed_primitives=8;
+// Each entry is a complete independently editable developed curve. Roles refer
+// to the five stable generator slots, not to vector positions in another cell.
+struct DevelopedCell {
+    Id id=0;
+    CenterlineShape shape{};
+    Vec3 translation{}; // Object-local metres; carries the entire local field.
+    std::vector<unsigned> roles{0,1,2}; // Explicit 3..5-lobe budget, includes 0/1/2.
+    bool operator==(const DevelopedCell&)const=default;
+};
+struct DevelopedCloud {
+    std::uint32_t contract_version=developed_cloud_contract_version;
+    Id id=1;
+    Transform transform{};
+    Optics optics{}; // One participating medium; no optical coefficient sums.
+    double fusion_width=4,overlap=0.15; // Inter-development metres and [0,1].
+    std::vector<DevelopedCell> cells; // Empty is a valid transparent cloud.
+    bool operator==(const DevelopedCloud&)const=default;
+};
 struct Camera {
     Vec3 position{120,70,120},target{0,20,0},up{0,1,0};
     double vertical_fov_degrees=45,near_plane=0.1,far_plane=10000;
@@ -162,10 +182,11 @@ struct Sun {
     bool operator==(const Sun&) const = default;
 };
 struct Scene {
-    std::uint32_t schema_version=6,algorithm_version=3;
+    std::uint32_t schema_version=7,algorithm_version=3;
     CloudRecipe cloud{}; // Derived render snapshot when cumulonimbus is present.
     std::optional<CumulonimbusGroup> cumulonimbus{};
     std::optional<CenterlineShape> centerline{}; // Exclusive source alternative.
+    std::optional<DevelopedCloud> developed{}; // Complete source; cloud is a validated metadata proxy for >1 group.
     Camera camera{};
     Sun sun{};
     double exposure_ev=0;

@@ -8,6 +8,7 @@ const CumulonimbusGroup* prefab_source(const Scene& scene) {
     return scene.cumulonimbus?&*scene.cumulonimbus:nullptr;
 }
 Scene new_centerline_scene(Scene scene) {
+    if(scene.developed)throw std::invalid_argument("Edit the selected development centerline in its source controls");
     if(scene.centerline)return scene;
     if(!scene.cumulonimbus)scene=new_cumulonimbus_scene(std::move(scene));
     CenterlineShape shape;shape.source=*scene.cumulonimbus;

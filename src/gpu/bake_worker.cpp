@@ -1,4 +1,4 @@
-#include "white/field_graph.hpp"
+#include "white/developed_scene.hpp"
 #include "white/gpu_bake_worker.hpp"
 #include "white/density.hpp"
 #include "white/dense_cache.hpp"
@@ -29,7 +29,7 @@ void GpuBakeWorker::run(){
         try{
             const auto start=std::chrono::steady_clock::now();
             const auto budget=cache_budget(job.extent,job.previous_bytes,job.other_gpu_bytes);built.estimated_gpu_bytes=budget.peak_gpu_buffer_bytes;
-            const auto cloud=FieldEvaluationPlan(field_graph_from_recipe(job.scene.cloud)).gpu_params();
+            const auto cloud=gpu_scene_density_params(job.scene);
             SDL_GPUTextureCreateInfo info{};info.type=SDL_GPU_TEXTURETYPE_3D;info.format=SDL_GPU_TEXTUREFORMAT_R32_FLOAT;info.usage=SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE|SDL_GPU_TEXTUREUSAGE_SAMPLER;
             info.width=job.extent[0];info.height=job.extent[1];info.layer_count_or_depth=job.extent[2];info.num_levels=1;
             built.texture=SDL_CreateGPUTexture(device_,&info);require(built.texture!=nullptr,"Create asynchronous bake texture");

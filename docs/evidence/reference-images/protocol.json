@@ -1,0 +1,127 @@
+{
+  "all_paths_complete": true,
+  "attempted_paths": 18874368,
+  "bake_error": "Excluded from the MC-versus-raymarch comparison because both consume the identical frozen array. Separate procedural density error is not inferred from this agreement.",
+  "checkpoint_samples_per_seed": 1024,
+  "coarse_quadrature": {
+    "shadow_steps": 64,
+    "view_steps": 512
+  },
+  "density_extent": [
+    32,
+    32,
+    32
+  ],
+  "density_model": "One immutable CPU-baked R32F voxel-center array shared by raymarch and MC; trilinear clamp, hard base/cut/envelope mask after interpolation.",
+  "elapsed_seconds": 10.488690944,
+  "event_limit_per_call": 100000,
+  "fine_quadrature": {
+    "shadow_steps": 128,
+    "view_steps": 1024
+  },
+  "fixtures": [
+    {
+      "attempted_paths": 4718592,
+      "density_values_file": "density-r32f-le.bin",
+      "density_values_fnv1a64": "7989557643191771933",
+      "grid_local_bounds": [
+        [
+          -50.0,
+          -20.0,
+          -50.0
+        ],
+        [
+          50.0,
+          100.0,
+          50.0
+        ]
+      ],
+      "name": "fusion",
+      "pixel_count": 144,
+      "source_recipe": "gate/fusion.white.json",
+      "tracking_events": 3075808
+    },
+    {
+      "attempted_paths": 4718592,
+      "density_values_file": "density-r32f-le.bin",
+      "density_values_fnv1a64": "646014974381826713",
+      "grid_local_bounds": [
+        [
+          -50.0,
+          -20.0,
+          -50.0
+        ],
+        [
+          50.0,
+          100.0,
+          50.0
+        ]
+      ],
+      "name": "cut",
+      "pixel_count": 144,
+      "source_recipe": "gate/cut.white.json",
+      "tracking_events": 1673661
+    },
+    {
+      "attempted_paths": 4718592,
+      "density_values_file": "density-r32f-le.bin",
+      "density_values_fnv1a64": "13000654669195565423",
+      "grid_local_bounds": [
+        [
+          -50.0,
+          -20.0,
+          -50.0
+        ],
+        [
+          50.0,
+          100.0,
+          50.0
+        ]
+      ],
+      "name": "detail-17",
+      "pixel_count": 144,
+      "source_recipe": "gate/detail-17.white.json",
+      "tracking_events": 1471496
+    },
+    {
+      "attempted_paths": 4718592,
+      "density_values_file": "density-r32f-le.bin",
+      "density_values_fnv1a64": "7989557643191771933",
+      "grid_local_bounds": [
+        [
+          -50.0,
+          -20.0,
+          -50.0
+        ],
+        [
+          50.0,
+          100.0,
+          50.0
+        ]
+      ],
+      "name": "low-sun",
+      "pixel_count": 144,
+      "source_recipe": "sun/low-sun.white.json",
+      "tracking_events": 3096723
+    }
+  ],
+  "format_version": 1,
+  "gates": "Image mean within 6 aggregate SE + mean absolute quadrature discrepancy + 2e-5. Image RMSE within 3 expected MC RMSE + quadrature RMSE + 2e-4. Engineering envelopes, not simultaneous confidence guarantees.",
+  "height": 9,
+  "majorant": "local conservative trilinear-halo bricks",
+  "mode": "single scattering",
+  "native_comparison": "No GPU equality claimed here. A later native comparison must match camera pixels and quality, and account separately for CPU/GPU density-bake roundoff or load this exact saved R32F array.",
+  "pixel_footprint": "exact pixel center; normalized ((x+.5)/width,(y+.5)/height), aspect width/height; no jitter",
+  "pixel_statistics": "Per-pixel CSV reports unbiased sample variance divided by sample count, including directly measured RGB-average covariance. No per-pixel significance gate.",
+  "quadrature_error": "The difference between 512x64 and 1024x128 midpoint integrations is measured separately; it is a refinement diagnostic, not a rigorous integration-error bound.",
+  "ray_extent": "primary near/far camera clipping; sun visibility to frozen medium exit",
+  "samples_per_seed": 8192,
+  "seeds": [
+    "17",
+    "42",
+    "99991",
+    "4294967313"
+  ],
+  "tracking_events": 9317688,
+  "width": 16
+}

@@ -1,10 +1,17 @@
 #include "white/revision_queue.hpp"
 #include "white/persistence.hpp"
+#include "white/developed_scene.hpp"
 #include <algorithm>
 namespace white {
 namespace {std::uint64_t hash_byte(std::uint64_t h,unsigned char b){return (h^b)*1099511628211ull;}}
 std::uint64_t density_input_hash(const Scene& scene){
     Scene canonical;canonical.schema_version=scene.schema_version;canonical.algorithm_version=scene.algorithm_version;canonical.cloud=scene.cloud;canonical.cloud.optics={};
+    if(scene_has_multiple_developments(scene)) {
+        canonical.developed=DevelopedEvaluationPlan(*scene.developed).cloud();
+        canonical.developed->optics={};
+        for(auto& cell:canonical.developed->cells)cell.shape.source.modifiers.optics={};
+        canonical.cloud=developed_proxy_recipe(*canonical.developed);
+    }
     std::sort(canonical.cloud.cells.begin(),canonical.cloud.cells.end(),[](auto& a,auto& b){return a.id<b.id;});
     std::sort(canonical.cloud.cuts.begin(),canonical.cloud.cuts.end(),[](auto& a,auto& b){return a.id<b.id;});
     auto text=scene_json(canonical);std::uint64_t hash=14695981039346656037ull;for(unsigned char c:text)hash=hash_byte(hash,c);return hash;

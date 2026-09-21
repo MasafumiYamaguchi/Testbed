@@ -1,6 +1,7 @@
 #include "white/persistence.hpp"
 #include "white/cumulonimbus.hpp"
 #include "white/centerline.hpp"
+#include "white/developed_scene.hpp"
 #include <nlohmann/json.hpp>
 #include <algorithm>
 #include <atomic>
@@ -153,6 +154,27 @@ CenterlineShape centerline_from_json(const Json& j) {
     for(const auto& p:profile){shape(p,{"id","t","radius_scale","density_scale"});source.profile.push_back({id(p.at("id")),number(p.at("t")),number(p.at("radius_scale")),number(p.at("density_scale"))});}
     return source;
 }
+Json developed_json(const DevelopedCloud& source) {
+    Json cells=Json::array();for(const auto& cell:source.cells)cells.push_back({{"id",std::to_string(cell.id)},
+        {"shape",centerline_json(cell.shape)},{"translation",vec(cell.translation)},{"roles",cell.roles}});
+    return {{"contract_version",source.contract_version},{"id",std::to_string(source.id)},{"transform",transform_json(source.transform)},
+        {"optics",optics_json(source.optics)},{"fusion_width",source.fusion_width},{"overlap",source.overlap},{"cells",cells}};
+}
+DevelopedCloud developed_from_json(const Json& j) {
+    shape(j,{"contract_version","id","transform","optics","fusion_width","overlap","cells"});
+    if(!j.at("contract_version").is_number_unsigned()||j.at("contract_version")!=developed_cloud_contract_version)
+        throw std::invalid_argument("Unsupported developed source version");
+    DevelopedCloud source;source.id=id(j.at("id"));source.transform=transform_from_json(j.at("transform"));source.optics=optics_from_json(j.at("optics"));
+    source.fusion_width=number(j.at("fusion_width"));source.overlap=number(j.at("overlap"));const auto& cells=j.at("cells");
+    if(!cells.is_array()||cells.size()>max_developed_cells)throw std::invalid_argument("Developed source exceeds two independent cells");
+    for(const auto& c:cells) {
+        shape(c,{"id","shape","translation","roles"});DevelopedCell cell;cell.id=id(c.at("id"));cell.shape=centerline_from_json(c.at("shape"));cell.translation=vec(c.at("translation"));
+        const auto& roles=c.at("roles");if(!roles.is_array()||roles.size()<3||roles.size()>5)throw std::invalid_argument("Development requires 3..5 explicit roles");
+        cell.roles.clear();for(const auto& role:roles){if(!role.is_number_unsigned()||role.get<std::uint64_t>()>4)throw std::invalid_argument("Development role must be an unsigned index in 0..4");cell.roles.push_back(role.get<unsigned>());}
+        source.cells.push_back(std::move(cell));
+    }
+    return source;
+}
 void push_bounded(std::vector<Scene>& history,Scene scene) {
     if(history.size()==128)history.erase(history.begin());
     history.push_back(std::move(scene));
@@ -179,7 +201,8 @@ std::string scene_json(const Scene& s) {
             {"vertical_fov_degrees",s.camera.vertical_fov_degrees},{"near_plane",s.camera.near_plane},{"far_plane",s.camera.far_plane}}},
         {"sun",{{"direction_to_light",vec(s.sun.direction_to_light)},{"irradiance",vec(s.sun.irradiance)}}},
         {"exposure_ev",s.exposure_ev},{"preview_approx",{{"enabled",s.preview_approx.enabled},{"strength",s.preview_approx.strength}}}};
-    if(s.centerline)j["cloud"]={{"kind","centerline"},{"source",centerline_json(*s.centerline)}};
+    if(s.developed)j["cloud"]={{"kind","developed"},{"source",developed_json(*s.developed)}};
+    else if(s.centerline)j["cloud"]={{"kind","centerline"},{"source",centerline_json(*s.centerline)}};
     else if(s.cumulonimbus)j["cloud"]={{"kind","cumulonimbus"},{"source",cumulonimbus_json(*s.cumulonimbus)}};
     return j.dump(2)+"\n";
 }
@@ -189,34 +212,38 @@ Scene parse_scene_json(std::string_view text) {
         if(depth>32)throw std::invalid_argument("Scene nesting exceeds 32 levels");
         return true;
     });
-    if((j.value("schema_version",0u)==4||j.value("schema_version",0u)==5||j.value("schema_version",0u)==6))shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev","preview_approx"});
+    if((j.value("schema_version",0u)==4||j.value("schema_version",0u)==5||j.value("schema_version",0u)==6||j.value("schema_version",0u)==7))shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev","preview_approx"});
     else shape(j,{"schema_version","algorithm_version","cloud","camera","sun","exposure_ev"});
     if(!j.at("schema_version").is_number_unsigned()||!j.at("algorithm_version").is_number_unsigned())throw std::invalid_argument("Version must be an unsigned integer");
     const bool legacy=j.at("schema_version")==1&&j.at("algorithm_version")==1;
     const bool version2=j.at("schema_version")==2&&j.at("algorithm_version")==2;
     const bool old_schema=(j.at("schema_version")==3||j.at("schema_version")==4||j.at("schema_version")==5)&&j.at("algorithm_version")==2;
-    const bool current_schema=j.at("schema_version")==6&&j.at("algorithm_version")==3;
-    if(!legacy&&!version2&&!old_schema&&!current_schema)throw std::invalid_argument("Unsupported schema/algorithm version");
+    const bool profile_schema=j.at("schema_version")==6&&j.at("algorithm_version")==3;
+    const bool current_schema=j.at("schema_version")==7&&j.at("algorithm_version")==3;
+    if(!legacy&&!version2&&!old_schema&&!profile_schema&&!current_schema)throw std::invalid_argument("Unsupported schema/algorithm version");
     if(legacy) {
         shape(j.at("cloud"),{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics"});
         j["cloud"]["noise"]=noise_json(NoiseSettings{}); // exact old shape: all noise amplitudes zero
     }
     if(legacy||version2){shape(j["cloud"]["optics"],{"extinction_scale","albedo"});j["cloud"]["optics"]["g"]=0;}
     Scene s;
-    if(j.at("schema_version")==4||j.at("schema_version")==5||j.at("schema_version")==6){const auto& a=j.at("preview_approx");shape(a,{"enabled","strength"});if(!a.at("enabled").is_boolean())throw std::invalid_argument("Approximation enabled must be boolean");s.preview_approx={a.at("enabled").get<bool>(),number(a.at("strength"))};}
-    if(!current_schema&&!j.at("cloud").contains("kind")) {
+    if(j.at("schema_version")==4||j.at("schema_version")==5||j.at("schema_version")==6||j.at("schema_version")==7){const auto& a=j.at("preview_approx");shape(a,{"enabled","strength"});if(!a.at("enabled").is_boolean())throw std::invalid_argument("Approximation enabled must be boolean");s.preview_approx={a.at("enabled").get<bool>(),number(a.at("strength"))};}
+    if(!current_schema&&!profile_schema&&!j.at("cloud").contains("kind")) {
         if(j.at("cloud").contains("altitude_density"))throw std::invalid_argument("Legacy schema cannot contain altitude density fields");
         j["cloud"]["altitude_density"]=altitude_density_json(AltitudeDensityProfile{});
     }
     auto& c=s.cloud;const auto& cj=j.at("cloud");
-    if((j.at("schema_version")==5||current_schema)&&cj.is_object()&&cj.contains("kind")) {
+    if((j.at("schema_version")==5||profile_schema||current_schema)&&cj.is_object()&&cj.contains("kind")) {
         shape(cj,{"kind","source"});
         if(cj.at("kind")=="cumulonimbus") {
             s.cumulonimbus=cumulonimbus_from_json(cj.at("source"));
             c=derive_cumulonimbus_recipe(*s.cumulonimbus);
-        } else if(current_schema&&cj.at("kind")=="centerline") {
+        } else if((profile_schema||current_schema)&&cj.at("kind")=="centerline") {
             s.centerline=centerline_from_json(cj.at("source"));
             c=lower_centerline_to_recipe(*s.centerline);
+        } else if(current_schema&&cj.at("kind")=="developed") {
+            s.developed=developed_from_json(cj.at("source"));
+            c=developed_proxy_recipe(*s.developed);
         } else throw std::invalid_argument("Unsupported cloud object kind");
     } else {
     shape(cj,{"id","cells","cuts","transform","envelope","base","density","blend_width","overlap","structure_seed","detail_seed","optics","noise","altitude_density"});
@@ -321,7 +348,9 @@ bool EditorSession::apply(Scene scene) {
     document_.replace(std::move(scene));undo_.swap(history);redo_.clear();return true;
 }
 Id EditorSession::add_cell(Cell cell) {
-    auto scene=document_.scene();cell.id=next_id(scene);
+    auto scene=document_.scene();
+    if(scene.developed)throw std::invalid_argument("Edit developed source cells through development commands");
+    cell.id=next_id(scene);
     if(scene.centerline) {
         scene.centerline->source.modifiers.manual_cells.push_back(cell);
         scene.cloud=lower_centerline_to_recipe(*scene.centerline);
@@ -333,6 +362,7 @@ Id EditorSession::add_cell(Cell cell) {
 }
 bool EditorSession::remove_cell(Id id) {
     auto scene=document_.scene();
+    if(scene.developed)throw std::invalid_argument("Remove a developed cell through its development command");
     if(scene.centerline) {
         const auto& ids=scene.centerline->source.cell_ids;
         if(std::find(ids.begin(),ids.end(),id)!=ids.end())
