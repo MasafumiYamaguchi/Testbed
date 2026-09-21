@@ -289,7 +289,11 @@ void GpuSpike::note_present(std::uint64_t revision,std::chrono::steady_clock::ti
 }
 void GpuSpike::validate() {
     wait_bakes();
-    if(validated_bake_==bake_count&&(!use_cache||scene_density_requires_direct(scene_snapshot_)||!cache_reference_.empty())){std::cout<<"density_validation_reused bake="<<bake_count<<'\n';return;}
+    // The scene is fixed for this readback. Source capability checks can build
+    // complete top/anvil plans, so resolve them once, not once per voxel.
+    const bool direct_required=scene_density_requires_direct(scene_snapshot_);
+    const bool retain_cache_reference=fixture==2&&use_cache&&!direct_required;
+    if(validated_bake_==bake_count&&(!use_cache||direct_required||!cache_reference_.empty())){std::cout<<"density_validation_reused bake="<<bake_count<<'\n';return;}
     // D3D12 texture row pitch is 256 bytes; explicitly pad the 17-wide fixture.
     const Uint32 pitch=(extent[0]+63)/64*64;
     const auto count=checked_volume_bytes(pitch,extent[1],extent[2],4);
@@ -303,13 +307,13 @@ void GpuSpike::validate() {
     auto* values=static_cast<float*>(SDL_MapGPUTransferBuffer(device,transfer.buffer,false));
     gpu_check(values != nullptr,"Map density readback");
     max_error=0; interpolation_error=0; bool finite=true;
-    if(fixture==2&&use_cache&&!scene_density_requires_direct(scene_snapshot_))cache_reference_.resize(size_t(extent[0])*extent[1]*extent[2]);
+    if(retain_cache_reference)cache_reference_.resize(size_t(extent[0])*extent[1]*extent[2]);
     const SceneDensityEvaluator reference_field(scene_snapshot_);
     const GridLayout layout{reference_field.local_support(),extent};
     for(Uint32 z=0;z<extent[2];++z) for(Uint32 y=0;y<extent[1];++y) for(Uint32 x=0;x<extent[0];++x) {
         const float value=values[(z*extent[1]+y)*pitch+x];
         finite=finite && std::isfinite(value);
-        if(fixture==2&&use_cache&&!scene_density_requires_direct(scene_snapshot_))cache_reference_[(size_t(z)*extent[1]+y)*extent[0]+x]=value;
+        if(retain_cache_reference)cache_reference_[(size_t(z)*extent[1]+y)*extent[0]+x]=value;
         const float expected=fixture==2?float(reference_field.at(index_to_local(layout,{double(x),double(y),double(z)}))):reference(x,y,z,extent,fixture);
         max_error=std::max(max_error,std::abs(value-expected));
     }
